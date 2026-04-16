@@ -1,0 +1,1095 @@
+'use client';
+
+import { SocialIcon, SocialPlatform } from '@/components/SocialIcons';
+import { useSettings } from '@/lib/use-settings';
+import { calcFinalPrice, formatPKR } from '@/lib/utils';
+import type { Banner, Category, Product } from '@/types';
+import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
+
+function ProductCard({ product }: { product: Product }) {
+  const finalPrice = calcFinalPrice(product.price, product.discount_percent);
+  const image = product.images?.find(i => i.is_primary)?.image_url ?? null;
+  const hasDiscount = product.discount_percent > 0;
+
+  return (
+    <Link href={`/products/${product.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+      <div
+        style={{
+          background: 'var(--white)',
+          border: '1px solid var(--border)',
+          borderRadius: '6px',
+          overflow: 'hidden',
+          transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+          cursor: 'pointer',
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)';
+          (e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 32px rgba(0,0,0,0.1)';
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+          (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+        }}
+      >
+        {/* Image */}
+        <div
+          style={{
+            width: '100%',
+            aspectRatio: '3/4',
+            background: 'var(--off-white)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {image ? (
+            <img src={image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--border-dark)" strokeWidth="1.2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>No image</span>
+            </div>
+          )}
+          {hasDiscount && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '10px',
+                left: '10px',
+                background: 'var(--blush-deep)',
+                color: 'var(--white)',
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                padding: '3px 8px',
+                borderRadius: '3px',
+              }}
+            >
+              -{product.discount_percent}%
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div style={{ padding: '0.85rem' }}>
+          <p
+            style={{
+              fontSize: '0.65rem',
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--text-light)',
+              marginBottom: '0.3rem',
+            }}
+          >
+            {product.category?.name}
+          </p>
+          <p
+            style={{
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              color: 'var(--text-dark)',
+              marginBottom: '0.5rem',
+              lineHeight: 1.3,
+            }}
+          >
+            {product.name}
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span
+              style={{
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                color: hasDiscount ? 'var(--blush-deep)' : 'var(--text-dark)',
+              }}
+            >
+              {formatPKR(finalPrice)}
+            </span>
+            {hasDiscount && (
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--text-light)',
+                  textDecoration: 'line-through',
+                }}
+              >
+                {formatPKR(product.price)}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function BannerSlider() {
+  const [current, setCurrent] = useState(0);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/banners')
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) setBanners(res.data);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const next = useCallback(() => setCurrent(c => (c + 1) % Math.max(banners.length, 1)), [banners.length]);
+  const prev = () => setCurrent(c => (c - 1 + Math.max(banners.length, 1)) % Math.max(banners.length, 1));
+
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const timer = setInterval(next, 5000);
+    return () => clearInterval(timer);
+  }, [next, banners.length]);
+
+  if (loading)
+    return (
+      <div
+        style={{
+          width: '100%',
+          height: 'clamp(300px, 50vh, 520px)',
+          background: 'var(--off-white)',
+          animation: 'pulse 1.5s ease infinite',
+        }}
+      />
+    );
+
+  if (banners.length === 0)
+    return (
+      <div
+        style={{
+          width: '100%',
+          height: 'clamp(300px, 50vh, 520px)',
+          background: 'linear-gradient(135deg, #f5ede4 0%, #fdf0eb 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            width: '500px',
+            height: '500px',
+            borderRadius: '50%',
+            background: 'rgba(201,125,106,0.08)',
+            right: '-100px',
+            top: '-100px',
+          }}
+        />
+        <div style={{ textAlign: 'center', padding: '0 2rem', position: 'relative', zIndex: 1 }}>
+          <p
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              color: 'var(--blush-deep)',
+              marginBottom: '1rem',
+            }}
+          >
+            New Collection
+          </p>
+          <h1
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(2rem, 5vw, 3.2rem)',
+              fontWeight: 700,
+              color: 'var(--text-dark)',
+              lineHeight: 1.2,
+              marginBottom: '1rem',
+            }}
+          >
+            Shop the Latest
+            <br />
+            Fashion & Beauty
+          </h1>
+          <p
+            style={{
+              fontSize: '1rem',
+              color: 'var(--text-mid)',
+              marginBottom: '2rem',
+            }}
+          >
+            Discover curated collections delivered across Pakistan
+          </p>
+          <Link href="/products" className="btn-primary">
+            Shop Now
+          </Link>
+        </div>
+      </div>
+    );
+
+  const banner = banners[current];
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: 'clamp(300px, 50vh, 520px)',
+        overflow: 'hidden',
+        background: 'var(--off-white)',
+      }}
+    >
+      <img
+        src={banner.image_url}
+        alt={banner.title ?? 'Banner'}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.5s ease' }}
+      />
+
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
+
+      {banner.title && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 2rem',
+          }}
+        >
+          <div style={{ textAlign: 'center', animation: 'fadeUp 0.5s ease' }}>
+            <h1
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(1.8rem, 4vw, 3rem)',
+                fontWeight: 700,
+                color: 'white',
+                lineHeight: 1.2,
+                marginBottom: '1.25rem',
+                textShadow: '0 2px 12px rgba(0,0,0,0.3)',
+              }}
+            >
+              {banner.title}
+            </h1>
+            {banner.link_url && (
+              <Link
+                href={banner.link_url}
+                className="btn-primary"
+                style={{ background: 'white', color: 'var(--text-dark)', borderColor: 'white' }}
+              >
+                Shop Now
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+
+      {banners.length > 1 && (
+        <>
+          <button
+            onClick={prev}
+            style={{
+              position: 'absolute',
+              left: '1.5rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'rgba(255,255,255,0.85)',
+              border: 'none',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              color: 'var(--text-dark)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            }}
+          >
+            ←
+          </button>
+          <button
+            onClick={next}
+            style={{
+              position: 'absolute',
+              right: '1.5rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'rgba(255,255,255,0.85)',
+              border: 'none',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              color: 'var(--text-dark)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            }}
+          >
+            →
+          </button>
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '1.25rem',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              gap: '0.5rem',
+            }}
+          >
+            {banners.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                style={{
+                  width: i === current ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: i === current ? 'white' : 'rgba(255,255,255,0.5)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  padding: 0,
+                }}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function FeaturesStrip() {
+  const features = [
+    {
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
+      ),
+      title: 'Free Delivery',
+      desc: 'On orders above PKR 3,000',
+    },
+    {
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
+      ),
+      title: '100% Original',
+      desc: 'Authentic products guaranteed',
+    },
+    {
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.37 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.64a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+        </svg>
+      ),
+      title: '24/7 Support',
+      desc: 'Always here to help you',
+    },
+    {
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="23 4 23 10 17 10" />
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+        </svg>
+      ),
+      title: 'Easy Returns',
+      desc: 'Hassle-free 7 day returns',
+    },
+  ];
+
+  return (
+    <div
+      style={{
+        background: 'var(--white)',
+        borderTop: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)',
+      }}
+    >
+      <div className="container">
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '0',
+          }}
+          className="features-grid"
+        >
+          {features.map((feature, i) => (
+            <div
+              key={i}
+              style={{
+                padding: '1.5rem 1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                borderRight: i < features.length - 1 ? '1px solid var(--border)' : 'none',
+              }}
+            >
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '8px',
+                  background: 'var(--blush-light)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--blush-deep)',
+                  flexShrink: 0,
+                }}
+              >
+                {feature.icon}
+              </div>
+              <div>
+                <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-dark)', marginBottom: '0.15rem' }}>
+                  {feature.title}
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>{feature.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({ label, title }: { label: string; title: string }) {
+  return (
+    <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+      <p
+        style={{
+          fontSize: '0.72rem',
+          fontWeight: 700,
+          letterSpacing: '0.15em',
+          textTransform: 'uppercase',
+          color: 'var(--blush-deep)',
+          marginBottom: '0.6rem',
+        }}
+      >
+        {label}
+      </p>
+      <h2
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 'clamp(1.6rem, 3vw, 2.2rem)',
+          fontWeight: 700,
+          color: 'var(--text-dark)',
+        }}
+      >
+        {title}
+      </h2>
+      <div className="divider" style={{ margin: '0.85rem auto 0' }} />
+    </div>
+  );
+}
+
+function CategoryLinks({ categories }: { categories: Category[] }) {
+  return (
+    <section style={{ padding: '3.5rem 0', background: 'var(--off-white)' }}>
+      <div className="container">
+        <SectionHeader label="Browse by Category" title="Shop Our Collections" />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+            gap: '1rem',
+          }}
+        >
+          {categories.map((cat, i) => (
+            <Link key={cat.id} href={`/category/${cat.slug}`} style={{ textDecoration: 'none' }}>
+              <div
+                style={{
+                  background: 'var(--white)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  padding: '1.5rem 1rem',
+                  textAlign: 'center',
+                  transition: 'all 0.2s ease',
+                  animation: `fadeUp 0.4s ease ${i * 0.06}s both`,
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--blush-deep)';
+                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)';
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)';
+                  (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    color: 'var(--text-dark)',
+                  }}
+                >
+                  {cat.name}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProductsGrid({
+  label,
+  title,
+  products,
+  bg = 'var(--white)',
+}: {
+  label: string;
+  title: string;
+  products: Product[];
+  bg?: string;
+}) {
+  if (products.length === 0) return null;
+
+  return (
+    <section style={{ padding: '3.5rem 0', background: bg }}>
+      <div className="container">
+        <SectionHeader label={label} title={title} />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: '1.25rem',
+          }}
+        >
+          {products.map((product, i) => (
+            <div key={product.id} style={{ animation: `fadeUp 0.4s ease ${i * 0.07}s both` }}>
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+        <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
+          <Link href="/products" className="btn-outline">
+            View All Products
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PromoBanner() {
+  return (
+    <section
+      style={{
+        background: 'linear-gradient(135deg, var(--text-dark) 0%, #2d2d2d 100%)',
+        padding: '3.5rem 0',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Decorative circles */}
+      <div
+        style={{
+          position: 'absolute',
+          width: '400px',
+          height: '400px',
+          borderRadius: '50%',
+          background: 'rgba(201,125,106,0.1)',
+          right: '-80px',
+          top: '-80px',
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          width: '200px',
+          height: '200px',
+          borderRadius: '50%',
+          background: 'rgba(201,125,106,0.08)',
+          left: '5%',
+          bottom: '-60px',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div
+        className="container"
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '2rem',
+        }}
+      >
+        <div>
+          <p
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              color: 'var(--blush-deep)',
+              marginBottom: '0.75rem',
+            }}
+          >
+            Special Offer
+          </p>
+          <h2
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(1.6rem, 3vw, 2.4rem)',
+              fontWeight: 700,
+              color: 'white',
+              lineHeight: 1.2,
+              marginBottom: '0.75rem',
+            }}
+          >
+            Get Free Delivery on
+            <br />
+            Your First Order
+          </h2>
+          <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.65)', maxWidth: '400px' }}>
+            Shop from our wide range of fashion, makeup, and lifestyle products. Delivered right to your doorstep across
+            Pakistan.
+          </p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
+          <Link
+            href="/products"
+            className="btn-primary"
+            style={{
+              background: 'var(--blush-deep)',
+              borderColor: 'var(--blush-deep)',
+              minWidth: '180px',
+              justifyContent: 'center',
+            }}
+          >
+            Shop Now
+          </Link>
+          <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>Cash on Delivery · No advance payment</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StatsSection() {
+  const stats = [
+    { value: '5,000+', label: 'Happy Customers' },
+    { value: '500+', label: 'Products Available' },
+    { value: '6', label: 'Product Categories' },
+    { value: '100%', label: 'Original Products' },
+  ];
+
+  return (
+    <section style={{ padding: '3rem 0', background: 'var(--blush-light)' }}>
+      <div className="container">
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '2rem',
+            textAlign: 'center',
+          }}
+          className="stats-grid"
+        >
+          {stats.map((stat, i) => (
+            <div key={i}>
+              <p
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
+                  fontWeight: 700,
+                  color: 'var(--blush-deep)',
+                  lineHeight: 1,
+                  marginBottom: '0.4rem',
+                }}
+              >
+                {stat.value}
+              </p>
+              <p
+                style={{
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  color: 'var(--text-mid)',
+                  letterSpacing: '0.03em',
+                }}
+              >
+                {stat.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AboutSection() {
+  return (
+    <section style={{ padding: '4rem 0', background: 'var(--white)' }}>
+      <div className="container">
+        <div
+          style={{
+            maxWidth: '680px',
+            margin: '0 auto',
+            textAlign: 'center',
+          }}
+        >
+          <p
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              color: 'var(--blush-deep)',
+              marginBottom: '0.75rem',
+            }}
+          >
+            About Us
+          </p>
+          <h2
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(1.6rem, 3vw, 2.2rem)',
+              fontWeight: 700,
+              color: 'var(--text-dark)',
+              marginBottom: '1.25rem',
+            }}
+          >
+            Your Trusted Fashion &amp; Beauty Destination
+          </h2>
+          <div className="divider" style={{ margin: '0 auto 1.5rem' }} />
+          <p
+            style={{
+              fontSize: '0.95rem',
+              color: 'var(--text-mid)',
+              lineHeight: 1.8,
+              marginBottom: '1rem',
+            }}
+          >
+            We are a Pakistani fashion and beauty store dedicated to bringing you the finest collection of garments, makeup,
+            skincare, and lifestyle products. Every product we carry is carefully selected for quality and authenticity.
+          </p>
+          <p
+            style={{
+              fontSize: '0.95rem',
+              color: 'var(--text-mid)',
+              lineHeight: 1.8,
+              marginBottom: '2rem',
+            }}
+          >
+            From everyday essentials to special occasion outfits, we have something for everyone in the family. Shop with
+            confidence — all products are 100% original and delivered right to your door across Pakistan.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link href="/products" className="btn-primary">
+              Browse Products
+            </Link>
+            <Link href="/category/makeup" className="btn-outline">
+              View Makeup
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer({ categories }: { categories: Category[] }) {
+  const { settings } = useSettings();
+  const socialLinks = settings.social_media?.filter(s => s.enabled && s.url) ?? [];
+
+  return (
+    <footer
+      style={{
+        background: 'var(--text-dark)',
+        color: 'rgba(255,255,255,0.7)',
+        padding: '3rem 0 1.5rem',
+      }}
+    >
+      <div className="container">
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '2rem',
+            marginBottom: '2.5rem',
+          }}
+        >
+          <div>
+            <h3
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: '1.3rem',
+                fontWeight: 700,
+                color: 'white',
+                marginBottom: '0.75rem',
+              }}
+            >
+              {settings.store_name}
+            </h3>
+            <p style={{ fontSize: '0.82rem', lineHeight: 1.7 }}>
+              Premium fashion, makeup &amp; lifestyle products delivered across Pakistan.
+            </p>
+
+            {/* Social icons */}
+            {socialLinks.length > 0 && (
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1em' }}>
+                {socialLinks.map((social, i) => (
+                  <SocialIcon key={i} platform={social.platform as SocialPlatform} url={social.url} size={36} light />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <p
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'var(--blush)',
+                marginBottom: '1rem',
+              }}
+            >
+              Categories
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {categories.map(cat => (
+                <Link
+                  key={cat.id}
+                  href={`/category/${cat.slug}`}
+                  style={{
+                    fontSize: '0.82rem',
+                    color: 'rgba(255,255,255,0.6)',
+                    textDecoration: 'none',
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'white')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
+                >
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'var(--blush)',
+                marginBottom: '1rem',
+              }}
+            >
+              Customer Service
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {[
+                { label: 'Track Order', href: '/track-order' },
+                { label: 'Return & Exchange Policy', href: '/return-policy' },
+              ].map(item => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  style={{
+                    fontSize: '0.82rem',
+                    color: 'rgba(255,255,255,0.6)',
+                    textDecoration: 'none',
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'white')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'var(--blush)',
+                marginBottom: '1rem',
+              }}
+            >
+              Contact
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              {[
+                { icon: '📞', text: settings.phone },
+                { icon: '📧', text: settings.email },
+                { icon: '📍', text: settings.address },
+              ].map(({ icon, text }) => (
+                <span
+                  key={text}
+                  style={{
+                    fontSize: '0.82rem',
+                    color: 'rgba(255,255,255,0.6)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  {icon} {text}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            paddingTop: '1.5rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+          }}
+        >
+          <p style={{ fontSize: '0.75rem' }}>
+            © {new Date().getFullYear()} {settings.store_name}. All rights reserved.
+          </p>
+          <p style={{ fontSize: '0.75rem' }}>Cash on Delivery · Delivered Across Pakistan</p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function EmptyState() {
+  return (
+    <section style={{ padding: '4rem 0', background: 'var(--off-white)' }}>
+      <div className="container" style={{ textAlign: 'center' }}>
+        <div
+          style={{
+            width: '72px',
+            height: '72px',
+            borderRadius: '50%',
+            background: 'var(--blush-light)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1.5rem',
+          }}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blush-deep)" strokeWidth="1.5">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <path d="M16 10a4 4 0 0 1-8 0" />
+          </svg>
+        </div>
+        <h3
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.5rem',
+            fontWeight: 700,
+            color: 'var(--text-dark)',
+            marginBottom: '0.75rem',
+          }}
+        >
+          Products Coming Soon
+        </h3>
+        <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+          We're stocking up. Check back shortly!
+        </p>
+        <Link href="/products" className="btn-primary">
+          Browse All
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+export default function HomePage() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  const [onSale, setOnSale] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const [catRes, prodRes] = await Promise.all([
+          fetch('/api/categories').then(r => r.json()),
+          fetch('/api/products?limit=8&sort=newest').then(r => r.json()),
+        ]);
+
+        if (catRes.success) setCategories(catRes.data);
+
+        if (prodRes.success) {
+          const products: Product[] = prodRes.data.data;
+          setNewArrivals(products.slice(0, 4));
+          setOnSale(products.filter((p: Product) => p.discount_percent > 0).slice(0, 4));
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  return (
+    <div>
+      <BannerSlider />
+      <FeaturesStrip />
+      <CategoryLinks categories={categories} />
+
+      {!loading &&
+        (newArrivals.length > 0 ? (
+          <ProductsGrid label="Just In" title="New Arrivals" products={newArrivals} />
+        ) : (
+          <EmptyState />
+        ))}
+
+      <PromoBanner />
+
+      {onSale.length > 0 && <ProductsGrid label="Special Offers" title="On Sale" products={onSale} bg="var(--off-white)" />}
+
+      <StatsSection />
+      <AboutSection />
+      <Footer categories={categories} />
+    </div>
+  );
+}
