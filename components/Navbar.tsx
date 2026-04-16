@@ -70,25 +70,51 @@ function TopBar() {
   return (
     <div
       style={{
-        height: 'var(--topbar-height)',
         background: 'var(--text-dark)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
         padding: '0 2.5rem',
         fontSize: '0.72rem',
         color: 'rgba(255,255,255,0.85)',
         fontFamily: 'var(--font-body)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.37 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.64a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-        </svg>
-        <span>{settings.phone}</span>
+      {/* Desktop — single row */}
+      <div
+        className="topbar-desktop"
+        style={{
+          height: 'var(--topbar-height)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.37 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.64a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+          </svg>
+          <span>{settings.phone}</span>
+        </div>
+        <span style={{ fontWeight: 500, letterSpacing: '0.04em', textAlign: 'center', flex: 1, padding: '0 1rem' }}>
+          {settings.tagline}
+        </span>
+        <span style={{ flexShrink: 0 }}>
+          Free delivery on orders above PKR {parseInt(settings.free_delivery_threshold || '3000').toLocaleString()}
+        </span>
       </div>
-      <span style={{ fontWeight: 500, letterSpacing: '0.04em' }}>{settings.tagline}</span>
-      <span>Free delivery on orders above PKR {parseInt(settings.free_delivery_threshold).toLocaleString()}</span>
+
+      {/* Mobile — stacked, show only most important info */}
+      <div className="topbar-mobile" style={{ display: 'none', padding: '0.5rem 0', textAlign: 'center' }}>
+        <p style={{ fontWeight: 500, letterSpacing: '0.03em', marginBottom: '0.2rem' }}>{settings.tagline}</p>
+        <p style={{ opacity: 0.75 }}>
+          Free delivery above PKR {parseInt(settings.free_delivery_threshold || '3000').toLocaleString()}
+        </p>
+      </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .topbar-desktop { display: none !important; }
+          .topbar-mobile  { display: block !important; }
+        }
+      `}</style>
     </div>
   );
 }
