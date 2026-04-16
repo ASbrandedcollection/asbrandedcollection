@@ -122,6 +122,13 @@ function TopBar() {
 function MobileMenu({ categories, onClose }: { categories: Category[]; onClose: () => void }) {
   const [activeCat, setActiveCat] = useState<Category | null>(null);
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   if (activeCat) {
     const grouped = groupSubcategories(activeCat.subcategories ?? []);
 
@@ -608,7 +615,7 @@ export default function Navbar() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '2.5rem',
+            gap: '1.5rem',
             flex: 1,
           }}
           className="desktop-nav"
@@ -629,7 +636,7 @@ export default function Navbar() {
 
           {/* Category buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            {categories.map(cat => {
+            {categories.slice(0, 4).map(cat => {
               const active = pathname === `/category/${cat.slug}` || activeMegaCat?.id === cat.id;
               return (
                 <button
