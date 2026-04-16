@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       name: body.name.trim(),
       slug,
       category_id: body.category_id,
+      group_name: body.group_name,
       display_order: (last?.display_order ?? 0) + 1,
       is_active: body.is_active ?? true,
     })
