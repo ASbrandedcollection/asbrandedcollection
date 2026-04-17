@@ -135,114 +135,114 @@ function TopBar() {
   );
 }
 
-function MoreDropdown({
-  categories,
-  pathname,
-  onLeave,
-  linkStyle,
-}: {
-  categories: Category[];
-  pathname: string;
-  onLeave: () => void;
-  linkStyle: (active: boolean) => React.CSSProperties;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+// function MoreDropdown({
+//   categories,
+//   pathname,
+//   onLeave,
+//   linkStyle,
+// }: {
+//   categories: Category[];
+//   pathname: string;
+//   onLeave: () => void;
+//   linkStyle: (active: boolean) => React.CSSProperties;
+// }) {
+//   const [open, setOpen] = useState(false);
+//   const ref = useRef<HTMLDivElement>(null);
+//   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+//   useEffect(() => {
+//     function handleClick(e: MouseEvent) {
+//       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+//     }
+//     document.addEventListener('mousedown', handleClick);
+//     return () => document.removeEventListener('mousedown', handleClick);
+//   }, []);
 
-  const isActive = categories.some(c => pathname === `/category/${c.slug}`);
+//   const isActive = categories.some(c => pathname === `/category/${c.slug}`);
 
-  return (
-    <div
-      ref={ref}
-      style={{ position: 'relative', flexShrink: 0 }}
-      onMouseEnter={() => {
-        if (timer.current) clearTimeout(timer.current);
-        setOpen(true);
-        onLeave();
-      }}
-      onMouseLeave={() => {
-        timer.current = setTimeout(() => setOpen(false), 200);
-      }}
-    >
-      <button
-        onClick={() => setOpen(p => !p)}
-        style={{ ...linkStyle(isActive), display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-      >
-        More
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
+//   return (
+//     <div
+//       ref={ref}
+//       style={{ position: 'relative', flexShrink: 0 }}
+//       onMouseEnter={() => {
+//         if (timer.current) clearTimeout(timer.current);
+//         setOpen(true);
+//         onLeave();
+//       }}
+//       onMouseLeave={() => {
+//         timer.current = setTimeout(() => setOpen(false), 200);
+//       }}
+//     >
+//       <button
+//         onClick={() => setOpen(p => !p)}
+//         style={{ ...linkStyle(isActive), display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+//       >
+//         More
+//         <svg
+//           width="12"
+//           height="12"
+//           viewBox="0 0 24 24"
+//           fill="none"
+//           stroke="currentColor"
+//           strokeWidth="2.5"
+//           style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+//         >
+//           <polyline points="6 9 12 15 18 9" />
+//         </svg>
+//       </button>
 
-      {open && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 12px)',
-            right: 0,
-            background: 'var(--white)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-            minWidth: '180px',
-            zIndex: 200,
-            overflow: 'hidden',
-          }}
-        >
-          {categories.map((cat, i) => {
-            const active = pathname === `/category/${cat.slug}`;
-            return (
-              <Link
-                key={cat.id}
-                href={`/category/${cat.slug}`}
-                onClick={() => setOpen(false)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.6rem',
-                  padding: '0.75rem 1rem',
-                  textDecoration: 'none',
-                  fontSize: '0.82rem',
-                  fontWeight: active ? 600 : 500,
-                  color: active ? 'var(--blush-deep)' : 'var(--text-dark)',
-                  background: active ? 'var(--blush-light)' : 'transparent',
-                  borderBottom: i < categories.length - 1 ? '1px solid var(--border)' : 'none',
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={e => {
-                  if (!active) e.currentTarget.style.background = 'var(--off-white)';
-                }}
-                onMouseLeave={e => {
-                  if (!active) e.currentTarget.style.background = 'transparent';
-                }}
-              >
-                <span>{cat.icon}</span>
-                {cat.name}
-              </Link>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
+//       {open && (
+//         <div
+//           style={{
+//             position: 'absolute',
+//             top: 'calc(100% + 12px)',
+//             right: 0,
+//             background: 'var(--white)',
+//             border: '1px solid var(--border)',
+//             borderRadius: '8px',
+//             boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+//             minWidth: '180px',
+//             zIndex: 200,
+//             overflow: 'hidden',
+//           }}
+//         >
+//           {categories.map((cat, i) => {
+//             const active = pathname === `/category/${cat.slug}`;
+//             return (
+//               <Link
+//                 key={cat.id}
+//                 href={`/category/${cat.slug}`}
+//                 onClick={() => setOpen(false)}
+//                 style={{
+//                   display: 'flex',
+//                   alignItems: 'center',
+//                   gap: '0.6rem',
+//                   padding: '0.75rem 1rem',
+//                   textDecoration: 'none',
+//                   fontSize: '0.82rem',
+//                   fontWeight: active ? 600 : 500,
+//                   color: active ? 'var(--blush-deep)' : 'var(--text-dark)',
+//                   background: active ? 'var(--blush-light)' : 'transparent',
+//                   borderBottom: i < categories.length - 1 ? '1px solid var(--border)' : 'none',
+//                   transition: 'background 0.15s',
+//                 }}
+//                 onMouseEnter={e => {
+//                   if (!active) e.currentTarget.style.background = 'var(--off-white)';
+//                 }}
+//                 onMouseLeave={e => {
+//                   if (!active) e.currentTarget.style.background = 'transparent';
+//                 }}
+//               >
+//                 <span>{cat.icon}</span>
+//                 {cat.name}
+//               </Link>
+//             );
+//           })}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
 
 function MegaMenu({ cat, onClose }: { cat: Category; onClose: () => void }) {
   const grouped = groupSubcategories(cat.subcategories ?? []);
@@ -803,14 +803,14 @@ export default function Navbar() {
                 );
               })}
 
-              {categories.length > VISIBLE_CATS && (
+              {/* {categories.length > VISIBLE_CATS && (
                 <MoreDropdown
                   categories={categories.slice(VISIBLE_CATS)}
                   pathname={pathname}
                   onLeave={startClose}
                   linkStyle={linkStyle}
                 />
-              )}
+              )} */}
 
               <Link
                 href="/products"
