@@ -6,6 +6,9 @@ import { useEffect, useState } from 'react';
 const COMMON_ICONS = ['👗', '👔', '🧒', '💄', '🧴', '✨', '🧸', '👟', '👜', '💍', '🕶', '🧣', '🏷'];
 
 export default function AdminCategoriesPage() {
+  const [dragOverCatId, setDragOverCatId] = useState<string | null>(null);
+  const [reordering, setReordering] = useState(false);
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [successMsg, setSuccessMsg] = useState('');
@@ -175,6 +178,44 @@ export default function AdminCategoriesPage() {
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
     setSubForm(f => ({ ...f, name, slug: editingSub ? f.slug : slug }));
+  }
+
+  function handleCatDragStart(e: React.DragEvent, id: string) {
+    e.dataTransfer.setData('catId', id);
+  }
+
+  function handleCatDragOver(e: React.DragEvent, id: string) {
+    e.preventDefault();
+    setDragOverCatId(id);
+  }
+
+  async function handleCatDrop(e: React.DragEvent, targetId: string) {
+    e.preventDefault();
+    setDragOverCatId(null);
+    const draggedId = e.dataTransfer.getData('catId');
+    if (draggedId === targetId) return;
+
+    const draggedIndex = categories.findIndex(c => c.id === draggedId);
+    const targetIndex = categories.findIndex(c => c.id === targetId);
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const updated = [...categories];
+    const [dragged] = updated.splice(draggedIndex, 1);
+    updated.splice(targetIndex, 0, dragged);
+    setCategories(updated);
+
+    setReordering(true);
+    await Promise.all(
+      updated.map((cat, i) =>
+        fetch(`/api/admin/categories/${cat.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ display_order: i + 1 }),
+        }),
+      ),
+    );
+    setReordering(false);
+    showSuccess('Order saved!');
   }
 
   async function handleSaveSub() {
@@ -352,6 +393,8 @@ export default function AdminCategoriesPage() {
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>
             {categories.length} categories · click ▶ to manage subcategories
+            <br /> drag ⠿ to reorder
+            {reordering && ' · saving...'}
           </p>
         </div>
         <button onClick={openAddCat} className="btn-primary">
@@ -404,17 +447,36 @@ export default function AdminCategoriesPage() {
               <div key={cat.id}>
                 {/* Category row */}
                 <div
+                  draggable
+                  onDragStart={e => handleCatDragStart(e, cat.id)}
+                  onDragOver={e => handleCatDragOver(e, cat.id)}
+                  onDrop={e => handleCatDrop(e, cat.id)}
+                  onDragLeave={() => setDragOverCatId(null)}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '32px 48px 1fr 120px 80px 160px',
+                    gridTemplateColumns: '24px 32px 48px 1fr 120px 80px 160px',
                     padding: '0.85rem 1rem',
                     borderBottom: '1px solid var(--border)',
                     gap: '0.75rem',
                     alignItems: 'center',
-                    background: isExpanded ? 'var(--blush-light)' : 'transparent',
                     transition: 'background 0.15s',
+                    background:
+                      dragOverCatId === cat.id ? 'var(--blush-light)' : isExpanded ? 'var(--blush-light)' : 'transparent',
+                    cursor: 'grab',
                   }}
                 >
+                  <div
+                    style={{
+                      color: 'var(--text-light)',
+                      fontSize: '0.85rem',
+                      cursor: 'grab',
+                      userSelect: 'none',
+                      textAlign: 'center',
+                    }}
+                  >
+                    ⠿
+                  </div>
+
                   {/* Expand toggle */}
                   <button
                     onClick={() =>
