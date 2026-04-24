@@ -223,6 +223,41 @@ export default function ProductsPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--off-white)' }}>
+      {/* Back button */}
+      <div
+        style={{
+          background: 'var(--white)',
+          borderBottom: '1px solid var(--border)',
+          padding: '0.6rem 1.5rem',
+        }}
+      >
+        <button
+          onClick={() => router.back()}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.8rem',
+            fontWeight: 500,
+            color: 'var(--text-mid)',
+            padding: 0,
+            transition: 'color 0.2s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'var(--blush-deep)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-mid)')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          Back
+        </button>
+      </div>
+
       {/* Page Header */}
       <div
         style={{
@@ -567,9 +602,10 @@ export default function ProductsPage() {
             {/* Products grid */}
             {loading ? (
               <div
+                className="products-grid"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
                   gap: '1.25rem',
                 }}
               >
@@ -632,9 +668,10 @@ export default function ProductsPage() {
             ) : (
               <>
                 <div
+                  className="products-grid"
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
                     gap: '1.25rem',
                   }}
                 >
@@ -726,6 +763,18 @@ export default function ProductsPage() {
         }
         @media (max-width: 768px) {
           .filter-sidebar { display: none !important; }
+        }
+          
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+        @media (max-width: 768px) {
+          .filter-sidebar { display: none !important; }
+          .products-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.75rem !important;
+          }
         }
       `}</style>
     </div>
