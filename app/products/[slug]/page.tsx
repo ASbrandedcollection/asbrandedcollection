@@ -199,27 +199,33 @@ export default function ProductDetailPage() {
           <div>
             {/* Main image */}
             <div
+              className="product-detail-main-image"
               style={{
                 width: '100%',
-                aspectRatio: '3/4',
-                background: 'var(--blush-light)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
                 overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 marginBottom: '0.75rem',
-                position: 'relative',
               }}
             >
               {selectedImage ? (
-                <img src={selectedImage} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img
+                  src={selectedImage}
+                  alt={product.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                />
               ) : (
                 <div
                   style={{
-                    width: '100%',
-                    height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '0.75rem',
+                    gap: '0.5rem',
+                    padding: '3rem',
                   }}
                 >
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--blush-deep)" strokeWidth="1">
@@ -227,7 +233,6 @@ export default function ProductDetailPage() {
                     <circle cx="8.5" cy="8.5" r="1.5" />
                     <polyline points="21 15 16 10 5 21" />
                   </svg>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>No image available</span>
                 </div>
               )}
 
