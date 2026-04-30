@@ -362,39 +362,67 @@ export default function ProductsPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--off-white)' }}>
       {/* Back button */}
-      <div
-        style={{
-          background: 'var(--white)',
-          borderBottom: '1px solid var(--border)',
-          padding: '0.6rem 1.5rem',
-        }}
-      >
-        <button
-          onClick={() => router.back()}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-body)',
-            fontSize: '0.8rem',
-            fontWeight: 500,
-            color: 'var(--text-mid)',
-            padding: 0,
-            transition: 'color 0.2s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.color = 'var(--blush-deep)')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-mid)')}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
-          </svg>
-          Back
-        </button>
-      </div>
+      {/* Smart Back Button */}
+      {(() => {
+        // Determine where back should go
+        const subcat = searchParams.get('subcategory');
+        const cat = searchParams.get('category');
+        const catObj = categories.find(c => c.slug === cat);
+
+        let backHref = '/';
+        let backLabel = 'Home';
+
+        if (subcat && cat) {
+          // On subcategory → back goes to category
+          backHref = `/products?category=${cat}`;
+          backLabel = catObj?.name ?? 'Category';
+        } else if (cat) {
+          // On category → back goes to home
+          backHref = '/';
+          backLabel = 'Home';
+        } else if (currentSearch) {
+          // On search → back goes to all products
+          backHref = '/products';
+          backLabel = 'All Products';
+        } else {
+          // On all products → back goes to home
+          backHref = '/';
+          backLabel = 'Home';
+        }
+
+        return (
+          <div
+            style={{
+              background: 'var(--white)',
+              borderBottom: '1px solid var(--border)',
+              padding: '0.6rem 1.5rem',
+            }}
+          >
+            <Link
+              href={backHref}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.8rem',
+                fontWeight: 500,
+                color: 'var(--text-mid)',
+                textDecoration: 'none',
+                transition: 'color 0.2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--blush-deep)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-mid)')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+              {backLabel}
+            </Link>
+          </div>
+        );
+      })()}
 
       {/* Page Header */}
       <div
