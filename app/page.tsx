@@ -36,11 +36,11 @@ function ProductCard({ product }: { product: Product }) {
         <div
           style={{
             width: '100%',
-            aspectRatio: '3/4',
-            background: 'var(--off-white)',
+            background: 'var(--blush-light)',
             position: 'relative',
             overflow: 'hidden',
           }}
+          className="product-card-image"
         >
           {image ? (
             <img src={image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -580,6 +580,7 @@ function ProductsGrid({
       <div className="container">
         <SectionHeader label={label} title={title} />
         <div
+          className="home-products-row"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
