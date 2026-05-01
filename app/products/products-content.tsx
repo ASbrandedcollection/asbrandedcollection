@@ -361,7 +361,6 @@ export default function ProductsPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--off-white)' }}>
-      {/* Back button */}
       {/* Smart Back Button */}
       {(() => {
         // Determine where back should go

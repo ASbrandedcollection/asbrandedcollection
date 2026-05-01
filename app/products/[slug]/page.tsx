@@ -5,11 +5,12 @@ import { useCart } from '@/lib/cart-context';
 import { calcFinalPrice, formatPKR } from '@/lib/utils';
 import type { Product } from '@/types';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const searchParams = useSearchParams();
   const { addItem, isInCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -129,9 +130,56 @@ export default function ProductDetailPage() {
   const inCart = isInCart(product.id);
   const outOfStock = product.stock_qty === 0;
 
+  // Smart back button logic
+  const subcat = searchParams.get('subcategory');
+  const cat = searchParams.get('category');
+  const search = searchParams.get('search');
+
+  let backHref = '/products';
+  let backLabel = 'Back';
+
+  if (subcat && cat) {
+    backHref = `/products?category=${cat}&subcategory=${subcat}`;
+  } else if (cat) {
+    backHref = `/products?category=${cat}`;
+  } else if (search) {
+    backHref = `/products?search=${search}`;
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--off-white)' }}>
-      {/* Breadcrumb */}
+      {/* Smart Back Button */}
+      <div
+        style={{
+          background: 'var(--white)',
+          borderBottom: '1px solid var(--border)',
+          padding: '0.6rem 1.5rem',
+        }}
+      >
+        <Link
+          href={backHref}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.8rem',
+            fontWeight: 500,
+            color: 'var(--text-mid)',
+            textDecoration: 'none',
+            transition: 'color 0.2s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'var(--blush-deep)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-mid)')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          {backLabel}
+        </Link>
+      </div>
+
       <div
         style={{
           background: 'var(--white)',
@@ -175,7 +223,7 @@ export default function ProductDetailPage() {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {crumb.label}
+                    {crumb.label.slice(0, 20)}
                   </span>
                 )}
                 {i < arr.length - 1 && <span style={{ fontSize: '0.7rem', color: 'var(--border-dark)' }}>›</span>}
@@ -192,6 +240,7 @@ export default function ProductDetailPage() {
             gridTemplateColumns: '1fr 1fr',
             gap: '3rem',
             alignItems: 'start',
+            position: 'relative',
           }}
           className="product-grid"
         >
@@ -240,13 +289,13 @@ export default function ProductDetailPage() {
                 <div
                   style={{
                     position: 'absolute',
-                    top: '16px',
-                    left: '16px',
+                    top: '0px',
+                    left: '0px',
                     background: 'var(--blush-deep)',
                     color: 'var(--white)',
-                    fontSize: '0.75rem',
+                    fontSize: '0.65rem',
                     fontWeight: 500,
-                    padding: '4px 10px',
+                    padding: '4px 8px',
                     letterSpacing: '0.05em',
                   }}
                 >
