@@ -982,6 +982,17 @@ function Footer({ categories }: { categories: Category[] }) {
   const { settings } = useSettings();
   const socialLinks = settings.social_media?.filter(s => s.enabled && s.url) ?? [];
 
+  // Mobile collapsible state
+  const [expanded, setExpanded] = useState({
+    categories: false,
+    customerService: false,
+    contact: false,
+  });
+
+  const toggleSection = (section: keyof typeof expanded) => {
+    setExpanded(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
   return (
     <footer
       style={{
@@ -991,7 +1002,9 @@ function Footer({ categories }: { categories: Category[] }) {
       }}
     >
       <div className="container">
+        {/* Desktop layout */}
         <div
+          className="footer-desktop"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -1130,6 +1143,216 @@ function Footer({ categories }: { categories: Category[] }) {
           </div>
         </div>
 
+        {/* Mobile layout with collapsible sections */}
+        <div className="footer-mobile" style={{ marginBottom: '2.5rem' }}>
+          {/* Store info */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h3
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: '1.1rem',
+                fontWeight: 700,
+                color: 'white',
+                marginBottom: '0.5rem',
+              }}
+            >
+              {settings.store_name}
+            </h3>
+            <p style={{ fontSize: '0.75rem', lineHeight: 1.6 }}>
+              Premium fashion, makeup &amp; lifestyle products delivered across Pakistan.
+            </p>
+
+            {/* Social icons */}
+            {socialLinks.length > 0 && (
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75em' }}>
+                {socialLinks.map((social, i) => (
+                  <SocialIcon key={i} platform={social.platform as SocialPlatform} url={social.url} size={32} light />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Categories collapsible */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginBottom: '1rem' }}>
+            <button
+              onClick={() => toggleSection('categories')}
+              style={{
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--blush)',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                padding: '0.75rem 0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                cursor: 'pointer',
+                transition: 'color 0.2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'white')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--blush)')}
+            >
+              Categories
+              <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{expanded.categories ? '−' : '+'}</span>
+            </button>
+
+            {expanded.categories && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  paddingTop: '0.75rem',
+                  animation: 'slideDown 0.3s ease',
+                }}
+              >
+                {categories.map(cat => (
+                  <Link
+                    key={cat.id}
+                    href={`/category/${cat.slug}`}
+                    style={{
+                      fontSize: '0.78rem',
+                      color: 'rgba(255,255,255,0.6)',
+                      textDecoration: 'none',
+                      transition: 'color 0.2s',
+                      paddingLeft: '0.5rem',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'white')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Customer Service collapsible */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginBottom: '1rem' }}>
+            <button
+              onClick={() => toggleSection('customerService')}
+              style={{
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--blush)',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                padding: '0.75rem 0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                cursor: 'pointer',
+                transition: 'color 0.2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'white')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--blush)')}
+            >
+              Customer Service
+              <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{expanded.customerService ? '−' : '+'}</span>
+            </button>
+
+            {expanded.customerService && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  paddingTop: '0.75rem',
+                  animation: 'slideDown 0.3s ease',
+                }}
+              >
+                {[
+                  { label: 'Track Order', href: '/track-order' },
+                  { label: 'Return & Exchange Policy', href: '/return-policy' },
+                ].map(item => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    style={{
+                      fontSize: '0.78rem',
+                      color: 'rgba(255,255,255,0.6)',
+                      textDecoration: 'none',
+                      transition: 'color 0.2s',
+                      paddingLeft: '0.5rem',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'white')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Contact collapsible */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginBottom: '1rem' }}>
+            <button
+              onClick={() => toggleSection('contact')}
+              style={{
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--blush)',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                padding: '0.75rem 0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                cursor: 'pointer',
+                transition: 'color 0.2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'white')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--blush)')}
+            >
+              Contact
+              <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{expanded.contact ? '−' : '+'}</span>
+            </button>
+
+            {expanded.contact && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  paddingTop: '0.75rem',
+                  animation: 'slideDown 0.3s ease',
+                }}
+              >
+                {[
+                  { icon: '📞', text: settings.phone },
+                  { icon: '📧', text: settings.email },
+                  { icon: '📍', text: settings.address },
+                ].map(({ icon, text }) => (
+                  <span
+                    key={text}
+                    style={{
+                      fontSize: '0.8rem',
+                      color: 'rgba(255,255,255,0.6)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      paddingLeft: '0.5rem',
+                    }}
+                  >
+                    {icon} {text}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer bottom */}
         <div
           style={{
             borderTop: '1px solid rgba(255,255,255,0.08)',
@@ -1139,14 +1362,38 @@ function Footer({ categories }: { categories: Category[] }) {
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: '0.5rem',
+            fontSize: '0.75rem',
           }}
         >
-          <p style={{ fontSize: '0.75rem' }}>
+          <p>
             © {new Date().getFullYear()} {settings.store_name}. All rights reserved.
           </p>
-          <p style={{ fontSize: '0.75rem' }}>Cash on Delivery · Delivered Across Pakistan</p>
+          <p>Cash on Delivery · Delivered Across Pakistan</p>
         </div>
       </div>
+
+      <style>{`
+        @media (min-width: 769px) {
+          .footer-desktop { display: grid !important; }
+          .footer-mobile { display: none !important; }
+        }
+
+        @media (max-width: 768px) {
+          .footer-desktop { display: none !important; }
+          .footer-mobile { display: block !important; }
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </footer>
   );
 }
