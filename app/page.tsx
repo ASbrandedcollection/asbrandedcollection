@@ -579,19 +579,27 @@ function SectionHeader({ label, title }: { label: string; title: string }) {
 }
 
 function CategoryLinks({ categories }: { categories: Category[] }) {
+  const categoryItems = [
+    ...categories.slice(0, 4).map(cat => ({ id: cat.id, name: cat.name, href: `/category/${cat.slug}` })),
+    { id: 'all', name: 'All', href: '/products' },
+  ];
+
   return (
     <section style={{ padding: '3.5rem 0', background: 'var(--off-white)' }}>
       <div className="container">
         <SectionHeader label="Browse by Category" title="Shop Our Collections" />
+
+        {/* Desktop grid */}
         <div
+          className="categories-desktop"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
             gap: '1rem',
           }}
         >
-          {categories.map((cat, i) => (
-            <Link key={cat.id} href={`/category/${cat.slug}`} style={{ textDecoration: 'none' }}>
+          {categoryItems.map((item, i) => (
+            <Link key={item.id} href={item.href} style={{ textDecoration: 'none' }}>
               <div
                 style={{
                   background: 'var(--white)',
@@ -623,13 +631,85 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                     color: 'var(--text-dark)',
                   }}
                 >
-                  {cat.name}
+                  {item.name}
                 </p>
               </div>
             </Link>
           ))}
         </div>
+
+        {/* Mobile horizontal scroll */}
+        <div
+          className="categories-mobile"
+          style={{
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch' as any,
+            scrollSnapType: 'x mandatory',
+            paddingLeft: '1rem',
+            paddingRight: '1rem',
+            paddingBottom: '0.5rem',
+          }}
+        >
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'nowrap', width: 'max-content' }}>
+            {categoryItems.map((item, i) => (
+              <Link key={item.id} href={item.href} style={{ textDecoration: 'none' }}>
+                <div
+                  style={{
+                    flexShrink: 0,
+                    width: 'calc(100vw - 2rem)',
+                    maxWidth: '150px',
+                    background: 'var(--white)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    padding: '1.5rem 1rem',
+                    textAlign: 'center',
+                    transition: 'all 0.2s ease',
+                    animation: `fadeUp 0.4s ease ${i * 0.06}s both`,
+                    cursor: 'pointer',
+                    scrollSnapAlign: 'start',
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--blush-deep)';
+                    (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)';
+                    (e.currentTarget as HTMLDivElement).style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)';
+                    (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+                    (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase',
+                      color: 'var(--text-dark)',
+                    }}
+                  >
+                    {item.name}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
+
+      <style>{`
+        @media (min-width: 769px) {
+          .categories-desktop { display: grid !important; }
+          .categories-mobile { display: none !important; }
+        }
+
+        @media (max-width: 768px) {
+          .categories-desktop { display: none !important; }
+          .categories-mobile { display: flex !important; }
+          .categories-mobile::-webkit-scrollbar { display: none; }
+          .categories-mobile { -ms-overflow-style: none; scrollbar-width: none; }
+        }
+      `}</style>
     </section>
   );
 }
