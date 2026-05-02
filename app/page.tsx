@@ -427,24 +427,82 @@ function FeaturesStrip() {
         borderBottom: '1px solid var(--border)',
       }}
     >
-      <div className="container">
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '0',
-          }}
-          className="features-grid"
-        >
+      {/* Desktop grid */}
+      <div className="features-desktop">
+        <div className="container">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '0',
+            }}
+          >
+            {features.map((feature, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: '1.5rem 1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  borderRight: i < features.length - 1 ? '1px solid var(--border)' : 'none',
+                }}
+              >
+                <div
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '8px',
+                    background: 'var(--blush-light)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--blush-deep)',
+                    flexShrink: 0,
+                  }}
+                >
+                  {feature.icon}
+                </div>
+                <div>
+                  <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-dark)', marginBottom: '0.15rem' }}>
+                    {feature.title}
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>{feature.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile horizontal scroll */}
+      <div
+        className="features-mobile"
+        style={{
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch' as any,
+          scrollSnapType: 'x mandatory',
+          paddingLeft: '1rem',
+          paddingRight: '1rem',
+          paddingTop: '1rem',
+          paddingBottom: '0.5rem',
+        }}
+      >
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'nowrap', width: 'max-content' }}>
           {features.map((feature, i) => (
             <div
               key={i}
               style={{
-                padding: '1.5rem 1.25rem',
+                flexShrink: 0,
+                width: 'calc(100vw - 2rem)',
+                maxWidth: '280px',
+                padding: '1rem',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '1rem',
-                borderRight: i < features.length - 1 ? '1px solid var(--border)' : 'none',
+                background: 'var(--off-white)',
+                borderRadius: '6px',
+                scrollSnapAlign: 'start',
               }}
             >
               <div
@@ -472,6 +530,20 @@ function FeaturesStrip() {
           ))}
         </div>
       </div>
+
+      <style>{`
+        @media (min-width: 769px) {
+          .features-desktop { display: block !important; }
+          .features-mobile { display: none !important; }
+        }
+ 
+        @media (max-width: 768px) {
+          .features-desktop { display: none !important; }
+          .features-mobile { display: flex !important; }
+          .features-mobile::-webkit-scrollbar { display: none; }
+          .features-mobile { -ms-overflow-style: none; scrollbar-width: none; }
+        }
+      `}</style>
     </div>
   );
 }
