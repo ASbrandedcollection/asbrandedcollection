@@ -55,3 +55,33 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   return NextResponse.json({ success: true, data: category }, { status: 201 });
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { error: authError } = await requireAdmin(request);
+  if (authError) return authError;
+
+  // Get current image_url so we can delete from storage too
+  const { data: category } = await supabaseAdmin.from('categories').select('image_url').eq('id', id).single();
+
+  if (category?.image_url) {
+    // Extract storage path from the public URL
+    // URL format: .../storage/v1/object/public/product-images/categories/{id}/...
+    const url = new URL(category.image_url);
+    const pathParts = url.pathname.split('/product-images/');
+    if (pathParts.length > 1) {
+      const storagePath = pathParts[1];
+      // Best-effort delete from storage — don't fail the whole request if this errors
+      await supabaseAdmin.storage.from('product-images').remove([storagePath]);
+    }
+  }
+
+  // Null out the image_url in DB
+  const { error } = await supabaseAdmin.from('categories').update({ image_url: null }).eq('id', id);
+
+  if (error) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}

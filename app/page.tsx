@@ -580,8 +580,10 @@ function SectionHeader({ label, title }: { label: string; title: string }) {
 
 function CategoryLinks({ categories }: { categories: Category[] }) {
   const categoryItems = [
-    ...categories.slice(0, 4).map(cat => ({ id: cat.id, name: cat.name, href: `/category/${cat.slug}` })),
-    { id: 'all', name: 'All', href: '/products' },
+    ...categories
+      .slice(0, 4)
+      .map(cat => ({ id: cat.id, name: cat.name, href: `/category/${cat.slug}`, image_url: cat.image_url ?? null })),
+    { id: 'all', name: 'All', href: '/products', image_url: null },
   ];
 
   return (
@@ -622,6 +624,32 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                   (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
                 }}
               >
+                {/* Image or icon */}
+                <div
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    background: 'var(--blush-light)',
+                    overflow: 'hidden',
+                    border: '2px solid var(--border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 0.75rem',
+                  }}
+                >
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: '2rem' }}>🛍️</span>
+                  )}
+                </div>
+
                 <p
                   style={{
                     fontSize: '0.78rem',
@@ -661,12 +689,16 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                     background: 'var(--white)',
                     border: '1px solid var(--border)',
                     borderRadius: '6px',
-                    padding: '1.5rem 1rem',
+                    padding: '1rem',
                     textAlign: 'center',
                     transition: 'all 0.2s ease',
                     animation: `fadeUp 0.4s ease ${i * 0.06}s both`,
                     cursor: 'pointer',
                     scrollSnapAlign: 'start',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '0.5rem',
                   }}
                   onMouseEnter={e => {
                     (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--blush-deep)';
@@ -679,13 +711,40 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                     (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
                   }}
                 >
+                  {/* Rounded image */}
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: 'var(--blush-light)',
+                      overflow: 'hidden',
+                      border: '2px solid var(--border)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: '1.5rem' }}>🛍️</span>
+                    )}
+                  </div>
+
                   <p
                     style={{
-                      fontSize: '0.78rem',
+                      fontSize: '0.75rem',
                       fontWeight: 700,
                       letterSpacing: '0.04em',
                       textTransform: 'uppercase',
                       color: 'var(--text-dark)',
+                      margin: 0,
                     }}
                   >
                     {item.name}
