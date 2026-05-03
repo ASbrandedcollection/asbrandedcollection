@@ -1,5 +1,3 @@
-// PUT    /api/admin/categories/:id — Update category
-// DELETE /api/admin/categories/:id — Delete category
 import { requireAdmin } from '@/lib/admin-auth';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { toSlug } from '@/lib/utils';
@@ -18,6 +16,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (body.name !== undefined) updates.name = body.name.trim();
   if (body.slug !== undefined) updates.slug = toSlug(body.slug);
   if (body.icon !== undefined) updates.icon = body.icon;
+  if (body.image_url !== undefined) updates.image_url = body.image_url;
   if (body.display_order !== undefined) updates.display_order = body.display_order;
   if (body.is_active !== undefined) updates.is_active = body.is_active;
 
