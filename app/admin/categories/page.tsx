@@ -22,6 +22,11 @@ export default function AdminCategoriesPage() {
   const [deletingCatId, setDeletingCatId] = useState<string | null>(null);
   const [catDeleteError, setCatDeleteError] = useState('');
 
+  // Category image upload
+  const [catImageFile, setCatImageFile] = useState<File | null>(null);
+  const [catImagePreview, setCatImagePreview] = useState<string | null>(null);
+  const [catImageUploading, setCatImageUploading] = useState(false);
+
   // Subcategory modal
   const [subModal, setSubModal] = useState<'add' | 'edit' | null>(null);
   const [editingSub, setEditingSub] = useState<Subcategory | null>(null);
@@ -72,6 +77,8 @@ export default function AdminCategoriesPage() {
     setCatForm({ name: '', slug: '', icon: '' });
     setEditingCat(null);
     setCatError('');
+    setCatImageFile(null);
+    setCatImagePreview(null);
     setCatModal('add');
   }
 
@@ -79,6 +86,8 @@ export default function AdminCategoriesPage() {
     setCatForm({ name: cat.name, slug: cat.slug, icon: cat.icon ?? '' });
     setEditingCat(cat);
     setCatError('');
+    setCatImageFile(null);
+    setCatImagePreview(cat.image_url ?? null);
     setCatModal('edit');
   }
 
@@ -121,10 +130,42 @@ export default function AdminCategoriesPage() {
       return;
     }
 
+    // Upload image if selected
+    if (catImageFile && data.data?.id) {
+      const imageUrl = await uploadCatImage(data.data.id, catImageFile);
+      if (imageUrl) {
+        await fetch(`/api/admin/categories/${data.data.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_url: imageUrl }),
+        });
+      }
+    }
+
     setCatModal(null);
     setCatSaving(false);
+    setCatImageFile(null);
+    setCatImagePreview(null);
     fetchCategories();
     showSuccess(editingCat ? 'Category updated!' : 'Category added!');
+  }
+
+  async function uploadCatImage(categoryId: string, file: File): Promise<string | null> {
+    setCatImageUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch(`/api/admin/categories/${categoryId}/image`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!data.success) return null;
+      return data.data.image_url;
+    } finally {
+      setCatImageUploading(false);
+    }
   }
 
   async function toggleCatActive(cat: Category) {
@@ -454,7 +495,7 @@ export default function AdminCategoriesPage() {
                   onDragLeave={() => setDragOverCatId(null)}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '24px 32px 48px 1fr 120px 80px 160px',
+                    gridTemplateColumns: '24px 32px 64px 48px 1fr 120px 80px 160px',
                     padding: '0.85rem 1rem',
                     borderBottom: '1px solid var(--border)',
                     gap: '0.75rem',
@@ -500,6 +541,31 @@ export default function AdminCategoriesPage() {
                   >
                     ▶
                   </button>
+
+                  {/* Image thumbnail */}
+                  <div
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '8px',
+                      background: 'var(--blush-light)',
+                      overflow: 'hidden',
+                      border: '1px solid var(--border)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {cat.image_url ? (
+                      <img
+                        src={cat.image_url}
+                        alt={cat.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: '1.2rem' }}>📷</span>
+                    )}
+                  </div>
 
                   {/* Icon */}
                   <div style={{ fontSize: '1.4rem' }}>{cat.icon ?? '📁'}</div>
@@ -808,7 +874,16 @@ export default function AdminCategoriesPage() {
               </button>
             </div>
 
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div
+              style={{
+                padding: '1.5rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                maxHeight: '75vh',
+                overflowY: 'auto',
+              }}
+            >
               {catError && (
                 <div
                   style={{
@@ -887,6 +962,78 @@ export default function AdminCategoriesPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Image upload */}
+              <div>
+                <label style={labelStyle}>Image (optional)</label>
+                <div
+                  style={{
+                    border: `2px dashed ${catImagePreview ? 'var(--blush-deep)' : 'var(--border)'}`,
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.2s',
+                    minHeight: '100px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    position: 'relative',
+                  }}
+                  onClick={() => document.getElementById('cat-image-upload')?.click()}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--blush-deep)')}
+                  onMouseLeave={e =>
+                    (e.currentTarget.style.borderColor = catImagePreview ? 'var(--blush-deep)' : 'var(--border)')
+                  }
+                >
+                  {catImagePreview ? (
+                    <img
+                      src={catImagePreview}
+                      alt="Preview"
+                      style={{ width: '100%', height: '100px', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '1rem' }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>📷</div>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>Click to upload category image</p>
+                      <p style={{ fontSize: '0.68rem', color: 'var(--text-light)', marginTop: '0.15rem' }}>
+                        Shows as rounded circle · square recommended
+                      </p>
+                    </div>
+                  )}
+                  <input
+                    id="cat-image-upload"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setCatImageFile(file);
+                      setCatImagePreview(URL.createObjectURL(file));
+                    }}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+
+                {catImagePreview && (
+                  <button
+                    onClick={() => {
+                      setCatImageFile(null);
+                      setCatImagePreview(null);
+                    }}
+                    style={{
+                      marginTop: '0.4rem',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.72rem',
+                      color: 'var(--text-light)',
+                      fontFamily: 'var(--font-body)',
+                    }}
+                  >
+                    ✕ Remove image
+                  </button>
+                )}
+              </div>
             </div>
 
             <div
@@ -903,11 +1050,11 @@ export default function AdminCategoriesPage() {
               </button>
               <button
                 onClick={handleSaveCat}
-                disabled={catSaving}
+                disabled={catSaving || catImageUploading}
                 className="btn-primary"
-                style={{ opacity: catSaving ? 0.7 : 1 }}
+                style={{ opacity: catSaving || catImageUploading ? 0.7 : 1 }}
               >
-                {catSaving ? 'Saving...' : editingCat ? 'Save Changes' : 'Add Category'}
+                {catImageUploading ? 'Uploading...' : catSaving ? 'Saving...' : editingCat ? 'Save Changes' : 'Add Category'}
               </button>
             </div>
           </div>
