@@ -22,10 +22,11 @@ export default function AdminCategoriesPage() {
   const [deletingCatId, setDeletingCatId] = useState<string | null>(null);
   const [catDeleteError, setCatDeleteError] = useState('');
 
-  // Category image upload
+  // Category image
   const [catImageFile, setCatImageFile] = useState<File | null>(null);
   const [catImagePreview, setCatImagePreview] = useState<string | null>(null);
   const [catImageUploading, setCatImageUploading] = useState(false);
+  const [catImageDeleting, setCatImageDeleting] = useState(false);
 
   // Subcategory modal
   const [subModal, setSubModal] = useState<'add' | 'edit' | null>(null);
@@ -37,23 +38,23 @@ export default function AdminCategoriesPage() {
   const [deletingSubId, setDeletingSubId] = useState<string | null>(null);
   const [subDeleteError, setSubDeleteError] = useState('');
 
-  // Expanded categories (to show subcategories)
+  // Expanded categories
   const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
 
+  // Subcategory image
   const [subImageFile, setSubImageFile] = useState<File | null>(null);
   const [subImagePreview, setSubImagePreview] = useState<string | null>(null);
   const [subImageUploading, setSubImageUploading] = useState(false);
+  const [subImageDeleting, setSubImageDeleting] = useState(false);
 
   async function fetchCategories() {
     setLoading(true);
     const res = await fetch('/api/admin/categories');
     const data = await res.json();
     if (data.success) {
-      // Fetch subcategories for each category
       const subsRes = await fetch('/api/admin/subcategories');
       const subsData = await subsRes.json();
       const subs: Subcategory[] = subsData.success ? subsData.data : [];
-
       const withSubs = data.data.map((cat: Category) => ({
         ...cat,
         subcategories: subs.filter(s => s.category_id === cat.id),
@@ -117,7 +118,6 @@ export default function AdminCategoriesPage() {
     };
 
     const url = editingCat ? `/api/admin/categories/${editingCat.id}` : '/api/admin/categories';
-
     const res = await fetch(url, {
       method: editingCat ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -130,16 +130,9 @@ export default function AdminCategoriesPage() {
       return;
     }
 
-    // Upload image if selected
+    // Upload new image if selected
     if (catImageFile && data.data?.id) {
-      const imageUrl = await uploadCatImage(data.data.id, catImageFile);
-      if (imageUrl) {
-        await fetch(`/api/admin/categories/${data.data.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image_url: imageUrl }),
-        });
-      }
+      await uploadCatImage(data.data.id, catImageFile);
     }
 
     setCatModal(null);
@@ -155,17 +148,41 @@ export default function AdminCategoriesPage() {
     try {
       const formData = new FormData();
       formData.append('image', file);
-
       const res = await fetch(`/api/admin/categories/${categoryId}/image`, {
         method: 'POST',
         body: formData,
       });
       const data = await res.json();
-      if (!data.success) return null;
-      return data.data.image_url;
+      return data.success ? data.data.image_url : null;
     } finally {
       setCatImageUploading(false);
     }
+  }
+
+  async function handleRemoveCatImage() {
+    if (!editingCat) {
+      // Adding new category — no server image yet, just clear preview
+      setCatImageFile(null);
+      setCatImagePreview(null);
+      return;
+    }
+
+    // Only call API if there was an existing saved image
+    if (editingCat.image_url) {
+      setCatImageDeleting(true);
+      try {
+        await fetch(`/api/admin/categories/${editingCat.id}/image`, { method: 'DELETE' });
+        // Reflect the removal in local state so thumbnail updates immediately
+        setEditingCat(prev => (prev ? { ...prev, image_url: null } : prev));
+        setCategories(prev => prev.map(c => (c.id === editingCat.id ? { ...c, image_url: null } : c)));
+        showSuccess('Image removed!');
+      } finally {
+        setCatImageDeleting(false);
+      }
+    }
+
+    setCatImageFile(null);
+    setCatImagePreview(null);
   }
 
   async function toggleCatActive(cat: Category) {
@@ -271,8 +288,6 @@ export default function AdminCategoriesPage() {
 
     if (editingSub) {
       let imageUrl = editingSub.image_url ?? null;
-
-      // Upload new image if selected
       if (subImageFile) {
         imageUrl = await uploadSubImage(editingSub.id, subImageFile);
       }
@@ -294,7 +309,6 @@ export default function AdminCategoriesPage() {
         return;
       }
     } else {
-      // Create subcategory first to get ID
       const res = await fetch('/api/admin/subcategories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -312,16 +326,8 @@ export default function AdminCategoriesPage() {
         return;
       }
 
-      // Upload image if selected
       if (subImageFile && data.data?.id) {
-        const imageUrl = await uploadSubImage(data.data.id, subImageFile);
-        if (imageUrl) {
-          await fetch(`/api/admin/subcategories/${data.data.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image_url: imageUrl }),
-          });
-        }
+        await uploadSubImage(data.data.id, subImageFile);
       }
     }
 
@@ -331,6 +337,45 @@ export default function AdminCategoriesPage() {
     setSubImagePreview(null);
     fetchCategories();
     showSuccess(editingSub ? 'Subcategory updated!' : 'Subcategory added!');
+  }
+
+  async function uploadSubImage(subcategoryId: string, file: File): Promise<string | null> {
+    setSubImageUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch(`/api/admin/subcategories/${subcategoryId}/image`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      return data.success ? data.data.image_url : null;
+    } finally {
+      setSubImageUploading(false);
+    }
+  }
+
+  async function handleRemoveSubImage() {
+    if (!editingSub) {
+      // Adding new subcategory — no server image yet, just clear preview
+      setSubImageFile(null);
+      setSubImagePreview(null);
+      return;
+    }
+
+    if (editingSub.image_url) {
+      setSubImageDeleting(true);
+      try {
+        await fetch(`/api/admin/subcategories/${editingSub.id}/image`, { method: 'DELETE' });
+        setEditingSub(prev => (prev ? { ...prev, image_url: null } : prev));
+        showSuccess('Image removed!');
+      } finally {
+        setSubImageDeleting(false);
+      }
+    }
+
+    setSubImageFile(null);
+    setSubImagePreview(null);
   }
 
   async function toggleSubActive(sub: Subcategory) {
@@ -353,24 +398,6 @@ export default function AdminCategoriesPage() {
     setDeletingSubId(null);
     fetchCategories();
     showSuccess('Subcategory deleted!');
-  }
-
-  async function uploadSubImage(subcategoryId: string, file: File): Promise<string | null> {
-    setSubImageUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const res = await fetch(`/api/admin/subcategories/${subcategoryId}/image`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      if (!data.success) return null;
-      return data.data.image_url;
-    } finally {
-      setSubImageUploading(false);
-    }
   }
 
   const inputStyle = {
@@ -480,13 +507,12 @@ export default function AdminCategoriesPage() {
             </button>
           </div>
         ) : (
-          categories.map((cat, i) => {
+          categories.map(cat => {
             const isExpanded = expandedCats.has(cat.id);
             const subCount = cat.subcategories?.length ?? 0;
 
             return (
               <div key={cat.id}>
-                {/* Category row */}
                 <div
                   draggable
                   onDragStart={e => handleCatDragStart(e, cat.id)}
@@ -518,7 +544,6 @@ export default function AdminCategoriesPage() {
                     ⠿
                   </div>
 
-                  {/* Expand toggle */}
                   <button
                     onClick={() =>
                       setExpandedCats(prev => {
@@ -542,7 +567,6 @@ export default function AdminCategoriesPage() {
                     ▶
                   </button>
 
-                  {/* Image thumbnail */}
                   <div
                     style={{
                       width: '48px',
@@ -567,10 +591,8 @@ export default function AdminCategoriesPage() {
                     )}
                   </div>
 
-                  {/* Icon */}
                   <div style={{ fontSize: '1.4rem' }}>{cat.icon ?? '📁'}</div>
 
-                  {/* Name + sub count */}
                   <div>
                     <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-dark)' }}>{cat.name}</p>
                     <p style={{ fontSize: '0.72rem', color: 'var(--text-light)' }}>
@@ -578,7 +600,6 @@ export default function AdminCategoriesPage() {
                     </p>
                   </div>
 
-                  {/* Slug */}
                   <p
                     style={{
                       fontSize: '0.72rem',
@@ -592,100 +613,55 @@ export default function AdminCategoriesPage() {
                     {cat.slug}
                   </p>
 
-                  {/* Toggle */}
                   <button onClick={() => toggleCatActive(cat)} style={badgeStyle(cat.is_active)}>
                     {cat.is_active ? 'Active' : 'Hidden'}
                   </button>
 
-                  {/* Actions */}
                   <div style={{ display: 'flex', gap: '0.4rem' }}>
-                    <button
-                      onClick={() => openAddSub(cat)}
-                      style={{
-                        padding: '4px 8px',
-                        border: '1px solid var(--border)',
-                        borderRadius: '4px',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        fontSize: '0.72rem',
-                        color: 'var(--text-mid)',
-                        fontFamily: 'var(--font-body)',
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = '#16a34a';
-                        e.currentTarget.style.color = '#16a34a';
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = 'var(--border)';
-                        e.currentTarget.style.color = 'var(--text-mid)';
-                      }}
-                    >
-                      + Sub
-                    </button>
-                    <button
-                      onClick={() => openEditCat(cat)}
-                      style={{
-                        padding: '4px 8px',
-                        border: '1px solid var(--border)',
-                        borderRadius: '4px',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        fontSize: '0.72rem',
-                        color: 'var(--text-mid)',
-                        fontFamily: 'var(--font-body)',
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = 'var(--blush-deep)';
-                        e.currentTarget.style.color = 'var(--blush-deep)';
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = 'var(--border)';
-                        e.currentTarget.style.color = 'var(--text-mid)';
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        setDeletingCatId(cat.id);
-                        setCatDeleteError('');
-                      }}
-                      style={{
-                        padding: '4px 8px',
-                        border: '1px solid var(--border)',
-                        borderRadius: '4px',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        fontSize: '0.72rem',
-                        color: 'var(--text-mid)',
-                        fontFamily: 'var(--font-body)',
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = '#ef4444';
-                        e.currentTarget.style.color = '#ef4444';
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = 'var(--border)';
-                        e.currentTarget.style.color = 'var(--text-mid)';
-                      }}
-                    >
-                      Delete
-                    </button>
+                    {[
+                      { label: '+ Sub', color: '#16a34a', onClick: () => openAddSub(cat) },
+                      { label: 'Edit', color: 'var(--blush-deep)', onClick: () => openEditCat(cat) },
+                      {
+                        label: 'Delete',
+                        color: '#ef4444',
+                        onClick: () => {
+                          setDeletingCatId(cat.id);
+                          setCatDeleteError('');
+                        },
+                      },
+                    ].map(({ label, color, onClick }) => (
+                      <button
+                        key={label}
+                        onClick={onClick}
+                        style={{
+                          padding: '4px 8px',
+                          border: '1px solid var(--border)',
+                          borderRadius: '4px',
+                          background: 'transparent',
+                          cursor: 'pointer',
+                          fontSize: '0.72rem',
+                          color: 'var(--text-mid)',
+                          fontFamily: 'var(--font-body)',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.borderColor = color;
+                          e.currentTarget.style.color = color;
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.borderColor = 'var(--border)';
+                          e.currentTarget.style.color = 'var(--text-mid)';
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Subcategories (expanded) */}
                 {isExpanded && (
                   <div style={{ background: '#fafafa', borderBottom: '1px solid var(--border)' }}>
                     {subCount === 0 ? (
-                      <div
-                        style={{
-                          padding: '1rem 1rem 1rem 5rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '1rem',
-                        }}
-                      >
+                      <div style={{ padding: '1rem 1rem 1rem 5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>No subcategories yet</p>
                         <button
                           onClick={() => openAddSub(cat)}
@@ -716,97 +692,56 @@ export default function AdminCategoriesPage() {
                             alignItems: 'center',
                           }}
                         >
-                          {/* Indent indicator */}
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.4rem',
-                              paddingLeft: '2rem',
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: '16px',
-                                height: '1px',
-                                background: 'var(--border-dark)',
-                              }}
-                            />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', paddingLeft: '2rem' }}>
+                            <div style={{ width: '16px', height: '1px', background: 'var(--border-dark)' }} />
                           </div>
-
-                          {/* Name */}
                           <div>
                             <p style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-dark)' }}>{sub.name}</p>
                             <p style={{ fontSize: '0.68rem', color: 'var(--text-light)' }}>/{sub.slug}</p>
                           </div>
-
-                          {/* Slug */}
-                          <p
-                            style={{
-                              fontSize: '0.72rem',
-                              color: 'var(--text-light)',
-                              fontFamily: 'monospace',
-                            }}
-                          >
+                          <p style={{ fontSize: '0.72rem', color: 'var(--text-light)', fontFamily: 'monospace' }}>
                             {sub.slug}
                           </p>
-
-                          {/* Toggle */}
                           <button onClick={() => toggleSubActive(sub)} style={badgeStyle(sub.is_active)}>
                             {sub.is_active ? 'Active' : 'Hidden'}
                           </button>
-
-                          {/* Actions */}
                           <div style={{ display: 'flex', gap: '0.4rem' }}>
-                            <button
-                              onClick={() => openEditSub(sub, cat)}
-                              style={{
-                                padding: '4px 8px',
-                                border: '1px solid var(--border)',
-                                borderRadius: '4px',
-                                background: 'transparent',
-                                cursor: 'pointer',
-                                fontSize: '0.72rem',
-                                color: 'var(--text-mid)',
-                                fontFamily: 'var(--font-body)',
-                              }}
-                              onMouseEnter={e => {
-                                e.currentTarget.style.borderColor = 'var(--blush-deep)';
-                                e.currentTarget.style.color = 'var(--blush-deep)';
-                              }}
-                              onMouseLeave={e => {
-                                e.currentTarget.style.borderColor = 'var(--border)';
-                                e.currentTarget.style.color = 'var(--text-mid)';
-                              }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => {
-                                setDeletingSubId(sub.id);
-                                setSubDeleteError('');
-                              }}
-                              style={{
-                                padding: '4px 8px',
-                                border: '1px solid var(--border)',
-                                borderRadius: '4px',
-                                background: 'transparent',
-                                cursor: 'pointer',
-                                fontSize: '0.72rem',
-                                color: 'var(--text-mid)',
-                                fontFamily: 'var(--font-body)',
-                              }}
-                              onMouseEnter={e => {
-                                e.currentTarget.style.borderColor = '#ef4444';
-                                e.currentTarget.style.color = '#ef4444';
-                              }}
-                              onMouseLeave={e => {
-                                e.currentTarget.style.borderColor = 'var(--border)';
-                                e.currentTarget.style.color = 'var(--text-mid)';
-                              }}
-                            >
-                              Delete
-                            </button>
+                            {[
+                              { label: 'Edit', color: 'var(--blush-deep)', onClick: () => openEditSub(sub, cat) },
+                              {
+                                label: 'Delete',
+                                color: '#ef4444',
+                                onClick: () => {
+                                  setDeletingSubId(sub.id);
+                                  setSubDeleteError('');
+                                },
+                              },
+                            ].map(({ label, color, onClick }) => (
+                              <button
+                                key={label}
+                                onClick={onClick}
+                                style={{
+                                  padding: '4px 8px',
+                                  border: '1px solid var(--border)',
+                                  borderRadius: '4px',
+                                  background: 'transparent',
+                                  cursor: 'pointer',
+                                  fontSize: '0.72rem',
+                                  color: 'var(--text-mid)',
+                                  fontFamily: 'var(--font-body)',
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.borderColor = color;
+                                  e.currentTarget.style.color = color;
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.borderColor = 'var(--border)';
+                                  e.currentTarget.style.color = 'var(--text-mid)';
+                                }}
+                              >
+                                {label}
+                              </button>
+                            ))}
                           </div>
                         </div>
                       ))
@@ -874,16 +809,7 @@ export default function AdminCategoriesPage() {
               </button>
             </div>
 
-            <div
-              style={{
-                padding: '1.5rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-                maxHeight: '75vh',
-                overflowY: 'auto',
-              }}
-            >
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {catError && (
                 <div
                   style={{
@@ -977,7 +903,6 @@ export default function AdminCategoriesPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     overflow: 'hidden',
-                    position: 'relative',
                   }}
                   onClick={() => document.getElementById('cat-image-upload')?.click()}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--blush-deep)')}
@@ -1016,21 +941,20 @@ export default function AdminCategoriesPage() {
 
                 {catImagePreview && (
                   <button
-                    onClick={() => {
-                      setCatImageFile(null);
-                      setCatImagePreview(null);
-                    }}
+                    onClick={handleRemoveCatImage}
+                    disabled={catImageDeleting}
                     style={{
                       marginTop: '0.4rem',
                       background: 'none',
                       border: 'none',
-                      cursor: 'pointer',
+                      cursor: catImageDeleting ? 'not-allowed' : 'pointer',
                       fontSize: '0.72rem',
-                      color: 'var(--text-light)',
+                      color: '#ef4444',
                       fontFamily: 'var(--font-body)',
+                      opacity: catImageDeleting ? 0.6 : 1,
                     }}
                   >
-                    ✕ Remove image
+                    {catImageDeleting ? 'Removing...' : '✕ Remove image'}
                   </button>
                 )}
               </div>
@@ -1084,6 +1008,8 @@ export default function AdminCategoriesPage() {
               borderRadius: '8px',
               width: '100%',
               maxWidth: '440px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
             }}
           >
             <div
@@ -1196,7 +1122,6 @@ export default function AdminCategoriesPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     overflow: 'hidden',
-                    position: 'relative',
                   }}
                   onClick={() => document.getElementById('sub-image-upload')?.click()}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--blush-deep)')}
@@ -1235,21 +1160,20 @@ export default function AdminCategoriesPage() {
 
                 {subImagePreview && (
                   <button
-                    onClick={() => {
-                      setSubImageFile(null);
-                      setSubImagePreview(null);
-                    }}
+                    onClick={handleRemoveSubImage}
+                    disabled={subImageDeleting}
                     style={{
                       marginTop: '0.4rem',
                       background: 'none',
                       border: 'none',
-                      cursor: 'pointer',
+                      cursor: subImageDeleting ? 'not-allowed' : 'pointer',
                       fontSize: '0.72rem',
-                      color: 'var(--text-light)',
+                      color: '#ef4444',
                       fontFamily: 'var(--font-body)',
+                      opacity: subImageDeleting ? 0.6 : 1,
                     }}
                   >
-                    ✕ Remove image
+                    {subImageDeleting ? 'Removing...' : '✕ Remove image'}
                   </button>
                 )}
               </div>

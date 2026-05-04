@@ -3,7 +3,7 @@ export interface Category {
   name: string;
   slug: string;
   icon: string | null;
-  image_url: string;
+  image_url: string | null;
   display_order: number;
   is_active: boolean;
   created_at: string;
