@@ -684,9 +684,6 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                     flexShrink: 0,
                     width: 'calc(100vw - 2rem)',
                     maxWidth: '150px',
-                    background: 'var(--white)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '6px',
                     padding: '1rem',
                     textAlign: 'center',
                     transition: 'all 0.2s ease',
@@ -712,8 +709,8 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                   {/* Rounded image */}
                   <div
                     style={{
-                      width: '64px',
-                      height: '64px',
+                      width: '100px',
+                      height: '100px',
                       borderRadius: '50%',
                       background: 'var(--blush-light)',
                       overflow: 'hidden',
