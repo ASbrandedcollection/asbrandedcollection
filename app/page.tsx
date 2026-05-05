@@ -1510,14 +1510,14 @@ export default function HomePage() {
       try {
         const [catRes, prodRes] = await Promise.all([
           fetch('/api/categories').then(r => r.json()),
-          fetch('/api/products?limit=8&sort=newest').then(r => r.json()),
+          fetch('/api/products?limit=20&sort=newest').then(r => r.json()),
         ]);
 
         if (catRes.success) setCategories(catRes.data);
 
         if (prodRes.success) {
           const products: Product[] = prodRes.data.data;
-          setNewArrivals(products.slice(0, 4));
+          setNewArrivals(products);
           setOnSale(products.filter((p: Product) => p.discount_percent > 0).slice(0, 4));
         }
       } finally {
