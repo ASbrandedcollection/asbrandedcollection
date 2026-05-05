@@ -604,8 +604,6 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
             <Link key={item.id} href={item.href} style={{ textDecoration: 'none' }}>
               <div
                 style={{
-                  background: 'var(--white)',
-                  border: '1px solid var(--border)',
                   borderRadius: '6px',
                   padding: '1.5rem 1rem',
                   textAlign: 'center',
@@ -627,8 +625,8 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                 {/* Image or icon */}
                 <div
                   style={{
-                    width: '80px',
-                    height: '80px',
+                    width: '100px',
+                    height: '100px',
                     borderRadius: '50%',
                     background: 'var(--blush-light)',
                     overflow: 'hidden',
