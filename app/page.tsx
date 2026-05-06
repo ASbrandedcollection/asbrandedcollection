@@ -913,7 +913,6 @@ function StatsSection() {
   const stats = [
     { value: '5,000+', label: 'Happy Customers' },
     { value: '500+', label: 'Products Available' },
-    { value: '6', label: 'Product Categories' },
     { value: '100%', label: 'Original Products' },
   ];
 
@@ -923,7 +922,7 @@ function StatsSection() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
+            gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '2rem',
             textAlign: 'center',
           }}
@@ -1536,8 +1535,6 @@ export default function HomePage() {
         ) : (
           <EmptyState />
         ))}
-
-      <PromoBanner />
 
       {onSale.length > 0 && <ProductsGrid label="Special Offers" title="On Sale" products={onSale} bg="var(--off-white)" />}
 
