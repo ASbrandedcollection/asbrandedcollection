@@ -368,7 +368,6 @@ function MobileMenu({
           display: 'flex',
           flexDirection: 'column',
           overflowY: 'auto',
-          // Push below topbar + navbar
           paddingTop: 'var(--topbar-height) + var(--nav-height))',
         }}
       >
@@ -408,16 +407,39 @@ function MobileMenu({
             </svg>
             Back
           </button>
-          <span
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '1rem',
-              fontWeight: 700,
-              color: 'var(--text-dark)',
-            }}
-          >
-            {activeCat.icon} {activeCat.name}
-          </span>
+          {/* Header: rounded image + name */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {activeCat.image_url ? (
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  border: '1.5px solid var(--border)',
+                  flexShrink: 0,
+                }}
+              >
+                <img
+                  src={activeCat.image_url}
+                  alt={activeCat.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            ) : (
+              <span style={{ fontSize: '1.1rem' }}>{activeCat.icon}</span>
+            )}
+            <span
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: 'var(--text-dark)',
+              }}
+            >
+              {activeCat.name}
+            </span>
+          </div>
         </div>
 
         {/* View all */}
@@ -443,7 +465,7 @@ function MobileMenu({
           </svg>
         </Link>
 
-        {/* Grouped subcategories */}
+        {/* Grouped subcategories — unchanged */}
         {Object.entries(grouped).map(([groupName, subs]) => (
           <div key={groupName}>
             {groupName !== '__ungrouped__' && (
@@ -513,7 +535,7 @@ function MobileMenu({
           color: 'var(--text-dark)',
         }}
       >
-        All Product
+        All Products
       </Link>
 
       <button onClick={onClose} style={iconStyle} aria-label="Close menu">
@@ -541,6 +563,44 @@ function MobileMenu({
       {categories.map((cat, i) => {
         const hasSubs = (cat.subcategories?.length ?? 0) > 0;
 
+        // Shared left side: rounded image + name
+        const labelContent = (
+          <span
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.88rem',
+              fontWeight: 500,
+              color: 'var(--text-dark)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+            }}
+          >
+            {/* Rounded image (falls back to icon emoji) */}
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                border: '1.5px solid var(--border)',
+                background: 'var(--blush-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              {cat.image_url ? (
+                <img src={cat.image_url} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: '1.1rem' }}>{cat.icon}</span>
+              )}
+            </div>
+            {cat.name}
+          </span>
+        );
+
         return hasSubs ? (
           <button
             key={cat.id}
@@ -554,25 +614,12 @@ function MobileMenu({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '1rem 1.25rem',
+              padding: '0.75rem 1.25rem',
               borderBottom: '1px solid var(--border)',
               fontFamily: 'var(--font-body)',
             }}
           >
-            <span
-              style={{
-                fontSize: '0.88rem',
-                fontWeight: 500,
-                color: 'var(--text-dark)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.6rem',
-              }}
-            >
-              <span style={{ fontSize: '1.1rem' }}>{cat.icon}</span>
-              {cat.name}
-            </span>
-            {/* Only show arrow if has subcategories */}
+            {labelContent}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" strokeWidth="2">
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />
@@ -586,26 +633,12 @@ function MobileMenu({
             style={{
               display: 'flex',
               alignItems: 'center',
-              padding: '1rem 1.25rem',
+              padding: '0.75rem 1.25rem',
               borderBottom: '1px solid var(--border)',
               textDecoration: 'none',
             }}
           >
-            <span
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.88rem',
-                fontWeight: 500,
-                color: 'var(--text-dark)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.6rem',
-              }}
-            >
-              <span style={{ fontSize: '1.1rem' }}>{cat.icon}</span>
-              {cat.name}
-            </span>
-            {/* No arrow for categories without subcategories */}
+            {labelContent}
           </Link>
         );
       })}
