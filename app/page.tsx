@@ -578,12 +578,30 @@ function SectionHeader({ label, title }: { label: string; title: string }) {
   );
 }
 
+// CategoryLinks component
 function CategoryLinks({ categories }: { categories: Category[] }) {
+  const [showAll, setShowAll] = useState(false);
+
+  // Don't render anything until categories are loaded from API
+  if (categories.length === 0) return null;
+
+  const visibleCategories = showAll ? categories : categories.slice(0, 4);
+
   const categoryItems = [
-    ...categories
-      .slice(0, 4)
-      .map(cat => ({ id: cat.id, name: cat.name, href: `/category/${cat.slug}`, image_url: cat.image_url ?? null })),
-    { id: 'all', name: 'All', href: '/products', image_url: null },
+    ...visibleCategories.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      href: `/category/${cat.slug}`,
+      image_url: cat.image_url ?? null,
+      isButton: false,
+    })),
+    {
+      id: 'all',
+      name: showAll ? 'Show Less' : 'All',
+      href: '#',
+      image_url: null,
+      isButton: true,
+    },
   ];
 
   return (
@@ -600,8 +618,8 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
             gap: '1rem',
           }}
         >
-          {categoryItems.map((item, i) => (
-            <Link key={item.id} href={item.href} style={{ textDecoration: 'none' }}>
+          {categoryItems.map((item, i) => {
+            const inner = (
               <div
                 style={{
                   borderRadius: '6px',
@@ -622,7 +640,6 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                   (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
                 }}
               >
-                {/* Image or icon */}
                 <div
                   style={{
                     width: '100px',
@@ -647,21 +664,34 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                     <span style={{ fontSize: '2rem' }}>🛍️</span>
                   )}
                 </div>
-
                 <p
                   style={{
                     fontSize: '0.78rem',
                     fontWeight: 700,
                     letterSpacing: '0.04em',
                     textTransform: 'uppercase',
-                    color: 'var(--text-dark)',
+                    color: item.isButton ? 'var(--blush-deep)' : 'var(--text-dark)',
                   }}
                 >
                   {item.name}
                 </p>
               </div>
-            </Link>
-          ))}
+            );
+
+            return item.isButton ? (
+              <button
+                key={item.id}
+                onClick={() => setShowAll(prev => !prev)}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', width: '100%' }}
+              >
+                {inner}
+              </button>
+            ) : (
+              <Link key={item.id} href={item.href} style={{ textDecoration: 'none' }}>
+                {inner}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Mobile horizontal scroll */}
@@ -677,8 +707,8 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
           }}
         >
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'nowrap', width: 'max-content' }}>
-            {categoryItems.map((item, i) => (
-              <Link key={item.id} href={item.href} style={{ textDecoration: 'none' }}>
+            {categoryItems.map((item, i) => {
+              const inner = (
                 <div
                   style={{
                     flexShrink: 0,
@@ -706,7 +736,6 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                     (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
                   }}
                 >
-                  {/* Rounded image */}
                   <div
                     style={{
                       width: '100px',
@@ -731,22 +760,35 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                       <span style={{ fontSize: '1.5rem' }}>🛍️</span>
                     )}
                   </div>
-
                   <p
                     style={{
                       fontSize: '0.75rem',
                       fontWeight: 700,
                       letterSpacing: '0.04em',
                       textTransform: 'uppercase',
-                      color: 'var(--text-dark)',
+                      color: item.isButton ? 'var(--blush-deep)' : 'var(--text-dark)',
                       margin: 0,
                     }}
                   >
                     {item.name}
                   </p>
                 </div>
-              </Link>
-            ))}
+              );
+
+              return item.isButton ? (
+                <button
+                  key={item.id}
+                  onClick={() => setShowAll(prev => !prev)}
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                >
+                  {inner}
+                </button>
+              ) : (
+                <Link key={item.id} href={item.href} style={{ textDecoration: 'none' }}>
+                  {inner}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>
