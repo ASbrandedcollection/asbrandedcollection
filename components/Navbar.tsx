@@ -84,53 +84,99 @@ function SubcategoryCard({
   );
 }
 
-function TopBar() {
+function TickerTrack() {
   const { settings } = useSettings();
+
+  const items = [
+    {
+      icon: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.37 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.64a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+        </svg>
+      ),
+      label: settings.phone,
+    },
+    { icon: '✨', label: settings.tagline },
+    {
+      icon: '🚚',
+      label: `Free delivery above PKR ${parseInt(settings.free_delivery_threshold || '3000').toLocaleString()}`,
+    },
+  ];
+
+  const doubled = [...items, ...items];
+
   return (
-    <div style={{ background: 'var(--text-dark)', fontFamily: 'var(--font-body)' }}>
-      {/* Desktop */}
-      <div
-        className="topbar-desktop"
-        style={{
-          height: 'var(--topbar-height)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 2.5rem',
-          fontSize: '0.72rem',
-          color: 'rgba(255,255,255,0.85)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.37 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.64a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-          </svg>
-          <span>{settings.phone}</span>
-        </div>
-        <span style={{ fontWeight: 500, letterSpacing: '0.04em', textAlign: 'center', flex: 1, padding: '0 1rem' }}>
-          {settings.tagline}
-        </span>
-        <span style={{ flexShrink: 0 }}>
-          Free delivery on orders above PKR {parseInt(settings.free_delivery_threshold || '3000').toLocaleString()}
-        </span>
+    <div className="ticker-wrapper">
+      <div className="ticker-track">
+        {doubled.map((item, i) => (
+          <span key={i} className="ticker-item">
+            <span className="ticker-icon">{item.icon}</span>
+            {item.label}
+          </span>
+        ))}
       </div>
 
-      {/* Mobile — two lines, centered */}
-      <div
-        className="topbar-mobile"
-        style={{
-          display: 'none',
-          padding: '0.5rem 1rem',
-          textAlign: 'center',
-          fontSize: '0.7rem',
-          color: 'rgba(255,255,255,0.85)',
-        }}
-      >
-        <p style={{ fontWeight: 600, marginBottom: '0.15rem' }}>{settings.tagline}</p>
-        <p style={{ opacity: 0.8 }}>
-          Free delivery above PKR {parseInt(settings.free_delivery_threshold || '3000').toLocaleString()}
-        </p>
-      </div>
+      <style jsx>{`
+        .ticker-wrapper {
+          overflow: hidden;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+        }
+
+        .ticker-track {
+          display: flex;
+          white-space: nowrap;
+          animation: ticker-scroll 22s linear infinite;
+          will-change: transform;
+        }
+
+        .ticker-track:hover {
+          animation-play-state: paused;
+        }
+
+        .ticker-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          padding: 0 2.5rem;
+          font-size: 0.72rem;
+          color: rgba(255, 255, 255, 0.88);
+          border-right: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .ticker-icon {
+          font-size: 0.75rem;
+          display: inline-flex;
+          align-items: center;
+        }
+
+        @keyframes ticker-scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function TopBar() {
+  return (
+    <div
+      style={{
+        background: 'var(--text-dark)',
+        fontFamily: 'var(--font-body)',
+        height: 'var(--topbar-height)',
+        overflow: 'hidden',
+        padding: '.5rem 0',
+      }}
+    >
+      <TickerTrack />
     </div>
   );
 }
