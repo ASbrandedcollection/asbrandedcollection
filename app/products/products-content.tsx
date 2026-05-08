@@ -31,14 +31,8 @@ function ProductCard({ product }: { product: Product }) {
           (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
         }}
       >
-        {/* Image */}
         <div
-          style={{
-            width: '100%',
-            position: 'relative',
-            overflow: 'hidden',
-            background: 'var(--blush-light)',
-          }}
+          style={{ width: '100%', position: 'relative', overflow: 'hidden', background: 'var(--blush-light)' }}
           className="product-card-image"
         >
           {image ? (
@@ -86,7 +80,6 @@ function ProductCard({ product }: { product: Product }) {
           )}
         </div>
 
-        {/* Info */}
         <div className="product-card-info" style={{ padding: '0.6rem' }}>
           <p
             style={{
@@ -118,22 +111,12 @@ function ProductCard({ product }: { product: Product }) {
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
             <span
-              style={{
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: hasDiscount ? 'var(--blush-deep)' : 'var(--text-dark)',
-              }}
+              style={{ fontSize: '0.78rem', fontWeight: 600, color: hasDiscount ? 'var(--blush-deep)' : 'var(--text-dark)' }}
             >
               {formatPKR(finalPrice)}
             </span>
             {hasDiscount && (
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  color: 'var(--text-light)',
-                  textDecoration: 'line-through',
-                }}
-              >
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-light)', textDecoration: 'line-through' }}>
                 {formatPKR(product.price)}
               </span>
             )}
@@ -144,137 +127,6 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-// function ProductCard({ product }: { product: Product }) {
-//   const finalPrice = calcFinalPrice(product.price, product.discount_percent);
-//   const image = product.images?.find(i => i.is_primary)?.image_url ?? null;
-//   const hasDiscount = product.discount_percent > 0;
-
-//   return (
-//     <Link href={`/products/${product.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-//       <div
-//         style={{
-//           background: 'var(--white)',
-//           border: '1px solid var(--border)',
-//           overflow: 'hidden',
-//           transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-//           cursor: 'pointer',
-//           height: '100%',
-//         }}
-//         onMouseEnter={e => {
-//           (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)';
-//           (e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 32px rgba(0,0,0,0.08)';
-//         }}
-//         onMouseLeave={e => {
-//           (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
-//           (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
-//         }}
-//       >
-//         {/* Image */}
-//         <div
-//           style={{
-//             width: '100%',
-//             aspectRatio: '3/4',
-//             background: 'var(--blush-light)',
-//             position: 'relative',
-//             overflow: 'hidden',
-//           }}
-//         >
-//           {image ? (
-//             <img src={image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-//           ) : (
-//             <div
-//               style={{
-//                 width: '100%',
-//                 height: '100%',
-//                 display: 'flex',
-//                 flexDirection: 'column',
-//                 alignItems: 'center',
-//                 justifyContent: 'center',
-//                 gap: '0.5rem',
-//               }}
-//             >
-//               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--blush-deep)" strokeWidth="1.2">
-//                 <rect x="3" y="3" width="18" height="18" rx="2" />
-//                 <circle cx="8.5" cy="8.5" r="1.5" />
-//                 <polyline points="21 15 16 10 5 21" />
-//               </svg>
-//               <span style={{ fontSize: '0.65rem', color: 'var(--text-light)' }}>No image</span>
-//             </div>
-//           )}
-//           {hasDiscount && (
-//             <div
-//               style={{
-//                 position: 'absolute',
-//                 top: '10px',
-//                 left: '10px',
-//                 background: 'var(--blush-deep)',
-//                 color: 'var(--white)',
-//                 fontSize: '0.65rem',
-//                 fontWeight: 500,
-//                 letterSpacing: '0.04em',
-//                 padding: '3px 8px',
-//               }}
-//             >
-//               -{product.discount_percent}%
-//             </div>
-//           )}
-//         </div>
-
-//         {/* Info */}
-//         <div style={{ padding: '0.9rem' }}>
-//           <p
-//             style={{
-//               fontSize: '0.62rem',
-//               fontWeight: 500,
-//               letterSpacing: '0.1em',
-//               textTransform: 'uppercase',
-//               color: 'var(--text-light)',
-//               marginBottom: '0.3rem',
-//             }}
-//           >
-//             {product.category?.name}
-//           </p>
-//           <p
-//             style={{
-//               fontFamily: 'var(--font-display)',
-//               fontSize: '0.95rem',
-//               fontWeight: 400,
-//               color: 'var(--text-dark)',
-//               marginBottom: '0.5rem',
-//               lineHeight: 1.3,
-//             }}
-//           >
-//             {product.name}
-//           </p>
-//           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-//             <span
-//               style={{
-//                 fontSize: '0.88rem',
-//                 fontWeight: 500,
-//                 color: hasDiscount ? 'var(--blush-deep)' : 'var(--text-dark)',
-//               }}
-//             >
-//               {formatPKR(finalPrice)}
-//             </span>
-//             {hasDiscount && (
-//               <span
-//                 style={{
-//                   fontSize: '0.75rem',
-//                   color: 'var(--text-light)',
-//                   textDecoration: 'line-through',
-//                 }}
-//               >
-//                 {formatPKR(product.price)}
-//               </span>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-//     </Link>
-//   );
-// }
-
-// ── Main Page ─────────────────────────────────
 export default function ProductsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -285,45 +137,41 @@ export default function ProductsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  // Read filters from URL
   const currentCategory = searchParams.get('category') ?? '';
+  const currentSubcategory = searchParams.get('subcategory') ?? '';
   const currentSearch = searchParams.get('search') ?? '';
   const currentSort = searchParams.get('sort') ?? 'newest';
   const currentMinPrice = searchParams.get('min_price') ?? '';
   const currentMaxPrice = searchParams.get('max_price') ?? '';
   const currentPage = parseInt(searchParams.get('page') ?? '1');
 
-  // Local search input (not committed yet)
   const [searchInput, setSearchInput] = useState(currentSearch);
 
-  // Update URL params
+  // FIX: separate page updates from filter updates so page param isn't deleted
   const updateParams = useCallback(
-    (updates: Record<string, string>) => {
+    (updates: Record<string, string>, isPageChange = false) => {
       const params = new URLSearchParams(searchParams.toString());
       Object.entries(updates).forEach(([k, v]) => {
         if (v) params.set(k, v);
         else params.delete(k);
       });
-      params.delete('page'); // reset to page 1 on filter change
+      if (!isPageChange) params.delete('page'); // only reset page on filter changes
       router.push(`/products?${params.toString()}`);
     },
     [searchParams, router],
   );
 
-  // Fetch products
   useEffect(() => {
     setLoading(true);
     const params = new URLSearchParams();
     if (currentCategory) params.set('category', currentCategory);
+    if (currentSubcategory) params.set('subcategory', currentSubcategory);
     if (currentSearch) params.set('search', currentSearch);
     if (currentSort) params.set('sort', currentSort);
     if (currentMinPrice) params.set('min_price', currentMinPrice);
     if (currentMaxPrice) params.set('max_price', currentMaxPrice);
     params.set('page', currentPage.toString());
-    params.set('limit', '12');
-
-    const currentSubcategory = searchParams.get('subcategory') ?? '';
-    if (currentSubcategory) params.set('subcategory', currentSubcategory);
+    params.set('limit', '80');
 
     fetch(`/api/products?${params.toString()}`)
       .then(r => r.json())
@@ -335,9 +183,8 @@ export default function ProductsPage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [currentCategory, currentSearch, currentSort, currentMinPrice, currentMaxPrice, currentPage, searchParams]);
+  }, [currentCategory, currentSubcategory, currentSearch, currentSort, currentMinPrice, currentMaxPrice, currentPage]);
 
-  // Fetch categories for filter sidebar
   useEffect(() => {
     fetch('/api/categories')
       .then(r => r.json())
@@ -346,7 +193,12 @@ export default function ProductsPage() {
       });
   }, []);
 
-  const handleSearchSubmit = (e: React.SubmitEvent) => {
+  // Keep search input in sync when URL changes externally (e.g. back button)
+  useEffect(() => {
+    setSearchInput(currentSearch);
+  }, [currentSearch]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateParams({ search: searchInput });
   };
@@ -356,81 +208,84 @@ export default function ProductsPage() {
     router.push('/products');
   };
 
-  const currentSubcategory = searchParams.get('subcategory') ?? '';
   const hasFilters = currentCategory || currentSubcategory || currentSearch || currentMinPrice || currentMaxPrice;
+
+  const cat = categories.find(c => c.slug === currentCategory);
+  const sub = cat?.subcategories?.find(s => s.slug === currentSubcategory);
+
+  const pageTitle = currentSearch ? `Results for "${currentSearch}"` : (sub?.name ?? cat?.name ?? 'All Products');
+
+  const breadcrumb = sub ? `${cat?.name} › ${sub.name}` : (cat?.name ?? 'All Products');
+
+  // Shared search form — rendered in sidebar (desktop) and above grid (mobile)
+  const SearchForm = (
+    <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
+      <input
+        type="text"
+        value={searchInput}
+        onChange={e => setSearchInput(e.target.value)}
+        placeholder="Search products..."
+        style={{
+          flex: 1,
+          padding: '0.6rem 0.75rem',
+          border: '1px solid var(--border)',
+          background: 'var(--white)',
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.8rem',
+          color: 'var(--text-dark)',
+          outline: 'none',
+        }}
+        onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
+        onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+      />
+      <button
+        type="submit"
+        style={{
+          padding: '0.6rem 0.75rem',
+          background: 'var(--text-dark)',
+          border: 'none',
+          cursor: 'pointer',
+          color: 'var(--white)',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+      </button>
+    </form>
+  );
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--off-white)' }}>
       {/* Smart Back Button */}
-      {(() => {
-        // Determine where back should go
-        const subcat = searchParams.get('subcategory');
-        const cat = searchParams.get('category');
-        const catObj = categories.find(c => c.slug === cat);
-
-        let backHref = '/';
-        let backLabel = 'Home';
-
-        if (subcat && cat) {
-          // On subcategory → back goes to category
-          backHref = `/products?category=${cat}`;
-          backLabel = catObj?.name ?? 'Category';
-        } else if (cat) {
-          // On category → back goes to home
-          backHref = '/';
-          backLabel = 'Home';
-        } else if (currentSearch) {
-          // On search → back goes to all products
-          backHref = '/products';
-          backLabel = 'All Products';
-        } else {
-          // On all products → back goes to home
-          backHref = '/';
-          backLabel = 'Home';
-        }
-
-        return (
-          <div
-            style={{
-              background: 'var(--white)',
-              borderBottom: '1px solid var(--border)',
-              padding: '0.6rem 1.5rem',
-            }}
-          >
-            <Link
-              href={backHref}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                fontFamily: 'var(--font-body)',
-                fontSize: '0.8rem',
-                fontWeight: 500,
-                color: 'var(--text-mid)',
-                textDecoration: 'none',
-                transition: 'color 0.2s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--blush-deep)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-mid)')}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
-              {backLabel}
-            </Link>
-          </div>
-        );
-      })()}
+      <div style={{ background: 'var(--white)', borderBottom: '1px solid var(--border)', padding: '0.6rem 1.5rem' }}>
+        <Link
+          href={sub && currentCategory ? `/products?category=${currentCategory}` : currentSearch ? '/products' : '/'}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.8rem',
+            fontWeight: 500,
+            color: 'var(--text-mid)',
+            textDecoration: 'none',
+            transition: 'color 0.2s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'var(--blush-deep)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-mid)')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          {sub ? (cat?.name ?? 'Category') : currentSearch ? 'All Products' : 'Home'}
+        </Link>
+      </div>
 
       {/* Page Header */}
-      <div
-        style={{
-          background: 'var(--white)',
-          borderBottom: '1px solid var(--border)',
-          padding: '2rem 0',
-        }}
-      >
+      <div style={{ background: 'var(--white)', borderBottom: '1px solid var(--border)', padding: '2rem 0' }}>
         <div className="container">
           <p
             style={{
@@ -442,16 +297,8 @@ export default function ProductsPage() {
               marginBottom: '0.4rem',
             }}
           >
-            {(() => {
-              const currentSubcategory = searchParams.get('subcategory') ?? '';
-              const cat = categories.find(c => c.slug === currentCategory);
-              const sub = cat?.subcategories?.find(s => s.slug === currentSubcategory);
-              if (sub) return `${cat?.name} › ${sub.name}`;
-              if (cat) return cat.name;
-              return 'All Products';
-            })()}
+            {breadcrumb}
           </p>
-
           <div
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}
           >
@@ -463,17 +310,8 @@ export default function ProductsPage() {
                 color: 'var(--text-dark)',
               }}
             >
-              {(() => {
-                const currentSubcategory = searchParams.get('subcategory') ?? '';
-                const cat = categories.find(c => c.slug === currentCategory);
-                const sub = cat?.subcategories?.find(s => s.slug === currentSubcategory);
-                if (currentSearch) return `Results for "${currentSearch}"`;
-                if (sub) return sub.name;
-                if (cat) return cat.name;
-                return 'All Products';
-              })()}
+              {pageTitle}
             </h1>
-
             <p style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>
               {loading ? 'Loading...' : `${total} product${total !== 1 ? 's' : ''}`}
             </p>
@@ -482,18 +320,17 @@ export default function ProductsPage() {
       </div>
 
       <div className="container" style={{ padding: '2rem' }}>
+        {/* Mobile search bar — shown only on mobile */}
+        <div className="mobile-search" style={{ marginBottom: '1rem' }}>
+          {SearchForm}
+        </div>
+
         <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
-          {/* ── Sidebar ── */}
+          {/* Sidebar */}
           <aside
-            style={{
-              width: '220px',
-              flexShrink: 0,
-              position: 'sticky',
-              top: 'calc(var(--nav-height) + 1rem)',
-            }}
+            style={{ width: '220px', flexShrink: 0, position: 'sticky', top: 'calc(var(--nav-height) + 1rem)' }}
             className="filter-sidebar"
           >
-            {/* Search */}
             <div style={{ marginBottom: '1.5rem' }}>
               <p
                 style={{
@@ -507,47 +344,12 @@ export default function ProductsPage() {
               >
                 Search
               </p>
-              <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={e => setSearchInput(e.target.value)}
-                  placeholder="Search products..."
-                  style={{
-                    flex: 1,
-                    padding: '0.6rem 0.75rem',
-                    border: '1px solid var(--border)',
-                    background: 'var(--white)',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '0.8rem',
-                    color: 'var(--text-dark)',
-                    outline: 'none',
-                  }}
-                  onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
-                  onBlur={e => (e.target.style.borderColor = 'var(--border)')}
-                />
-                <button
-                  type="submit"
-                  style={{
-                    padding: '0.6rem 0.75rem',
-                    background: 'var(--text-dark)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--white)',
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.35-4.35" />
-                  </svg>
-                </button>
-              </form>
+              {SearchForm}
             </div>
 
             <div style={{ width: '100%', height: '1px', background: 'var(--border)', marginBottom: '1.5rem' }} />
 
-            {/* Categories + Subcategories filter */}
+            {/* Categories */}
             <div style={{ marginBottom: '1.5rem' }}>
               <p
                 style={{
@@ -580,14 +382,12 @@ export default function ProductsPage() {
                   All Categories
                 </button>
 
-                {categories.map(cat => {
-                  const isCatActive = currentCategory === cat.slug;
-                  const currentSubcategory = searchParams.get('subcategory') ?? '';
-
+                {categories.map(c => {
+                  const isCatActive = currentCategory === c.slug;
                   return (
-                    <div key={cat.id}>
+                    <div key={c.id}>
                       <button
-                        onClick={() => updateParams({ category: cat.slug, subcategory: '' })}
+                        onClick={() => updateParams({ category: c.slug, subcategory: '' })}
                         style={{
                           textAlign: 'left',
                           padding: '0.45rem 0.75rem',
@@ -605,17 +405,15 @@ export default function ProductsPage() {
                           gap: '0.4rem',
                         }}
                       >
-                        <span style={{ fontSize: '0.9rem' }}>{cat.icon}</span>
-                        {cat.name}
+                        <span style={{ fontSize: '0.9rem' }}>{c.icon}</span>
+                        {c.name}
                       </button>
-
-                      {/* Subcategories — only show if this category is selected */}
-                      {isCatActive && cat.subcategories && cat.subcategories.length > 0 && (
+                      {isCatActive && c.subcategories && c.subcategories.length > 0 && (
                         <div style={{ paddingLeft: '0.75rem', marginTop: '0.15rem' }}>
-                          {cat.subcategories.map(sub => (
+                          {c.subcategories.map(sub => (
                             <button
                               key={sub.id}
-                              onClick={() => updateParams({ category: cat.slug, subcategory: sub.slug })}
+                              onClick={() => updateParams({ category: c.slug, subcategory: sub.slug })}
                               style={{
                                 textAlign: 'left',
                                 padding: '0.35rem 0.75rem',
@@ -698,7 +496,6 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            {/* Clear filters */}
             {hasFilters && (
               <button
                 onClick={clearFilters}
@@ -730,7 +527,7 @@ export default function ProductsPage() {
             )}
           </aside>
 
-          {/* ── Main content ── */}
+          {/* Main content */}
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* Sort bar */}
             <div
@@ -764,17 +561,9 @@ export default function ProductsPage() {
               </select>
             </div>
 
-            {/* Products grid */}
             {loading ? (
-              <div
-                className="products-grid"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-                  gap: '1.25rem',
-                }}
-              >
-                {Array.from({ length: 8 }).map((_, i) => (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1.25rem' }}>
+                {Array.from({ length: 12 }).map((_, i) => (
                   <div
                     key={i}
                     style={{
@@ -831,51 +620,18 @@ export default function ProductsPage() {
               </div>
             ) : (
               <>
-                {/* Desktop grid */}
                 <div
-                  className="products-grid-desktop"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-                    gap: '1.25rem',
-                  }}
+                  className="products-grid" // add this
+                  style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1.25rem' }}
                 >
                   {products.map((product, i) => (
-                    <div key={product.id} style={{ animation: `fadeUp 0.4s ease ${i * 0.05}s both` }}>
+                    <div key={product.id} style={{ animation: `fadeUp 0.4s ease ${Math.min(i, 10) * 0.05}s both` }}>
                       <ProductCard product={product} />
                     </div>
                   ))}
                 </div>
 
-                {/* Mobile horizontal scroll */}
-                <div
-                  className="products-grid-mobile"
-                  style={{
-                    display: 'none',
-                    overflowX: 'auto',
-                    WebkitOverflowScrolling: 'touch' as any,
-                    scrollSnapType: 'x mandatory',
-                    gap: '0.75rem',
-                    paddingBottom: '0.5rem',
-                    // Hide scrollbar
-                  }}
-                >
-                  {products.map((product, i) => (
-                    <div
-                      key={product.id}
-                      style={{
-                        flexShrink: 0,
-                        width: '42vw',
-                        maxWidth: '180px',
-                        scrollSnapAlign: 'start',
-                      }}
-                    >
-                      <ProductCard product={product} />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Pagination */}
+                {/* Pagination — FIX: pass isPageChange=true */}
                 {totalPages > 1 && (
                   <div
                     style={{
@@ -884,10 +640,11 @@ export default function ProductsPage() {
                       alignItems: 'center',
                       gap: '0.5rem',
                       marginTop: '2.5rem',
+                      flexWrap: 'wrap',
                     }}
                   >
                     <button
-                      onClick={() => updateParams({ page: (currentPage - 1).toString() })}
+                      onClick={() => updateParams({ page: (currentPage - 1).toString() }, true)}
                       disabled={currentPage === 1}
                       style={{
                         padding: '0.5rem 1rem',
@@ -906,7 +663,7 @@ export default function ProductsPage() {
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                       <button
                         key={page}
-                        onClick={() => updateParams({ page: page.toString() })}
+                        onClick={() => updateParams({ page: page.toString() }, true)}
                         style={{
                           width: '36px',
                           height: '36px',
@@ -925,7 +682,7 @@ export default function ProductsPage() {
                     ))}
 
                     <button
-                      onClick={() => updateParams({ page: (currentPage + 1).toString() })}
+                      onClick={() => updateParams({ page: (currentPage + 1).toString() }, true)}
                       disabled={currentPage === totalPages}
                       style={{
                         padding: '0.5rem 1rem',
@@ -948,39 +705,20 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Mobile responsive */}
       <style>{`
-      @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; }
-      }
-      @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(12px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .product-card-image { aspect-ratio: 3/4; }
+        .mobile-search { display: none; }
 
-      /* Desktop image — tall portrait */
-      .product-card-image {
-        aspect-ratio: 3/4;
-      }
-
-      @media (max-width: 768px) {
-        .filter-sidebar { display: none !important; }
-        .products-grid-desktop { display: none !important; }
-        .products-grid-mobile { display: flex !important; }
-
-        /* Mobile image — square, compact */
-        .product-card-image {
-          aspect-ratio: 1/1;
+        @media (max-width: 768px) {
+          .filter-sidebar { display: none !important; }
+          .mobile-search { display: block !important; }
+          .product-card-image { aspect-ratio: 1/1; }
+          .product-card-info { padding: 0.4rem !important; }
+          .products-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
-        .product-card-info {
-          padding: 0.4rem !important;
-        }
-      }
-
-      .products-grid-mobile::-webkit-scrollbar { display: none; }
-      .products-grid-mobile { -ms-overflow-style: none; scrollbar-width: none; }
-  `}</style>
+      `}</style>
     </div>
   );
 }
