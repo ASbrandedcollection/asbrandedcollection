@@ -453,6 +453,31 @@ function MobileMenu({
             </svg>
             Back
           </button>
+
+          {/* Divider */}
+          <span style={{ width: '1px', height: '16px', background: 'var(--border)', flexShrink: 0 }} />
+
+          {/* Home button */}
+          <Link
+            href="/"
+            onClick={onClose}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              color: 'var(--blush-deep)',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
+              <polyline points="9 21 9 12 15 12 15 21" />
+            </svg>
+            Home
+          </Link>
           {/* Header: rounded image + name */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {activeCat.image_url ? (
@@ -564,6 +589,26 @@ function MobileMenu({
         overflowY: 'auto',
       }}
     >
+      {/* Home link */}
+      <Link
+        href="/"
+        onClick={onClose}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '1rem 1.25rem',
+          borderBottom: '1px solid var(--border)',
+          textDecoration: 'none',
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.9rem',
+          fontWeight: 600,
+          color: 'var(--text-dark)',
+        }}
+      >
+        Home
+      </Link>
+
       {/* All Products link */}
       <Link
         href="/products"
