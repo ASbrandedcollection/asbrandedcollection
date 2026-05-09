@@ -86,11 +86,10 @@ export default function CartPage() {
         </div>
       </div>
 
-      <div className="container" style={{ padding: '2rem' }}>
+      <div className="container" style={{ padding: '2rem 1rem' }}>
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 340px',
             gap: '2rem',
             alignItems: 'start',
           }}
@@ -98,8 +97,28 @@ export default function CartPage() {
         >
           {/* ── Cart items ── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Clear cart */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Link
+                href="/products"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.8rem',
+                  color: 'var(--text-mid)',
+                  textDecoration: 'none',
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--blush-deep)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-mid)')}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+                Continue Shopping
+              </Link>
+
               <button
                 onClick={clearCart}
                 style={{
@@ -305,30 +324,6 @@ export default function CartPage() {
                 </div>
               </div>
             ))}
-
-            {/* Continue shopping */}
-            <div style={{ marginTop: '0.5rem' }}>
-              <Link
-                href="/products"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontSize: '0.8rem',
-                  color: 'var(--text-mid)',
-                  textDecoration: 'none',
-                  transition: 'color 0.2s',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'var(--blush-deep)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-mid)')}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="19" y1="12" x2="5" y2="12" />
-                  <polyline points="12 19 5 12 12 5" />
-                </svg>
-                Continue Shopping
-              </Link>
-            </div>
           </div>
 
           {/* ── Order Summary ── */}
@@ -465,9 +460,25 @@ export default function CartPage() {
       </div>
 
       <style>{`
-        @media (max-width: 768px) {
-          .cart-grid { grid-template-columns: 1fr !important; }
+        .cart-grid {
+          grid-template-columns: 1fr 340px;
         }
+        @media (max-width: 768px) {
+          .cart-grid {
+            grid-template-columns: 1fr;
+          }
+        .cart-grid > * {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+        }
+        .cart-grid > div > div {
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+      }
       `}</style>
     </div>
   );
