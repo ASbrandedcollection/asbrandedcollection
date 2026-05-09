@@ -5,12 +5,13 @@ import { useCart } from '@/lib/cart-context';
 import { calcFinalPrice, formatPKR } from '@/lib/utils';
 import type { Product } from '@/types';
 import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { addItem, isInCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -50,6 +51,22 @@ export default function ProductDetailPage() {
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    const finalPrice = calcFinalPrice(product.price, product.discount_percent);
+    addItem({
+      product_id: product.id,
+      name: product.name,
+      slug: product.slug,
+      image_url: selectedImage,
+      unit_price: finalPrice,
+      original_price: product.price,
+      discount_percent: product.discount_percent,
+      quantity: 1,
+    });
+    router.push('/cart');
   };
 
   // ── Loading ───────────────────────────────────
@@ -554,6 +571,50 @@ export default function ProductDetailPage() {
               )}
             </div>
 
+            {/* Buy Now button — only when in stock */}
+            {!outOfStock && (
+              <button
+                onClick={handleBuyNow}
+                className="btn-buy-now"
+                style={{
+                  marginTop: '1rem',
+                  width: '100%',
+                  padding: '0.9rem 2rem',
+                  background: 'linear-gradient(135deg, var(--blush-deep) 0%, #c2185b 100%)',
+                  color: 'var(--white)',
+                  border: 'none',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  fontFamily: 'var(--font-body)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  animation: 'buyNowBounce 1.8s ease-in-out infinite',
+                  boxShadow: '0 4px 15px rgba(194, 24, 91, 0.35)',
+                  transition: 'box-shadow 0.2s, transform 0.2s',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.animationPlayState = 'paused';
+                  (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 8px 24px rgba(194, 24, 91, 0.5)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.animationPlayState = 'running';
+                  (e.currentTarget as HTMLButtonElement).style.transform = '';
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 15px rgba(194, 24, 91, 0.35)';
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+                Buy Now
+              </button>
+            )}
+
             <div style={{ width: '100%', height: '1px', background: 'var(--border)', margin: '1.5rem 0' }} />
 
             {/* Meta info */}
@@ -581,6 +642,13 @@ export default function ProductDetailPage() {
       <style>{`
         @media (max-width: 768px) {
           .product-grid { grid-template-columns: 1fr !important; }
+        }
+          
+        @keyframes buyNowBounce {
+          0%, 100% { transform: translateY(0px); }
+          30%       { transform: translateY(-5px); }
+          60%       { transform: translateY(-2px); }
+          80%       { transform: translateY(-4px); }
         }
       `}</style>
     </div>
