@@ -1,10 +1,12 @@
 'use client';
 
 import { SocialIcon, SocialPlatform } from '@/components/SocialIcons';
+import { useCart } from '@/lib/cart-context';
 import { useSettings } from '@/lib/use-settings';
 import { calcFinalPrice, formatPKR } from '@/lib/utils';
 import type { Banner, BrandItem, Category, Deal, Product } from '@/types';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 function ProductCard({ product }: { product: Product }) {
@@ -1578,7 +1580,9 @@ function BrandsSection({ brands }: { brands: BrandItem[] }) {
           style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'center', alignItems: 'center' }}
         >
           {brands.map(brand => (
-            <BrandCard key={brand.id} brand={brand} />
+            <Link key={brand.id} href={`/products?category=brands&subcategory=${brand.slug}`}>
+              <BrandCard key={brand.id} brand={brand} />
+            </Link>
           ))}
         </div>
 
@@ -1595,7 +1599,9 @@ function BrandsSection({ brands }: { brands: BrandItem[] }) {
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'nowrap', width: 'max-content', padding: '0 1rem' }}>
             {brands.map(brand => (
               <div key={brand.id} style={{ scrollSnapAlign: 'start', flexShrink: 0 }}>
-                <BrandCard brand={brand} />
+                <Link href={`/products?category=brands&subcategory=${brand.slug}`}>
+                  <BrandCard brand={brand} />
+                </Link>
               </div>
             ))}
           </div>
@@ -1669,6 +1675,27 @@ function DealsSection({ deals }: { deals: Deal[] }) {
 }
 
 function DealCard({ deal }: { deal: Deal }) {
+  const { addItem } = useCart(); // whatever your cart hook is
+  const router = useRouter();
+
+  const handleShopDeal = () => {
+    const products = deal.deal_products.map(dp => dp.product);
+    products.forEach(product => {
+      const image = product.images?.find(img => img.is_primary)?.image_url ?? null;
+      addItem({
+        product_id: product.id,
+        name: product.name,
+        slug: product.slug,
+        image_url: image,
+        unit_price: deal.deal_price / products.length, // split deal price equally
+        original_price: product.price,
+        discount_percent: product.discount_percent,
+        quantity: 1,
+      });
+    });
+    router.push('/cart');
+  };
+
   const products = deal.deal_products?.map(dp => dp.product).filter(Boolean) ?? [];
   const originalTotal = products.reduce((sum, p) => sum + (p.price ?? 0), 0);
   const savings = originalTotal - deal.deal_price;
@@ -1850,13 +1877,31 @@ function DealCard({ deal }: { deal: Deal }) {
               )}
             </div>
           </div>
-          <Link
-            href="/products"
+
+          <button
+            onClick={handleShopDeal}
             className="btn-primary"
-            style={{ minWidth: '140px', justifyContent: 'center', textAlign: 'center' }}
+            style={{
+              minWidth: '140px',
+              justifyContent: 'center',
+              textAlign: 'center',
+              animation: 'buyNowBounce 1.8s ease-in-out infinite',
+              boxShadow: '0 4px 15px rgba(194, 24, 91, 0.35)',
+              background: 'linear-gradient(135deg, var(--blush-deep) 0%, #c2185b 100%)',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.animationPlayState = 'paused';
+              (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.animationPlayState = 'running';
+              (e.currentTarget as HTMLButtonElement).style.transform = '';
+            }}
           >
             Shop This Deal
-          </Link>
+          </button>
         </div>
       </div>
     </div>
