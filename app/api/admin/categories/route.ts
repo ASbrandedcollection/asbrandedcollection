@@ -1,5 +1,3 @@
-// GET    /api/admin/categories — All categories (including inactive)
-// POST   /api/admin/categories — Create new category
 import { requireAdmin } from '@/lib/admin-auth';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { toSlug } from '@/lib/utils';
