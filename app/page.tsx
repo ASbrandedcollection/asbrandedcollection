@@ -1883,7 +1883,6 @@ export default function HomePage() {
         ]);
 
         if (catRes.success) setCategories(catRes.data);
-
         if (prodRes.success) setNewArrivals(prodRes.data.data);
         if (saleRes.success) setOnSale(saleRes.data.data);
         if (dealsRes.success) setDeals(dealsRes.data);
@@ -1909,8 +1908,8 @@ export default function HomePage() {
         ))}
 
       {onSale.length > 0 && <ProductsGrid label="Special Offers" title="On Sale" products={onSale} bg="var(--off-white)" />}
-      <DealsSection deals={deals} />
-      <BrandsSection brands={brands} />
+      {deals.length > 0 && <DealsSection deals={deals} />}
+      {brands.length > 0 && <BrandsSection brands={brands} />}
       <StatsSection />
       <AboutSection />
       <Footer categories={categories} />

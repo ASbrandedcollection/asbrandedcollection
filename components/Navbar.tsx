@@ -735,7 +735,7 @@ export default function Navbar() {
           boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
         }}
       >
-        {/* ✅ NORMAL NAV (only when menu CLOSED) */}
+        {/* NORMAL NAV (only when menu CLOSED) */}
         {!menuOpen && (
           <>
             {/* Left: hamburger */}
@@ -907,7 +907,7 @@ export default function Navbar() {
           </>
         )}
 
-        {/* ✅ ONLY CROSS BUTTON (when menu OPEN) */}
+        {/* ONLY CROSS BUTTON (when menu OPEN) */}
         {/* {menuOpen && (
           <div
             style={{
