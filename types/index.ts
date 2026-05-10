@@ -53,6 +53,35 @@ export interface Product {
   rating_avg: number;
 }
 
+export interface Brand {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  website_url: string | null;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export interface DealProduct {
+  product: {
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    discount_percent: number;
+    images: { image_url: string; is_primary: boolean }[];
+  };
+}
+
+export interface Deal {
+  id: string;
+  title: string;
+  deal_price: number;
+  is_active: boolean;
+  sort_order: number;
+  deal_products: DealProduct[];
+}
+
 export interface Review {
   id: string;
   product_id: string;
