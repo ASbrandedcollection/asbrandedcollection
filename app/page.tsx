@@ -3,7 +3,7 @@
 import { SocialIcon, SocialPlatform } from '@/components/SocialIcons';
 import { useSettings } from '@/lib/use-settings';
 import { calcFinalPrice, formatPKR } from '@/lib/utils';
-import type { Banner, Category, Product, Deal, Brand } from '@/types';
+import type { Banner, Brand, Category, Deal, Product } from '@/types';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
