@@ -12,6 +12,8 @@ export async function GET(req: NextRequest) {
     const sort = searchParams.get('sort') ?? 'newest';
     const minPrice = searchParams.get('min_price') ?? '';
     const maxPrice = searchParams.get('max_price') ?? '';
+    const discount = searchParams.get('discount') ?? '';
+
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '80')));
     const offset = (page - 1) * limit;
@@ -52,6 +54,7 @@ export async function GET(req: NextRequest) {
 
     if (minPrice) query = query.gte('price', parseFloat(minPrice));
     if (maxPrice) query = query.lte('price', parseFloat(maxPrice));
+    if (discount) query = query.gt('discount_percent', 0);
 
     switch (sort) {
       case 'price_asc':
