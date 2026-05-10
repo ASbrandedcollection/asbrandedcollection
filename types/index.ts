@@ -53,13 +53,10 @@ export interface Product {
   rating_avg: number;
 }
 
-export interface Brand {
+export interface BrandItem {
   id: string;
   name: string;
-  logo_url: string | null;
-  website_url: string | null;
-  sort_order: number;
-  is_active: boolean;
+  image_url: string | null;
 }
 
 export interface DealProduct {

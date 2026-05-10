@@ -3,7 +3,7 @@
 import { SocialIcon, SocialPlatform } from '@/components/SocialIcons';
 import { useSettings } from '@/lib/use-settings';
 import { calcFinalPrice, formatPKR } from '@/lib/utils';
-import type { Banner, Brand, Category, Deal, Product } from '@/types';
+import type { Banner, BrandItem, Category, Deal, Product } from '@/types';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -1565,37 +1565,60 @@ function EmptyState() {
   );
 }
 
-function BrandsSection({ brands }: { brands: Brand[] }) {
+function BrandsSection({ brands }: { brands: BrandItem[] }) {
   if (brands.length === 0) return null;
   return (
     <section style={{ padding: '3rem 0', background: 'var(--white)', borderTop: '1px solid var(--border)' }}>
       <div className="container">
         <SectionHeader label="Trusted Names" title="Our Brands" />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'center', alignItems: 'center' }}>
-          {brands.map(brand =>
-            brand.website_url ? (
-              <a
-                key={brand.id}
-                href={brand.website_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: 'none' }}
-              >
-                <BrandCard brand={brand} />
-              </a>
-            ) : (
-              <div key={brand.id}>
+
+        {/* Desktop */}
+        <div
+          className="brands-desktop"
+          style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'center', alignItems: 'center' }}
+        >
+          {brands.map(brand => (
+            <BrandCard key={brand.id} brand={brand} />
+          ))}
+        </div>
+
+        {/* Mobile horizontal scroll */}
+        <div
+          className="brands-mobile"
+          style={{
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch' as any,
+            scrollSnapType: 'x mandatory',
+            paddingBottom: '0.5rem',
+          }}
+        >
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'nowrap', width: 'max-content', padding: '0 1rem' }}>
+            {brands.map(brand => (
+              <div key={brand.id} style={{ scrollSnapAlign: 'start', flexShrink: 0 }}>
                 <BrandCard brand={brand} />
               </div>
-            ),
-          )}
+            ))}
+          </div>
         </div>
       </div>
+
+      <style>{`
+        @media (min-width: 769px) {
+          .brands-desktop { display: flex !important; }
+          .brands-mobile { display: none !important; }
+        }
+        @media (max-width: 768px) {
+          .brands-desktop { display: none !important; }
+          .brands-mobile { display: flex !important; }
+          .brands-mobile::-webkit-scrollbar { display: none; }
+          .brands-mobile { -ms-overflow-style: none; scrollbar-width: none; }
+        }
+      `}</style>
     </section>
   );
 }
 
-function BrandCard({ brand }: { brand: Brand }) {
+function BrandCard({ brand }: { brand: BrandItem }) {
   return (
     <div
       style={{
@@ -1620,8 +1643,8 @@ function BrandCard({ brand }: { brand: Brand }) {
         (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
       }}
     >
-      {brand.logo_url ? (
-        <img src={brand.logo_url} alt={brand.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+      {brand.image_url ? (
+        <img src={brand.image_url} alt={brand.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
       ) : (
         <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-dark)', textAlign: 'center' }}>{brand.name}</p>
       )}
@@ -1700,7 +1723,9 @@ function DealCard({ deal }: { deal: Deal }) {
             gap: '1rem',
             alignItems: 'stretch',
             marginBottom: '1.5rem',
-            flexWrap: 'wrap',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch' as any,
+            paddingBottom: '0.25rem',
           }}
         >
           {products.map((product, i) => {
@@ -1843,7 +1868,7 @@ export default function HomePage() {
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [onSale, setOnSale] = useState<Product[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brands, setBrands] = useState<BrandItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -1854,7 +1879,7 @@ export default function HomePage() {
           fetch('/api/products?limit=20&sort=newest').then(r => r.json()),
           fetch('/api/products?limit=4&discount=true').then(r => r.json()),
           fetch('/api/deals').then(r => r.json()),
-          fetch('/api/brands').then(r => r.json()),
+          fetch('/api/subcategories?category=brands').then(r => r.json()),
         ]);
 
         if (catRes.success) setCategories(catRes.data);
