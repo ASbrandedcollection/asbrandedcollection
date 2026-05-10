@@ -49,6 +49,8 @@ export interface Product {
   subcategory?: Subcategory;
   images?: ProductImage[];
   final_price?: number;
+  review_count: number;
+  rating_avg: number;
 }
 
 export interface Review {

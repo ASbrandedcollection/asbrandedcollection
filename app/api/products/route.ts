@@ -23,7 +23,8 @@ export async function GET(req: NextRequest) {
         id, name, slug, price, discount_percent, is_active, created_at,
         category:categories!products_category_id_fkey(id, name, slug),
         subcategory:subcategories!products_subcategory_id_fkey(id, name, slug),
-        images:product_images(image_url, is_primary)
+        images:product_images(image_url, is_primary),
+        reviews:reviews(rating)
         `,
         { count: 'exact' },
       )
@@ -75,10 +76,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
+    const enriched = (data ?? []).map((product: any) => {
+      const reviews = product.reviews ?? [];
+      const review_count = reviews.length;
+      const rating_avg = review_count > 0 ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / review_count : 0;
+      const { reviews: _, ...rest } = product;
+      return { ...rest, review_count, rating_avg };
+    });
+
     return NextResponse.json({
       success: true,
       data: {
-        data: data ?? [],
+        data: enriched,
         total: count ?? 0,
         page,
         limit,
