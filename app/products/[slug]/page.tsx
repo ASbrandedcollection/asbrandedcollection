@@ -620,6 +620,7 @@ export default function ProductDetailPage() {
             {/* Meta info */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {[
+                { label: 'SKU', value: product.sku },
                 { label: 'Category', value: product.category?.name },
                 { label: 'Availability', value: outOfStock ? 'Out of Stock' : 'In Stock' },
                 { label: 'Payment', value: 'Cash on Delivery' },
@@ -628,7 +629,9 @@ export default function ProductDetailPage() {
                   value && (
                     <div key={label} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.8rem' }}>
                       <span style={{ color: 'var(--text-light)', minWidth: '90px' }}>{label}:</span>
-                      <span style={{ color: 'var(--text-mid)' }}>{value}</span>
+                      <span style={{ color: 'var(--text-mid)', fontFamily: label === 'SKU' ? 'monospace' : 'inherit' }}>
+                        {value}
+                      </span>
                     </div>
                   ),
               )}

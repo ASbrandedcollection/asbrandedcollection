@@ -36,6 +36,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (body.stock_qty !== undefined) updates.stock_qty = parseInt(body.stock_qty);
   if (body.is_active !== undefined) updates.is_active = body.is_active;
   if (body.subcategory_id !== undefined) updates.subcategory_id = body.subcategory_id || null;
+  if (body.sku !== undefined) updates.sku = body.sku?.trim() || null;
 
   const { data, error } = await supabaseAdmin.from('products').update(updates).eq('id', id).select().single();
 

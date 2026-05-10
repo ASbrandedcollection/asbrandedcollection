@@ -15,6 +15,7 @@ const emptyForm = {
   discount_percent: '0',
   stock_qty: '0',
   is_active: true,
+  sku: '',
 };
 
 export default function AdminProductsPage() {
@@ -90,6 +91,7 @@ export default function AdminProductsPage() {
       discount_percent: product.discount_percent.toString(),
       stock_qty: product.stock_qty.toString(),
       is_active: product.is_active,
+      sku: product.sku ?? '',
     });
     setEditingProduct(product);
     setImageFile(null);
@@ -157,6 +159,7 @@ export default function AdminProductsPage() {
       discount_percent: parseFloat(form.discount_percent),
       stock_qty: parseInt(form.stock_qty),
       is_active: form.is_active,
+      sku: form.sku.trim() || null,
     };
 
     let productId = editingProduct?.id;
@@ -780,6 +783,23 @@ export default function AdminProductsPage() {
                   onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
                   onBlur={e => (e.target.style.borderColor = 'var(--border)')}
                 />
+              </div>
+
+              {/* SKU */}
+              <div>
+                <label style={labelStyle}>SKU (optional)</label>
+                <input
+                  type="text"
+                  value={form.sku}
+                  onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
+                  placeholder="e.g. AS-LPS-001"
+                  style={inputStyle}
+                  onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
+                  onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+                />
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginTop: '0.3rem' }}>
+                  Unique identifier for inventory tracking
+                </p>
               </div>
 
               {/* Description */}
