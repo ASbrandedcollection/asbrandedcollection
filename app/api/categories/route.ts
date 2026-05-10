@@ -1,4 +1,3 @@
-// GET /api/categories — Returns active categories ordered for nav menu
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 
