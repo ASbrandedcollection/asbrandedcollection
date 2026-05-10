@@ -3,7 +3,7 @@
 import { SocialIcon, SocialPlatform } from '@/components/SocialIcons';
 import { useSettings } from '@/lib/use-settings';
 import { calcFinalPrice, formatPKR } from '@/lib/utils';
-import type { Banner, Category, Product } from '@/types';
+import type { Banner, Category, Product, Deal, Brand } from '@/types';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -1565,27 +1565,304 @@ function EmptyState() {
   );
 }
 
+function BrandsSection({ brands }: { brands: Brand[] }) {
+  if (brands.length === 0) return null;
+  return (
+    <section style={{ padding: '3rem 0', background: 'var(--white)', borderTop: '1px solid var(--border)' }}>
+      <div className="container">
+        <SectionHeader label="Trusted Names" title="Our Brands" />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'center', alignItems: 'center' }}>
+          {brands.map(brand =>
+            brand.website_url ? (
+              <a
+                key={brand.id}
+                href={brand.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'none' }}
+              >
+                <BrandCard brand={brand} />
+              </a>
+            ) : (
+              <div key={brand.id}>
+                <BrandCard brand={brand} />
+              </div>
+            ),
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BrandCard({ brand }: { brand: Brand }) {
+  return (
+    <div
+      style={{
+        width: '140px',
+        height: '80px',
+        border: '1px solid var(--border)',
+        borderRadius: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0.75rem',
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+        background: 'var(--white)',
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--blush-deep)';
+        (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)';
+        (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+      }}
+    >
+      {brand.logo_url ? (
+        <img src={brand.logo_url} alt={brand.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+      ) : (
+        <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-dark)', textAlign: 'center' }}>{brand.name}</p>
+      )}
+    </div>
+  );
+}
+
+function DealsSection({ deals }: { deals: Deal[] }) {
+  if (deals.length === 0) return null;
+  return (
+    <section style={{ padding: '3.5rem 0', background: 'var(--off-white)' }}>
+      <div className="container">
+        <SectionHeader label="Limited Time" title="Bundle Deals" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {deals.map(deal => (
+            <DealCard key={deal.id} deal={deal} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DealCard({ deal }: { deal: Deal }) {
+  const products = deal.deal_products?.map(dp => dp.product).filter(Boolean) ?? [];
+  const originalTotal = products.reduce((sum, p) => sum + (p.price ?? 0), 0);
+  const savings = originalTotal - deal.deal_price;
+
+  return (
+    <div
+      style={{
+        background: 'var(--white)',
+        border: '2px solid var(--blush)',
+        borderRadius: '10px',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      {/* Deal badge */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '1rem',
+          right: '1rem',
+          background: 'var(--blush-deep)',
+          color: 'white',
+          fontSize: '0.72rem',
+          fontWeight: 700,
+          padding: '4px 10px',
+          borderRadius: '20px',
+          letterSpacing: '0.05em',
+          textTransform: 'uppercase',
+          zIndex: 1,
+        }}
+      >
+        Bundle Deal
+      </div>
+
+      <div style={{ padding: '1.5rem' }}>
+        <h3
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.2rem',
+            fontWeight: 700,
+            color: 'var(--text-dark)',
+            marginBottom: '1.25rem',
+          }}
+        >
+          {deal.title}
+        </h3>
+
+        {/* Products side by side */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '1rem',
+            alignItems: 'stretch',
+            marginBottom: '1.5rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          {products.map((product, i) => {
+            const image = product.images?.find((img: any) => img.is_primary)?.image_url ?? null;
+            return (
+              <div key={product.id} style={{ display: 'contents' }}>
+                <Link href={`/products/${product.slug}`} style={{ textDecoration: 'none', flex: '1', minWidth: '140px' }}>
+                  <div
+                    style={{
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      height: '100%',
+                      transition: 'box-shadow 0.2s',
+                    }}
+                    onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)')}
+                    onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.boxShadow = 'none')}
+                  >
+                    <div style={{ height: '140px', background: 'var(--blush-light)', overflow: 'hidden' }}>
+                      {image ? (
+                        <img src={image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <span style={{ fontSize: '2rem' }}>🛍️</span>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding: '0.75rem' }}>
+                      <p
+                        style={{
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: 'var(--text-dark)',
+                          marginBottom: '0.3rem',
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {product.name}
+                      </p>
+                      <p style={{ fontSize: '0.78rem', color: 'var(--text-light)', textDecoration: 'line-through' }}>
+                        PKR {product.price?.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+
+                {/* Plus sign between products */}
+                {i < products.length - 1 && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      width: '32px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        background: 'var(--blush-light)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1rem',
+                        color: 'var(--blush-deep)',
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      +
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Pricing row */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            padding: '1rem',
+            background: 'var(--blush-light)',
+            borderRadius: '8px',
+          }}
+        >
+          <div>
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-mid)', marginBottom: '0.2rem' }}>
+              Original: <span style={{ textDecoration: 'line-through' }}>PKR {originalTotal.toLocaleString()}</span>
+            </p>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.4rem',
+                  fontWeight: 700,
+                  color: 'var(--blush-deep)',
+                }}
+              >
+                PKR {deal.deal_price.toLocaleString()}
+              </span>
+              {savings > 0 && (
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#10b981' }}>
+                  Save PKR {savings.toLocaleString()}
+                </span>
+              )}
+            </div>
+          </div>
+          <Link
+            href="/products"
+            className="btn-primary"
+            style={{ minWidth: '140px', justifyContent: 'center', textAlign: 'center' }}
+          >
+            Shop This Deal
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [onSale, setOnSale] = useState<Product[]>([]);
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const [catRes, prodRes] = await Promise.all([
+        const [catRes, prodRes, saleRes, dealsRes, brandsRes] = await Promise.all([
           fetch('/api/categories').then(r => r.json()),
           fetch('/api/products?limit=20&sort=newest').then(r => r.json()),
+          fetch('/api/products?limit=4&discount=true').then(r => r.json()),
+          fetch('/api/deals').then(r => r.json()),
+          fetch('/api/brands').then(r => r.json()),
         ]);
 
         if (catRes.success) setCategories(catRes.data);
 
-        if (prodRes.success) {
-          const products: Product[] = prodRes.data.data;
-          setNewArrivals(products);
-          setOnSale(products.filter((p: Product) => p.discount_percent > 0).slice(0, 4));
-        }
+        if (prodRes.success) setNewArrivals(prodRes.data.data);
+        if (saleRes.success) setOnSale(saleRes.data.data);
+        if (dealsRes.success) setDeals(dealsRes.data);
+        if (brandsRes.success) setBrands(brandsRes.data);
       } finally {
         setLoading(false);
       }
@@ -1607,7 +1884,8 @@ export default function HomePage() {
         ))}
 
       {onSale.length > 0 && <ProductsGrid label="Special Offers" title="On Sale" products={onSale} bg="var(--off-white)" />}
-
+      <DealsSection deals={deals} />
+      <BrandsSection brands={brands} />
       <StatsSection />
       <AboutSection />
       <Footer categories={categories} />
