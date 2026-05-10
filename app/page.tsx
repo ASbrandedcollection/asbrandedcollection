@@ -108,6 +108,34 @@ function ProductCard({ product }: { product: Product }) {
           >
             {product.name}
           </p>
+
+          {/* Stars + review count */}
+          {(product.review_count ?? 0) > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+              <div style={{ display: 'flex', gap: '1px' }}>
+                {[1, 2, 3, 4, 5].map(star => {
+                  const fill = Math.min(1, Math.max(0, (product.rating_avg ?? 0) - (star - 1)));
+                  return (
+                    <svg key={star} width="10" height="10" viewBox="0 0 24 24">
+                      <defs>
+                        <linearGradient id={`star-${product.id}-${star}`}>
+                          <stop offset={`${fill * 100}%`} stopColor="var(--blush-deep)" />
+                          <stop offset={`${fill * 100}%`} stopColor="#e5e7eb" />
+                        </linearGradient>
+                      </defs>
+                      <polygon
+                        points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
+                        fill={`url(#star-${product.id}-${star})`}
+                        stroke="none"
+                      />
+                    </svg>
+                  );
+                })}
+              </div>
+              <span style={{ fontSize: '0.6rem', color: 'var(--text-light)' }}>({product.review_count})</span>
+            </div>
+          )}
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span
               style={{
