@@ -272,138 +272,151 @@ function BannerSlider() {
   const banner = banners[current];
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        width: '100%',
-        height: 'clamp(300px, 50vh, 520px)',
-        overflow: 'hidden',
-        background: 'var(--off-white)',
-      }}
-    >
-      <img
-        src={banner.image_url}
-        alt={banner.title ?? 'Banner'}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.5s ease' }}
-      />
+    <div className="banner-wrapper">
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: 'clamp(300px, 50vh, 520px)',
+          overflow: 'hidden',
+          background: 'var(--off-white)',
+          borderRadius: '12px',
+        }}
+      >
+        <img
+          src={banner.image_url}
+          alt={banner.title ?? 'Banner'}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.5s ease' }}
+        />
 
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
 
-      {banner.title && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0 2rem',
-          }}
-        >
-          <div style={{ textAlign: 'center', animation: 'fadeUp 0.5s ease' }}>
-            <h1
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(1.8rem, 4vw, 3rem)',
-                fontWeight: 700,
-                color: 'white',
-                lineHeight: 1.2,
-                marginBottom: '1.25rem',
-                textShadow: '0 2px 12px rgba(0,0,0,0.3)',
-              }}
-            >
-              {banner.title}
-            </h1>
-            {banner.link_url && (
-              <Link
-                href={banner.link_url}
-                className="btn-primary"
-                style={{ background: 'white', color: 'var(--text-dark)', borderColor: 'white' }}
-              >
-                Shop Now
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
-
-      {banners.length > 1 && (
-        <>
-          <button
-            onClick={prev}
-            style={{
-              position: 'absolute',
-              left: '1.5rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'rgba(255,255,255,0.85)',
-              border: 'none',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              color: 'var(--text-dark)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-            }}
-          >
-            ←
-          </button>
-          <button
-            onClick={next}
-            style={{
-              position: 'absolute',
-              right: '1.5rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'rgba(255,255,255,0.85)',
-              border: 'none',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              color: 'var(--text-dark)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-            }}
-          >
-            →
-          </button>
+        {banner.title && (
           <div
             style={{
               position: 'absolute',
-              bottom: '1.25rem',
-              left: '50%',
-              transform: 'translateX(-50%)',
+              inset: 0,
               display: 'flex',
-              gap: '0.5rem',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 clamp(1.5rem, 6vw, 4rem)',
             }}
           >
-            {banners.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrent(i)}
+            <div style={{ textAlign: 'center', animation: 'fadeUp 0.5s ease' }}>
+              <h1
                 style={{
-                  width: i === current ? '24px' : '8px',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: i === current ? 'white' : 'rgba(255,255,255,0.5)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  padding: 0,
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'clamp(1.8rem, 4vw, 3rem)',
+                  fontWeight: 700,
+                  color: 'white',
+                  lineHeight: 1.2,
+                  marginBottom: '1.25rem',
+                  textShadow: '0 2px 12px rgba(0,0,0,0.3)',
                 }}
-              />
-            ))}
+              >
+                {banner.title}
+              </h1>
+              {banner.link_url && (
+                <Link
+                  href={banner.link_url}
+                  className="btn-primary"
+                  style={{ background: 'white', color: 'var(--text-dark)', borderColor: 'white' }}
+                >
+                  Shop Now
+                </Link>
+              )}
+            </div>
           </div>
-        </>
-      )}
+        )}
+
+        {banners.length > 1 && (
+          <>
+            <button
+              onClick={prev}
+              style={{
+                position: 'absolute',
+                left: 'clamp(0.75rem, 3vw, 1.5rem)',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'rgba(255,255,255,0.85)',
+                border: 'none',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                color: 'var(--text-dark)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              }}
+            >
+              ←
+            </button>
+            <button
+              onClick={next}
+              style={{
+                position: 'absolute',
+                right: 'clamp(0.75rem, 3vw, 1.5rem)',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'rgba(255,255,255,0.85)',
+                border: 'none',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                color: 'var(--text-dark)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              }}
+            >
+              →
+            </button>
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '1.25rem',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                gap: '0.5rem',
+              }}
+            >
+              {banners.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrent(i)}
+                  style={{
+                    width: i === current ? '24px' : '8px',
+                    height: '8px',
+                    borderRadius: '4px',
+                    background: i === current ? 'white' : 'rgba(255,255,255,0.5)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    padding: 0,
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      <style>{`
+      .banner-wrapper {
+        padding: 0;
+      }
+      @media (max-width: 768px) {
+        .banner-wrapper {
+          padding: 0 1rem;
+        }
+      }
+    `}</style>
     </div>
   );
 }
