@@ -34,8 +34,10 @@ export default function AdminProductsPage() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // const [imageFile, setImageFile] = useState<File | null>(null);
+  // const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -71,8 +73,8 @@ export default function AdminProductsPage() {
   function openAdd() {
     setForm(emptyForm);
     setEditingProduct(null);
-    setImageFile(null);
-    setImagePreview(null);
+    setImageFiles([]);
+    setImagePreviews([]);
     setExistingImages([]);
     setSubcategories([]);
     setError('');
@@ -92,8 +94,8 @@ export default function AdminProductsPage() {
       sku: product.sku ?? '',
     });
     setEditingProduct(product);
-    setImageFile(null);
-    setImagePreview(null);
+    setImageFiles([]);
+    setImagePreviews([]);
     setExistingImages(product.images ?? []);
     setError('');
     setModalMode('edit');
@@ -118,24 +120,44 @@ export default function AdminProductsPage() {
     setError('');
   }
 
+  // function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+  //   setImageFile(file);
+  //   setImagePreview(URL.createObjectURL(file));
+  // }
+
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    setImageFiles(prev => [...prev, ...files]);
+    setImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
   }
 
-  async function uploadImage(productId: string, isPrimary: boolean) {
-    if (!imageFile) return;
-    setUploadingImage(true);
-    const formData = new FormData();
-    formData.append('image', imageFile);
-    formData.append('is_primary', isPrimary ? 'true' : 'false');
-    await fetch(`/api/admin/products/${productId}/images`, {
-      method: 'POST',
-      body: formData,
-    });
-    setUploadingImage(false);
+  // async function uploadImage(productId: string, isPrimary: boolean) {
+  //   if (!imageFile) return;
+  //   setUploadingImage(true);
+  //   const formData = new FormData();
+  //   formData.append('image', imageFile);
+  //   formData.append('is_primary', isPrimary ? 'true' : 'false');
+  //   await fetch(`/api/admin/products/${productId}/images`, {
+  //     method: 'POST',
+  //     body: formData,
+  //   });
+  //   setUploadingImage(false);
+  // }
+
+  async function uploadImage(productId: string, hasExistingImages: boolean) {
+    for (let i = 0; i < imageFiles.length; i++) {
+      const isPrimary = !hasExistingImages && i === 0;
+      const formData = new FormData();
+      formData.append('image', imageFiles[i]);
+      formData.append('is_primary', isPrimary ? 'true' : 'false');
+      await fetch(`/api/admin/products/${productId}/images`, {
+        method: 'POST',
+        body: formData,
+      });
+    }
   }
 
   async function handleSave() {
@@ -190,8 +212,14 @@ export default function AdminProductsPage() {
     }
 
     // Upload image if selected
-    if (imageFile && productId) {
-      await uploadImage(productId, true);
+    // if (imageFile && productId) {
+    //   await uploadImage(productId, true);
+    // }
+
+    if (imageFiles.length && productId) {
+      setUploadingImage(true);
+      await uploadImage(productId, modalMode === 'edit' && existingImages.length > 0);
+      setUploadingImage(false);
     }
 
     setSaving(false);
@@ -819,10 +847,8 @@ export default function AdminProductsPage() {
               </div>
 
               {/* Image upload */}
-              {/* Image section */}
               <div>
                 <label style={labelStyle}>Product Images</label>
-
                 {/* Existing images — only shown when editing */}
                 {modalMode === 'edit' && existingImages.length > 0 && (
                   <div style={{ marginBottom: '0.75rem' }}>
@@ -909,18 +935,14 @@ export default function AdminProductsPage() {
                 {/* Upload new image */}
                 {/* Only show upload if: adding new product, OR editing with no images yet, OR editing and explicitly want to add more */}
                 <div>
-                  <p
-                    style={{
-                      fontSize: '0.7rem',
-                      color: 'var(--text-light)',
-                      marginBottom: '0.5rem',
-                    }}
-                  >
-                    {modalMode === 'edit' && existingImages.length > 0 ? 'Upload additional image' : 'Upload product image'}
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginBottom: '0.5rem' }}>
+                    {modalMode === 'edit' && existingImages.length > 0
+                      ? 'Upload additional images'
+                      : 'Upload product images'}
                   </p>
                   <div
                     style={{
-                      border: `2px dashed ${imagePreview ? 'var(--blush-deep)' : 'var(--border)'}`,
+                      border: `2px dashed ${imagePreviews.length > 0 ? 'var(--blush-deep)' : 'var(--border)'}`,
                       borderRadius: '4px',
                       cursor: 'pointer',
                       transition: 'border-color 0.2s',
@@ -932,76 +954,94 @@ export default function AdminProductsPage() {
                     }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--blush-deep)')}
                     onMouseLeave={e =>
-                      (e.currentTarget.style.borderColor = imagePreview ? 'var(--blush-deep)' : 'var(--border)')
+                      (e.currentTarget.style.borderColor = imagePreviews.length > 0 ? 'var(--blush-deep)' : 'var(--border)')
                     }
                     onClick={() => document.getElementById('image-upload')?.click()}
                   >
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        style={{ maxHeight: '160px', maxWidth: '100%', objectFit: 'contain' }}
-                      />
-                    ) : (
-                      <div style={{ textAlign: 'center', padding: '1.5rem' }}>
-                        <div style={{ fontSize: '1.5rem', marginBottom: '0.4rem' }}>📷</div>
-                        <p style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>Click to upload</p>
-                        <p style={{ fontSize: '0.68rem', color: 'var(--text-light)', marginTop: '0.2rem' }}>
-                          JPEG, PNG, WebP · max 5MB
-                        </p>
-                      </div>
-                    )}
+                    <div style={{ textAlign: 'center', padding: '1.5rem' }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.4rem' }}>📷</div>
+                      <p style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>Click to upload (select multiple)</p>
+                      <p style={{ fontSize: '0.68rem', color: 'var(--text-light)', marginTop: '0.2rem' }}>
+                        JPEG, PNG, WebP · max 5MB each
+                      </p>
+                    </div>
                     <input
                       id="image-upload"
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
+                      multiple
                       onChange={handleImageChange}
                       style={{ display: 'none' }}
                     />
                   </div>
 
-                  {imagePreview && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginTop: '0.4rem',
-                      }}
-                    >
-                      <span style={{ fontSize: '0.72rem', color: 'var(--blush-deep)' }}>✓ Image ready to upload</span>
-                      <button
-                        onClick={() => {
-                          setImageFile(null);
-                          setImagePreview(null);
-                        }}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '0.72rem',
-                          color: 'var(--text-light)',
-                          fontFamily: 'var(--font-body)',
-                        }}
-                      >
-                        ✕ Remove
-                      </button>
+                  {imagePreviews.length > 0 && (
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+                      {imagePreviews.map((src, i) => (
+                        <div key={i} style={{ position: 'relative', width: '80px', height: '96px' }}>
+                          <img
+                            src={src}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
+                          />
+                          {i === 0 && existingImages.length === 0 && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                background: 'var(--blush-deep)',
+                                fontSize: '0.55rem',
+                                fontWeight: 700,
+                                color: 'white',
+                                textAlign: 'center',
+                                padding: '2px',
+                              }}
+                            >
+                              PRIMARY
+                            </div>
+                          )}
+                          <button
+                            onClick={e => {
+                              e.stopPropagation();
+                              setImageFiles(prev => prev.filter((_, j) => j !== i));
+                              setImagePreviews(prev => prev.filter((_, j) => j !== i));
+                            }}
+                            style={{
+                              position: 'absolute',
+                              top: '3px',
+                              right: '3px',
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              background: 'rgba(0,0,0,0.6)',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: 'white',
+                              fontSize: '0.65rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
                     </div>
+                  )}
+
+                  {imagePreviews.length > 0 && (
+                    <p style={{ fontSize: '0.72rem', color: 'var(--blush-deep)', marginTop: '0.4rem' }}>
+                      ✓ {imagePreviews.length} image{imagePreviews.length !== 1 ? 's' : ''} ready to upload
+                    </p>
                   )}
                 </div>
 
                 {/* Set as primary hint */}
-                {modalMode === 'edit' && existingImages.length > 0 && imageFile && (
-                  <p
-                    style={{
-                      fontSize: '0.7rem',
-                      color: 'var(--text-light)',
-                      marginTop: '0.4rem',
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    New image will be uploaded as an additional image. The first image uploaded is automatically set as
-                    primary.
+                {modalMode === 'edit' && existingImages.length > 0 && imageFiles.length > 0 && (
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginTop: '0.4rem', fontStyle: 'italic' }}>
+                    New images will be uploaded as additional images.
                   </p>
                 )}
               </div>
