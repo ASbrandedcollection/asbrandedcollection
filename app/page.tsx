@@ -1596,9 +1596,19 @@ function BrandsSection({ brands }: { brands: BrandItem[] }) {
             paddingBottom: '0.5rem',
           }}
         >
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'nowrap', width: 'max-content', padding: '0 1rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 140px)',
+              gridTemplateRows: 'repeat(2, 80px)',
+              gap: '1rem',
+              gridAutoFlow: 'column',
+              width: 'max-content',
+              padding: '0 1rem',
+            }}
+          >
             {brands.map(brand => (
-              <div key={brand.id} style={{ scrollSnapAlign: 'start', flexShrink: 0 }}>
+              <div key={brand.id} style={{ scrollSnapAlign: 'start' }}>
                 <Link href={`/products?category=brands&subcategory=${brand.slug}`}>
                   <BrandCard brand={brand} />
                 </Link>
