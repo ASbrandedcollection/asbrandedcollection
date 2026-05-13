@@ -34,12 +34,10 @@ export default function AdminProductsPage() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Image upload state
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  // Delete confirm
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [existingImages, setExistingImages] = useState<{ id: string; image_url: string; is_primary: boolean }[]>([]);
@@ -1007,65 +1005,6 @@ export default function AdminProductsPage() {
                   </p>
                 )}
               </div>
-
-              {/* <div>
-                <label style={labelStyle}>Product Image</label>
-                <div
-                  style={{
-                    border: '2px dashed var(--border)',
-                    borderRadius: '4px',
-                    padding: '1rem',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'border-color 0.2s',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--blush-deep)')}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
-                  onClick={() => document.getElementById('image-upload')?.click()}
-                >
-                  {imagePreview ? (
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      style={{ maxHeight: '160px', maxWidth: '100%', objectFit: 'contain', borderRadius: '4px' }}
-                    />
-                  ) : (
-                    <>
-                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📷</div>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>Click to upload image</p>
-                      <p style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: '0.25rem' }}>
-                        JPEG, PNG, WebP — max 5MB
-                      </p>
-                    </>
-                  )}
-                  <input
-                    id="image-upload"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleImageChange}
-                    style={{ display: 'none' }}
-                  />
-                </div>
-                {imagePreview && (
-                  <button
-                    onClick={() => {
-                      setImageFile(null);
-                      setImagePreview(null);
-                    }}
-                    style={{
-                      marginTop: '0.4rem',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '0.75rem',
-                      color: 'var(--text-light)',
-                      fontFamily: 'var(--font-body)',
-                    }}
-                  >
-                    ✕ Remove image
-                  </button>
-                )}
-              </div> */}
 
               {/* Active toggle */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
