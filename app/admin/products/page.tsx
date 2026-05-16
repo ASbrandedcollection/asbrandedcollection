@@ -34,8 +34,6 @@ export default function AdminProductsPage() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // const [imageFile, setImageFile] = useState<File | null>(null);
-  // const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -120,32 +118,12 @@ export default function AdminProductsPage() {
     setError('');
   }
 
-  // function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-  //   const file = e.target.files?.[0];
-  //   if (!file) return;
-  //   setImageFile(file);
-  //   setImagePreview(URL.createObjectURL(file));
-  // }
-
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
     setImageFiles(prev => [...prev, ...files]);
     setImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
   }
-
-  // async function uploadImage(productId: string, isPrimary: boolean) {
-  //   if (!imageFile) return;
-  //   setUploadingImage(true);
-  //   const formData = new FormData();
-  //   formData.append('image', imageFile);
-  //   formData.append('is_primary', isPrimary ? 'true' : 'false');
-  //   await fetch(`/api/admin/products/${productId}/images`, {
-  //     method: 'POST',
-  //     body: formData,
-  //   });
-  //   setUploadingImage(false);
-  // }
 
   async function uploadImage(productId: string, hasExistingImages: boolean) {
     for (let i = 0; i < imageFiles.length; i++) {
@@ -212,10 +190,6 @@ export default function AdminProductsPage() {
     }
 
     // Upload image if selected
-    // if (imageFile && productId) {
-    //   await uploadImage(productId, true);
-    // }
-
     if (imageFiles.length && productId) {
       setUploadingImage(true);
       await uploadImage(productId, modalMode === 'edit' && existingImages.length > 0);
