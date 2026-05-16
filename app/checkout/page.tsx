@@ -191,7 +191,7 @@ export default function CheckoutPage() {
       }
 
       clearCart();
-      router.push(`/order-confirmation?order_number=${data.data.order_number}`);
+      router.push(`/order-confirmation?order_number=${data.data.order_number}&order_id=${data.data.order_id}`);
     } catch {
       setServerError('Network error. Please check your connection and try again.');
       setPlacing(false);

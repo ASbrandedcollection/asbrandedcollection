@@ -3,15 +3,56 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
+import { formatPKR } from '@/lib/utils';
+
+type OrderItem = {
+  product_name: string;
+  product_image_url: string | null;
+  unit_price: number;
+  quantity: number;
+};
+
+type Order = {
+  order_number: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  address: string;
+  city: string;
+  postal_code: string;
+  notes: string | null;
+  total_amount: number;
+  payment_method: string;
+  status: string;
+  created_at: string;
+  order_items: OrderItem[];
+};
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get('order_number');
+  const orderId = searchParams.get('order_id');
+
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!orderId) {
+      setLoading(false);
+      return;
+    }
+    fetch(`/api/orders/${orderId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) setOrder(data.data);
+      })
+      .finally(() => setLoading(false));
+  }, [orderId]);
 
   function handleCopy() {
     if (!orderNumber) return;
-    navigator.clipboard.writeText(orderNumber ?? '');
+    navigator.clipboard.writeText(orderNumber);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -38,27 +79,20 @@ function OrderConfirmationContent() {
     );
   }
 
+  const shipping = order ? (order.total_amount >= 3000 ? 0 : 200) : 0;
+
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'var(--off-white)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem',
-      }}
-    >
-      <div style={{ width: '100%', maxWidth: '560px', animation: 'fadeUp 0.5s ease' }}>
-        {/* Success card */}
+    <div style={{ minHeight: '100vh', background: 'var(--off-white)', padding: '2rem 1rem' }}>
+      <div style={{ width: '100%', maxWidth: '680px', margin: '0 auto', animation: 'fadeUp 0.5s ease' }}>
+        {/* ── Success header card ── */}
         <div
           style={{
             background: 'var(--white)',
             border: '1px solid var(--border)',
-            padding: '3rem 2.5rem',
+            borderRadius: '8px',
+            padding: '2.5rem 2rem',
             textAlign: 'center',
             marginBottom: '1rem',
-            borderRadius: '8px',
           }}
         >
           {/* Checkmark */}
@@ -99,34 +133,14 @@ function OrderConfirmationContent() {
           >
             Order Placed!
           </h1>
-
-          {/* Order number — big and friendly */}
-          {orderNumber && (
-            <p
-              style={{
-                fontSize: '1.1rem',
-                fontWeight: 700,
-                color: 'var(--blush-deep)',
-                marginBottom: '0.75rem',
-                letterSpacing: '0.02em',
-              }}
-            >
-              Order #{orderNumber}
-            </p>
-          )}
-
-          <p
-            style={{
-              fontSize: '0.9rem',
-              color: 'var(--text-mid)',
-              lineHeight: 1.6,
-              marginBottom: '1.5rem',
-            }}
-          >
+          <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--blush-deep)', marginBottom: '0.75rem' }}>
+            Order #{orderNumber}
+          </p>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-mid)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
             Thank you for your order. We've received it and will call you shortly to confirm your delivery.
           </p>
 
-          {/* Order Number box with copy button */}
+          {/* Copy order number */}
           <div
             style={{
               background: 'var(--off-white)',
@@ -198,78 +212,13 @@ function OrderConfirmationContent() {
               textAlign: 'left',
             }}
           >
-            <span style={{ flexShrink: 0, fontSize: '1rem' }}>📱</span>
+            <span style={{ flexShrink: 0 }}>📱</span>
             <p style={{ fontSize: '0.78rem', color: '#92400e', lineHeight: 1.5 }}>
               <strong>Take a screenshot</strong> of this page or tap <strong>Copy ID</strong> above. You'll need this Order
               Number to track your order status later.
             </p>
           </div>
 
-          <div style={{ height: '1px', background: 'var(--border)', margin: '1.5rem 0' }} />
-
-          {/* What happens next */}
-          <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
-            <p
-              style={{
-                fontSize: '0.72rem',
-                fontWeight: 600,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                color: 'var(--text-light)',
-                marginBottom: '1rem',
-                textAlign: 'center',
-              }}
-            >
-              What happens next?
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {[
-                {
-                  icon: '📞',
-                  title: 'We call you',
-                  desc: 'Our team will call you to confirm your order and delivery details',
-                },
-                {
-                  icon: '📦',
-                  title: 'We pack your order',
-                  desc: 'Your items are carefully packed and prepared for shipping',
-                },
-                {
-                  icon: '🚚',
-                  title: 'Delivery to your door',
-                  desc: 'Expected delivery within 3-5 working days across Pakistan',
-                },
-                {
-                  icon: '💵',
-                  title: 'Pay on delivery',
-                  desc: 'Pay cash when your order arrives — no advance payment needed',
-                },
-              ].map(step => (
-                <div
-                  key={step.title}
-                  style={{
-                    display: 'flex',
-                    gap: '0.75rem',
-                    alignItems: 'flex-start',
-                    padding: '0.75rem',
-                    background: 'var(--off-white)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '4px',
-                  }}
-                >
-                  <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{step.icon}</span>
-                  <div>
-                    <p style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-dark)', marginBottom: '0.15rem' }}>
-                      {step.title}
-                    </p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', lineHeight: 1.5 }}>{step.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Track order + actions */}
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href={`/track-order?order_number=${orderNumber}`} className="btn-primary">
               Track My Order
@@ -280,7 +229,251 @@ function OrderConfirmationContent() {
           </div>
         </div>
 
-        {/* Bottom tip */}
+        {/* ── Customer info + order items ── */}
+        {loading ? (
+          <div
+            style={{
+              background: 'var(--white)',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              padding: '2rem',
+              textAlign: 'center',
+              color: 'var(--text-light)',
+              fontSize: '0.85rem',
+              marginBottom: '1rem',
+            }}
+          >
+            Loading order details...
+          </div>
+        ) : order ? (
+          <>
+            {/* Delivery info */}
+            <div
+              style={{
+                background: 'var(--white)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                padding: '1.5rem 2rem',
+                marginBottom: '1rem',
+              }}
+            >
+              <p
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: 'var(--text-light)',
+                  marginBottom: '1rem',
+                }}
+              >
+                Delivery Information
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }} className="info-grid">
+                {[
+                  { label: 'Name', value: `${order.first_name} ${order.last_name}` },
+                  { label: 'Phone', value: order.phone },
+                  { label: 'Address', value: order.address },
+                  { label: 'City', value: `${order.city}${order.postal_code ? ` — ${order.postal_code}` : ''}` },
+                  ...(order.notes ? [{ label: 'Notes', value: order.notes }] : []),
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <p
+                      style={{
+                        fontSize: '0.68rem',
+                        color: 'var(--text-light)',
+                        letterSpacing: '0.07em',
+                        textTransform: 'uppercase',
+                        marginBottom: '0.2rem',
+                      }}
+                    >
+                      {label}
+                    </p>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-dark)', fontWeight: 500, lineHeight: 1.4 }}>
+                      {value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Order items */}
+            <div
+              style={{
+                background: 'var(--white)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                padding: '1.5rem 2rem',
+                marginBottom: '1rem',
+              }}
+            >
+              <p
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: 'var(--text-light)',
+                  marginBottom: '1rem',
+                }}
+              >
+                Items Ordered
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {order.order_items.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    <div
+                      style={{
+                        width: '52px',
+                        height: '64px',
+                        flexShrink: 0,
+                        background: 'var(--blush-light)',
+                        overflow: 'hidden',
+                        borderRadius: '2px',
+                      }}
+                    >
+                      {item.product_image_url ? (
+                        <img
+                          src={item.product_image_url}
+                          alt={item.product_name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1rem',
+                          }}
+                        >
+                          📦
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p
+                        style={{ fontSize: '0.85rem', color: 'var(--text-dark)', fontWeight: 500, marginBottom: '0.15rem' }}
+                      >
+                        {item.product_name}
+                      </p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>Qty: {item.quantity}</p>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-dark)', flexShrink: 0 }}>
+                      {formatPKR(item.unit_price * item.quantity)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ height: '1px', background: 'var(--border)', margin: '1rem 0' }} />
+
+              {/* Totals */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-mid)' }}>Subtotal</span>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-dark)' }}>{formatPKR(order.total_amount)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-mid)' }}>Shipping</span>
+                  <span style={{ fontSize: '0.82rem', color: shipping === 0 ? '#16a34a' : 'var(--text-dark)' }}>
+                    {shipping === 0 ? 'Free' : formatPKR(shipping)}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem' }}>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: '1rem',
+                      fontStyle: 'italic',
+                      color: 'var(--text-dark)',
+                    }}
+                  >
+                    Total
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: '1.1rem',
+                      color: 'var(--text-dark)',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {formatPKR(order.total_amount + shipping)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : null}
+
+        {/* ── What happens next ── */}
+        <div
+          style={{
+            background: 'var(--white)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '1.5rem 2rem',
+            marginBottom: '1rem',
+          }}
+        >
+          <p
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'var(--text-light)',
+              marginBottom: '1rem',
+              textAlign: 'center',
+            }}
+          >
+            What happens next?
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {[
+              {
+                icon: '📞',
+                title: 'We call you',
+                desc: 'Our team will call you to confirm your order and delivery details',
+              },
+              { icon: '📦', title: 'We pack your order', desc: 'Your items are carefully packed and prepared for shipping' },
+              {
+                icon: '🚚',
+                title: 'Delivery to your door',
+                desc: 'Expected delivery within 3-5 working days across Pakistan',
+              },
+              { icon: '💵', title: 'Pay on delivery', desc: 'Pay cash when your order arrives — no advance payment needed' },
+            ].map(step => (
+              <div
+                key={step.title}
+                style={{
+                  display: 'flex',
+                  gap: '0.75rem',
+                  alignItems: 'flex-start',
+                  padding: '0.75rem',
+                  background: 'var(--off-white)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '4px',
+                }}
+              >
+                <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{step.icon}</span>
+                <div>
+                  <p style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-dark)', marginBottom: '0.15rem' }}>
+                    {step.title}
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', lineHeight: 1.5 }}>{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Bottom tip ── */}
         <div
           style={{
             padding: '0.85rem 1rem',
@@ -304,6 +497,14 @@ function OrderConfirmationContent() {
           </span>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 600px) {
+          .info-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
