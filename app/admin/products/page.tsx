@@ -1,7 +1,7 @@
 'use client';
 
 import { calcFinalPrice, formatPKR } from '@/lib/utils';
-import type { Category, Product } from '@/types';
+import type { Category, Product, ProductVariant } from '@/types';
 import { useEffect, useState } from 'react';
 
 type ModalMode = 'add' | 'edit' | null;
@@ -18,6 +18,275 @@ const emptyForm = {
   sku: '',
 };
 
+function VariantsEditor({
+  productId,
+  existingImages,
+}: {
+  productId: string;
+  existingImages: { id: string; image_url: string; is_primary: boolean }[];
+}) {
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // The "type name" is shared across all variants of a product (e.g. "Shade").
+  // We infer it from existing variants, or let admin set it when adding the first one.
+  const [typeName, setTypeName] = useState('');
+  const [newLabel, setNewLabel] = useState('');
+  const [newImageId, setNewImageId] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/admin/products/${productId}/variants`)
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) {
+          setVariants(res.data);
+          if (res.data.length > 0) setTypeName(res.data[0].type_name);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [productId]);
+
+  async function handleAdd() {
+    if (!typeName.trim() || !newLabel.trim()) {
+      setErr('Type name and label are required');
+      return;
+    }
+    setAdding(true);
+    setErr('');
+    const res = await fetch(`/api/admin/products/${productId}/variants`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type_name: typeName.trim(),
+        label: newLabel.trim(),
+        image_id: newImageId || null,
+      }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setVariants(prev => [...prev, data.data]);
+      setNewLabel('');
+      setNewImageId('');
+    } else {
+      setErr(data.error);
+    }
+    setAdding(false);
+  }
+
+  async function handleDelete(variantId: string) {
+    setDeletingId(variantId);
+    await fetch(`/api/admin/products/${productId}/variants/${variantId}`, { method: 'DELETE' });
+    setVariants(prev => prev.filter(v => v.id !== variantId));
+    setDeletingId(null);
+  }
+
+  async function handleImageChange(variantId: string, imageId: string) {
+    const res = await fetch(`/api/admin/products/${productId}/variants/${variantId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image_id: imageId || null }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setVariants(prev => prev.map(v => (v.id === variantId ? data.data : v)));
+    }
+  }
+
+  const inputStyle: React.CSSProperties = {
+    padding: '0.55rem 0.65rem',
+    border: '1px solid var(--border)',
+    background: 'var(--off-white)',
+    fontFamily: 'var(--font-body)',
+    fontSize: '0.82rem',
+    color: 'var(--text-dark)',
+    outline: 'none',
+    borderRadius: '4px',
+    width: '100%',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: '0.68rem',
+    fontWeight: 500,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: 'var(--text-mid)',
+    display: 'block',
+    marginBottom: '0.3rem',
+  };
+
+  if (loading) {
+    return <p style={{ fontSize: '0.78rem', color: 'var(--text-light)', padding: '0.5rem 0' }}>Loading variants...</p>;
+  }
+
+  return (
+    <div>
+      {/* Type name — locked once variants exist */}
+      <div style={{ marginBottom: '0.75rem' }}>
+        <label style={labelStyle}>Variant Type (e.g. Shade, Color, Size)</label>
+        <input
+          type="text"
+          value={typeName}
+          onChange={e => setTypeName(e.target.value)}
+          placeholder="e.g. Shade"
+          disabled={variants.length > 0}
+          style={{
+            ...inputStyle,
+            opacity: variants.length > 0 ? 0.6 : 1,
+            cursor: variants.length > 0 ? 'not-allowed' : 'text',
+          }}
+        />
+        {variants.length > 0 && (
+          <p style={{ fontSize: '0.68rem', color: 'var(--text-light)', marginTop: '0.2rem' }}>
+            Delete all variants to change the type name.
+          </p>
+        )}
+      </div>
+
+      {/* Existing variants list */}
+      {variants.length > 0 && (
+        <div style={{ marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {variants.map(v => {
+            const linkedImg = existingImages.find(img => img.id === v.image_id);
+            return (
+              <div
+                key={v.id}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr auto',
+                  gap: '0.5rem',
+                  alignItems: 'center',
+                  padding: '0.5rem 0.6rem',
+                  background: 'var(--off-white)',
+                  borderRadius: '4px',
+                  border: '1px solid var(--border)',
+                }}
+              >
+                {/* Label */}
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-dark)', fontWeight: 500 }}>{v.label}</span>
+
+                {/* Image picker */}
+                <select
+                  value={v.image_id ?? ''}
+                  onChange={e => handleImageChange(v.id, e.target.value)}
+                  style={{ ...inputStyle, width: 'auto', fontSize: '0.75rem', cursor: 'pointer' }}
+                >
+                  <option value="">No image</option>
+                  {existingImages.map((img, i) => (
+                    <option key={img.id} value={img.id}>
+                      {img.is_primary ? '★ Primary' : `Image ${i + 1}`}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Linked image thumb */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {linkedImg && (
+                    <img
+                      src={linkedImg.image_url}
+                      alt=""
+                      style={{
+                        width: '32px',
+                        height: '40px',
+                        objectFit: 'cover',
+                        borderRadius: '3px',
+                        border: '1px solid var(--border)',
+                      }}
+                    />
+                  )}
+                  <button
+                    onClick={() => handleDelete(v.id)}
+                    disabled={deletingId === v.id}
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      border: 'none',
+                      background: '#fee2e2',
+                      color: '#dc2626',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {deletingId === v.id ? '…' : '×'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Add new variant row */}
+      {err && <p style={{ fontSize: '0.75rem', color: '#dc2626', marginBottom: '0.4rem' }}>{err}</p>}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.5rem', alignItems: 'end' }}>
+        <div>
+          <label style={labelStyle}>Label</label>
+          <input
+            type="text"
+            value={newLabel}
+            onChange={e => setNewLabel(e.target.value)}
+            placeholder="e.g. SH-01"
+            style={inputStyle}
+            onKeyDown={e => {
+              if (e.key === 'Enter') handleAdd();
+            }}
+          />
+        </div>
+        <div>
+          <label style={labelStyle}>Link to Image</label>
+          <select
+            value={newImageId}
+            onChange={e => setNewImageId(e.target.value)}
+            style={{ ...inputStyle, cursor: 'pointer' }}
+          >
+            <option value="">No image</option>
+            {existingImages.map((img, i) => (
+              <option key={img.id} value={img.id}>
+                {img.is_primary ? '★ Primary' : `Image ${i + 1}`}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          onClick={handleAdd}
+          disabled={adding}
+          style={{
+            padding: '0.55rem 1rem',
+            background: 'var(--blush-deep)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: adding ? 'not-allowed' : 'pointer',
+            fontSize: '0.78rem',
+            fontWeight: 500,
+            fontFamily: 'var(--font-body)',
+            whiteSpace: 'nowrap',
+            opacity: adding ? 0.7 : 1,
+          }}
+        >
+          {adding ? '…' : '+ Add'}
+        </button>
+      </div>
+
+      {existingImages.length === 0 && (
+        <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginTop: '0.4rem', fontStyle: 'italic' }}>
+          Upload product images first, then link each variant to an image.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── Main page ──────────────────────────────────────────────────────────────────
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -42,6 +311,11 @@ export default function AdminProductsPage() {
 
   const [existingImages, setExistingImages] = useState<{ id: string; image_url: string; is_primary: boolean }[]>([]);
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+
+  // Track the saved product id so VariantsEditor can load even for a brand-new product
+  const [savedProductId, setSavedProductId] = useState<string | null>(null);
+
+  const [activeTab, setActiveTab] = useState<'details' | 'variants'>('details');
 
   const [form, setForm] = useState(emptyForm);
 
@@ -71,11 +345,13 @@ export default function AdminProductsPage() {
   function openAdd() {
     setForm(emptyForm);
     setEditingProduct(null);
+    setSavedProductId(null);
     setImageFiles([]);
     setImagePreviews([]);
     setExistingImages([]);
     setSubcategories([]);
     setError('');
+    setActiveTab('details');
     setModalMode('add');
   }
 
@@ -92,12 +368,13 @@ export default function AdminProductsPage() {
       sku: product.sku ?? '',
     });
     setEditingProduct(product);
+    setSavedProductId(product.id);
     setImageFiles([]);
     setImagePreviews([]);
     setExistingImages(product.images ?? []);
     setError('');
+    setActiveTab('details');
     setModalMode('edit');
-    // Load subcategories for this product's category
     if (product.category_id) fetchSubcategories(product.category_id);
   }
 
@@ -115,6 +392,7 @@ export default function AdminProductsPage() {
   function closeModal() {
     setModalMode(null);
     setEditingProduct(null);
+    setSavedProductId(null);
     setError('');
   }
 
@@ -126,16 +404,18 @@ export default function AdminProductsPage() {
   }
 
   async function uploadImage(productId: string, hasExistingImages: boolean) {
+    const uploaded: { id: string; image_url: string; is_primary: boolean }[] = [];
     for (let i = 0; i < imageFiles.length; i++) {
       const isPrimary = !hasExistingImages && i === 0;
       const formData = new FormData();
       formData.append('image', imageFiles[i]);
       formData.append('is_primary', isPrimary ? 'true' : 'false');
-      await fetch(`/api/admin/products/${productId}/images`, {
-        method: 'POST',
-        body: formData,
-      });
+      const res = await fetch(`/api/admin/products/${productId}/images`, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) uploaded.push(data.data);
     }
+    // Update existingImages so VariantsEditor can immediately see new images
+    setExistingImages(prev => [...prev, ...uploaded]);
   }
 
   async function handleSave() {
@@ -160,9 +440,9 @@ export default function AdminProductsPage() {
       sku: form.sku.trim() || null,
     };
 
-    let productId = editingProduct?.id;
+    let productId = editingProduct?.id ?? savedProductId;
 
-    if (modalMode === 'add') {
+    if (modalMode === 'add' && !savedProductId) {
       const res = await fetch('/api/admin/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -175,8 +455,9 @@ export default function AdminProductsPage() {
         return;
       }
       productId = data.data.id;
-    } else if (modalMode === 'edit' && editingProduct) {
-      const res = await fetch(`/api/admin/products/${editingProduct.id}`, {
+      setSavedProductId(productId!);
+    } else if (productId) {
+      const res = await fetch(`/api/admin/products/${productId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -189,27 +470,30 @@ export default function AdminProductsPage() {
       }
     }
 
-    // Upload image if selected
     if (imageFiles.length && productId) {
       setUploadingImage(true);
       await uploadImage(productId, modalMode === 'edit' && existingImages.length > 0);
       setUploadingImage(false);
+      setImageFiles([]);
+      setImagePreviews([]);
     }
 
     setSaving(false);
-    closeModal();
     fetchProducts();
-    setSuccessMsg(modalMode === 'add' ? 'Product added!' : 'Product updated!');
+    setSuccessMsg(modalMode === 'add' && !savedProductId ? 'Product added!' : 'Product updated!');
     setTimeout(() => setSuccessMsg(''), 3000);
+
+    // If adding: switch to Variants tab so admin can immediately add shades/colors
+    if (modalMode === 'add') {
+      setActiveTab('variants');
+    }
   }
 
   async function handleDeleteImage(imageId: string, productId: string) {
     setDeletingImageId(imageId);
     const res = await fetch(`/api/admin/products/${productId}/images?image_id=${imageId}`, { method: 'DELETE' });
     const data = await res.json();
-    if (data.success) {
-      setExistingImages(prev => prev.filter(img => img.id !== imageId));
-    }
+    if (data.success) setExistingImages(prev => prev.filter(img => img.id !== imageId));
     setDeletingImageId(null);
   }
 
@@ -233,7 +517,7 @@ export default function AdminProductsPage() {
     fetchProducts();
   }
 
-  const inputStyle = {
+  const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '0.65rem 0.75rem',
     border: '1px solid var(--border)',
@@ -245,15 +529,28 @@ export default function AdminProductsPage() {
     borderRadius: '4px',
   };
 
-  const labelStyle = {
-    display: 'block' as const,
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
     fontSize: '0.7rem',
-    fontWeight: 500 as const,
+    fontWeight: 500,
     letterSpacing: '0.08em',
-    textTransform: 'uppercase' as const,
+    textTransform: 'uppercase',
     color: 'var(--text-mid)',
     marginBottom: '0.4rem',
   };
+
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    padding: '0.5rem 1.1rem',
+    border: 'none',
+    borderBottom: active ? '2px solid var(--blush-deep)' : '2px solid transparent',
+    background: 'none',
+    cursor: 'pointer',
+    fontFamily: 'var(--font-body)',
+    fontSize: '0.8rem',
+    fontWeight: active ? 600 : 400,
+    color: active ? 'var(--blush-deep)' : 'var(--text-light)',
+    transition: 'all 0.15s',
+  });
 
   return (
     <div>
@@ -289,7 +586,6 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
-      {/* Success message */}
       {successMsg && (
         <div
           style={{
@@ -308,14 +604,8 @@ export default function AdminProductsPage() {
 
       {/* Products table */}
       <div
-        style={{
-          background: 'var(--white)',
-          border: '1px solid var(--border)',
-          borderRadius: '8px',
-          overflow: 'hidden',
-        }}
+        style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}
       >
-        {/* Table header */}
         <div
           style={{
             display: 'grid',
@@ -358,7 +648,6 @@ export default function AdminProductsPage() {
           products.map((product, i) => {
             const primaryImage = product.images?.find(img => img.is_primary)?.image_url;
             const finalPrice = calcFinalPrice(product.price, product.discount_percent);
-
             return (
               <div
                 key={product.id}
@@ -374,7 +663,6 @@ export default function AdminProductsPage() {
                 onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.background = 'var(--off-white)')}
                 onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.background = 'transparent')}
               >
-                {/* Image */}
                 <div
                   style={{
                     width: '48px',
@@ -406,8 +694,6 @@ export default function AdminProductsPage() {
                     </div>
                   )}
                 </div>
-
-                {/* Name */}
                 <div style={{ minWidth: 0 }}>
                   <p
                     style={{
@@ -437,8 +723,6 @@ export default function AdminProductsPage() {
                     </span>
                   )}
                 </div>
-
-                {/* Category */}
                 <p
                   style={{
                     fontSize: '0.78rem',
@@ -450,24 +734,14 @@ export default function AdminProductsPage() {
                 >
                   {product.category?.name ?? '—'}
                 </p>
-
-                {/* Price */}
                 <div>
                   <p style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-dark)' }}>{formatPKR(finalPrice)}</p>
                   {product.discount_percent > 0 && (
-                    <p
-                      style={{
-                        fontSize: '0.7rem',
-                        color: 'var(--text-light)',
-                        textDecoration: 'line-through',
-                      }}
-                    >
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', textDecoration: 'line-through' }}>
                       {formatPKR(product.price)}
                     </p>
                   )}
                 </div>
-
-                {/* Stock */}
                 <p
                   style={{
                     fontSize: '0.82rem',
@@ -477,8 +751,6 @@ export default function AdminProductsPage() {
                 >
                   {product.stock_qty}
                 </p>
-
-                {/* Active toggle */}
                 <button
                   onClick={() => toggleActive(product)}
                   style={{
@@ -496,8 +768,6 @@ export default function AdminProductsPage() {
                 >
                   {product.is_active ? 'Active' : 'Hidden'}
                 </button>
-
-                {/* Actions */}
                 <div style={{ display: 'flex', gap: '0.4rem' }}>
                   <button
                     onClick={() => openEdit(product)}
@@ -556,14 +826,7 @@ export default function AdminProductsPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            marginTop: '1rem',
-          }}
-        >
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
@@ -626,15 +889,17 @@ export default function AdminProductsPage() {
               background: 'var(--white)',
               borderRadius: '8px',
               width: '100%',
-              maxWidth: '560px',
-              maxHeight: '90vh',
+              maxWidth: '580px',
+              maxHeight: '92vh',
               overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             {/* Modal header */}
             <div
               style={{
-                padding: '1.25rem 1.5rem',
+                padding: '1.1rem 1.5rem',
                 borderBottom: '1px solid var(--border)',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -669,8 +934,38 @@ export default function AdminProductsPage() {
               </button>
             </div>
 
+            {/* Tabs — only show Variants tab once product is saved */}
+            <div
+              style={{
+                display: 'flex',
+                borderBottom: '1px solid var(--border)',
+                padding: '0 1.5rem',
+                background: 'var(--white)',
+                position: 'sticky',
+                top: '52px',
+                zIndex: 1,
+              }}
+            >
+              <button style={tabStyle(activeTab === 'details')} onClick={() => setActiveTab('details')}>
+                Details
+              </button>
+              <button
+                style={{
+                  ...tabStyle(activeTab === 'variants'),
+                  opacity: savedProductId ? 1 : 0.4,
+                  cursor: savedProductId ? 'pointer' : 'not-allowed',
+                }}
+                onClick={() => {
+                  if (savedProductId) setActiveTab('variants');
+                }}
+                title={!savedProductId ? 'Save the product first to add variants' : ''}
+              >
+                Variants {!savedProductId && <span style={{ fontSize: '0.62rem', marginLeft: '0.2rem' }}>(save first)</span>}
+              </button>
+            </div>
+
             {/* Modal body */}
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ padding: '1.5rem', flex: 1, overflowY: 'auto' }}>
               {error && (
                 <div
                   style={{
@@ -680,380 +975,377 @@ export default function AdminProductsPage() {
                     borderRadius: '4px',
                     fontSize: '0.82rem',
                     color: '#dc2626',
+                    marginBottom: '1rem',
                   }}
                 >
                   {error}
                 </div>
               )}
 
-              {/* Name */}
-              <div>
-                <label style={labelStyle}>Product Name *</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="e.g. Floral Lawn Suit"
-                  style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
-                  onBlur={e => (e.target.style.borderColor = 'var(--border)')}
-                />
-              </div>
-
-              {/* Category */}
-              <div>
-                <label style={labelStyle}>Category *</label>
-                <select
-                  value={form.category_id}
-                  onChange={e => {
-                    setForm(f => ({ ...f, category_id: e.target.value, subcategory_id: '' }));
-                    fetchSubcategories(e.target.value);
-                  }}
-                  style={{ ...inputStyle, cursor: 'pointer' }}
-                >
-                  <option value="">Select category...</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.icon} {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Subcategory — only show if category selected and has subcategories */}
-              {form.category_id && subcategories.length > 0 && (
-                <div>
-                  <label style={labelStyle}>Subcategory (optional)</label>
-                  <select
-                    value={form.subcategory_id}
-                    onChange={e => setForm(f => ({ ...f, subcategory_id: e.target.value }))}
-                    style={{ ...inputStyle, cursor: 'pointer' }}
-                  >
-                    <option value="">No subcategory</option>
-                    {subcategories.map(sub => (
-                      <option key={sub.id} value={sub.id}>
-                        {sub.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Price + Discount */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={labelStyle}>Price (PKR) *</label>
-                  <input
-                    type="number"
-                    value={form.price}
-                    onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-                    placeholder="0"
-                    min="0"
-                    style={inputStyle}
-                    onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
-                    onBlur={e => (e.target.style.borderColor = 'var(--border)')}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle}>Discount %</label>
-                  <input
-                    type="number"
-                    value={form.discount_percent}
-                    onChange={e => setForm(f => ({ ...f, discount_percent: e.target.value }))}
-                    placeholder="0"
-                    min="0"
-                    max="100"
-                    style={inputStyle}
-                    onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
-                    onBlur={e => (e.target.style.borderColor = 'var(--border)')}
-                  />
-                </div>
-              </div>
-
-              {/* Stock */}
-              <div>
-                <label style={labelStyle}>Stock Quantity</label>
-                <input
-                  type="number"
-                  value={form.stock_qty}
-                  onChange={e => setForm(f => ({ ...f, stock_qty: e.target.value }))}
-                  placeholder="0"
-                  min="0"
-                  style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
-                  onBlur={e => (e.target.style.borderColor = 'var(--border)')}
-                />
-              </div>
-
-              {/* SKU */}
-              <div>
-                <label style={labelStyle}>SKU (optional)</label>
-                <input
-                  type="text"
-                  value={form.sku}
-                  onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
-                  placeholder="e.g. AS-LPS-001"
-                  style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
-                  onBlur={e => (e.target.style.borderColor = 'var(--border)')}
-                />
-                <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginTop: '0.3rem' }}>
-                  Unique identifier for inventory tracking
-                </p>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label style={labelStyle}>Description</label>
-                <textarea
-                  value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder="Product description..."
-                  rows={3}
-                  style={{
-                    ...inputStyle,
-                    resize: 'vertical',
-                    lineHeight: 1.6,
-                  }}
-                  onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
-                  onBlur={e => (e.target.style.borderColor = 'var(--border)')}
-                />
-              </div>
-
-              {/* Image upload */}
-              <div>
-                <label style={labelStyle}>Product Images</label>
-                {/* Existing images — only shown when editing */}
-                {modalMode === 'edit' && existingImages.length > 0 && (
-                  <div style={{ marginBottom: '0.75rem' }}>
-                    <p
-                      style={{
-                        fontSize: '0.7rem',
-                        color: 'var(--text-light)',
-                        marginBottom: '0.5rem',
-                      }}
-                    >
-                      Current images — click × to remove
-                    </p>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {existingImages.map(img => (
-                        <div
-                          key={img.id}
-                          style={{
-                            position: 'relative',
-                            width: '80px',
-                            height: '96px',
-                            borderRadius: '4px',
-                            overflow: 'hidden',
-                            border: img.is_primary ? '2px solid var(--blush-deep)' : '1px solid var(--border)',
-                          }}
-                        >
-                          <img
-                            src={img.image_url}
-                            alt="Product"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                          {/* Primary badge */}
-                          {img.is_primary && (
-                            <div
-                              style={{
-                                position: 'absolute',
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                background: 'var(--blush-deep)',
-                                fontSize: '0.55rem',
-                                fontWeight: 700,
-                                color: 'white',
-                                textAlign: 'center',
-                                padding: '2px',
-                                letterSpacing: '0.04em',
-                              }}
-                            >
-                              PRIMARY
-                            </div>
-                          )}
-                          {/* Delete button */}
-                          <button
-                            onClick={() => editingProduct && handleDeleteImage(img.id, editingProduct.id)}
-                            disabled={deletingImageId === img.id}
-                            style={{
-                              position: 'absolute',
-                              top: '3px',
-                              right: '3px',
-                              width: '20px',
-                              height: '20px',
-                              background: 'rgba(0,0,0,0.6)',
-                              border: 'none',
-                              borderRadius: '50%',
-                              cursor: 'pointer',
-                              color: 'white',
-                              fontSize: '0.65rem',
-                              fontWeight: 700,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transition: 'background 0.15s',
-                            }}
-                            onMouseEnter={e => (e.currentTarget.style.background = '#ef4444')}
-                            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.6)')}
-                          >
-                            {deletingImageId === img.id ? '...' : '×'}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Upload new image */}
-                {/* Only show upload if: adding new product, OR editing with no images yet, OR editing and explicitly want to add more */}
-                <div>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginBottom: '0.5rem' }}>
-                    {modalMode === 'edit' && existingImages.length > 0
-                      ? 'Upload additional images'
-                      : 'Upload product images'}
-                  </p>
-                  <div
-                    style={{
-                      border: `2px dashed ${imagePreviews.length > 0 ? 'var(--blush-deep)' : 'var(--border)'}`,
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      transition: 'border-color 0.2s',
-                      minHeight: '120px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--blush-deep)')}
-                    onMouseLeave={e =>
-                      (e.currentTarget.style.borderColor = imagePreviews.length > 0 ? 'var(--blush-deep)' : 'var(--border)')
-                    }
-                    onClick={() => document.getElementById('image-upload')?.click()}
-                  >
-                    <div style={{ textAlign: 'center', padding: '1.5rem' }}>
-                      <div style={{ fontSize: '1.5rem', marginBottom: '0.4rem' }}>📷</div>
-                      <p style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>Click to upload (select multiple)</p>
-                      <p style={{ fontSize: '0.68rem', color: 'var(--text-light)', marginTop: '0.2rem' }}>
-                        JPEG, PNG, WebP · max 5MB each
-                      </p>
-                    </div>
+              {/* ── DETAILS TAB ── */}
+              {activeTab === 'details' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {/* Name */}
+                  <div>
+                    <label style={labelStyle}>Product Name *</label>
                     <input
-                      id="image-upload"
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      multiple
-                      onChange={handleImageChange}
-                      style={{ display: 'none' }}
+                      type="text"
+                      value={form.name}
+                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                      placeholder="e.g. Floral Lawn Suit"
+                      style={inputStyle}
+                      onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border)')}
                     />
                   </div>
 
-                  {imagePreviews.length > 0 && (
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
-                      {imagePreviews.map((src, i) => (
-                        <div key={i} style={{ position: 'relative', width: '80px', height: '96px' }}>
-                          <img
-                            src={src}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
-                          />
-                          {i === 0 && existingImages.length === 0 && (
-                            <div
-                              style={{
-                                position: 'absolute',
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                background: 'var(--blush-deep)',
-                                fontSize: '0.55rem',
-                                fontWeight: 700,
-                                color: 'white',
-                                textAlign: 'center',
-                                padding: '2px',
-                              }}
-                            >
-                              PRIMARY
-                            </div>
-                          )}
-                          <button
-                            onClick={e => {
-                              e.stopPropagation();
-                              setImageFiles(prev => prev.filter((_, j) => j !== i));
-                              setImagePreviews(prev => prev.filter((_, j) => j !== i));
-                            }}
-                            style={{
-                              position: 'absolute',
-                              top: '3px',
-                              right: '3px',
-                              width: '20px',
-                              height: '20px',
-                              borderRadius: '50%',
-                              background: 'rgba(0,0,0,0.6)',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: 'white',
-                              fontSize: '0.65rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            ×
-                          </button>
-                        </div>
+                  {/* Category */}
+                  <div>
+                    <label style={labelStyle}>Category *</label>
+                    <select
+                      value={form.category_id}
+                      onChange={e => {
+                        setForm(f => ({ ...f, category_id: e.target.value, subcategory_id: '' }));
+                        fetchSubcategories(e.target.value);
+                      }}
+                      style={{ ...inputStyle, cursor: 'pointer' }}
+                    >
+                      <option value="">Select category...</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.icon} {cat.name}
+                        </option>
                       ))}
+                    </select>
+                  </div>
+
+                  {form.category_id && subcategories.length > 0 && (
+                    <div>
+                      <label style={labelStyle}>Subcategory (optional)</label>
+                      <select
+                        value={form.subcategory_id}
+                        onChange={e => setForm(f => ({ ...f, subcategory_id: e.target.value }))}
+                        style={{ ...inputStyle, cursor: 'pointer' }}
+                      >
+                        <option value="">No subcategory</option>
+                        {subcategories.map(sub => (
+                          <option key={sub.id} value={sub.id}>
+                            {sub.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   )}
 
-                  {imagePreviews.length > 0 && (
-                    <p style={{ fontSize: '0.72rem', color: 'var(--blush-deep)', marginTop: '0.4rem' }}>
-                      ✓ {imagePreviews.length} image{imagePreviews.length !== 1 ? 's' : ''} ready to upload
+                  {/* Price + Discount */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div>
+                      <label style={labelStyle}>Price (PKR) *</label>
+                      <input
+                        type="number"
+                        value={form.price}
+                        onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+                        placeholder="0"
+                        min="0"
+                        style={inputStyle}
+                        onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
+                        onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Discount %</label>
+                      <input
+                        type="number"
+                        value={form.discount_percent}
+                        onChange={e => setForm(f => ({ ...f, discount_percent: e.target.value }))}
+                        placeholder="0"
+                        min="0"
+                        max="100"
+                        style={inputStyle}
+                        onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
+                        onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Stock */}
+                  <div>
+                    <label style={labelStyle}>Stock Quantity</label>
+                    <input
+                      type="number"
+                      value={form.stock_qty}
+                      onChange={e => setForm(f => ({ ...f, stock_qty: e.target.value }))}
+                      placeholder="0"
+                      min="0"
+                      style={inputStyle}
+                      onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+                    />
+                  </div>
+
+                  {/* SKU */}
+                  <div>
+                    <label style={labelStyle}>SKU (optional)</label>
+                    <input
+                      type="text"
+                      value={form.sku}
+                      onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
+                      placeholder="e.g. AS-LPS-001"
+                      style={inputStyle}
+                      onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+                    />
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginTop: '0.3rem' }}>
+                      Unique identifier for inventory tracking
                     </p>
-                  )}
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label style={labelStyle}>Description</label>
+                    <textarea
+                      value={form.description}
+                      onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                      placeholder="Product description..."
+                      rows={3}
+                      style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }}
+                      onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+                    />
+                  </div>
+
+                  {/* Image upload */}
+                  <div>
+                    <label style={labelStyle}>Product Images</label>
+                    {modalMode === 'edit' && existingImages.length > 0 && (
+                      <div style={{ marginBottom: '0.75rem' }}>
+                        <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginBottom: '0.5rem' }}>
+                          Current images — click × to remove
+                        </p>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          {existingImages.map(img => (
+                            <div
+                              key={img.id}
+                              style={{
+                                position: 'relative',
+                                width: '80px',
+                                height: '96px',
+                                borderRadius: '4px',
+                                overflow: 'hidden',
+                                border: img.is_primary ? '2px solid var(--blush-deep)' : '1px solid var(--border)',
+                              }}
+                            >
+                              <img
+                                src={img.image_url}
+                                alt="Product"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                              {img.is_primary && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    background: 'var(--blush-deep)',
+                                    fontSize: '0.55rem',
+                                    fontWeight: 700,
+                                    color: 'white',
+                                    textAlign: 'center',
+                                    padding: '2px',
+                                    letterSpacing: '0.04em',
+                                  }}
+                                >
+                                  PRIMARY
+                                </div>
+                              )}
+                              <button
+                                onClick={() => editingProduct && handleDeleteImage(img.id, editingProduct.id)}
+                                disabled={deletingImageId === img.id}
+                                style={{
+                                  position: 'absolute',
+                                  top: '3px',
+                                  right: '3px',
+                                  width: '20px',
+                                  height: '20px',
+                                  background: 'rgba(0,0,0,0.6)',
+                                  border: 'none',
+                                  borderRadius: '50%',
+                                  cursor: 'pointer',
+                                  color: 'white',
+                                  fontSize: '0.65rem',
+                                  fontWeight: 700,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'background 0.15s',
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.background = '#ef4444')}
+                                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.6)')}
+                              >
+                                {deletingImageId === img.id ? '...' : '×'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginBottom: '0.5rem' }}>
+                        {modalMode === 'edit' && existingImages.length > 0
+                          ? 'Upload additional images'
+                          : 'Upload product images'}
+                      </p>
+                      <div
+                        style={{
+                          border: `2px dashed ${imagePreviews.length > 0 ? 'var(--blush-deep)' : 'var(--border)'}`,
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          transition: 'border-color 0.2s',
+                          minHeight: '100px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--blush-deep)')}
+                        onMouseLeave={e =>
+                          (e.currentTarget.style.borderColor =
+                            imagePreviews.length > 0 ? 'var(--blush-deep)' : 'var(--border)')
+                        }
+                        onClick={() => document.getElementById('image-upload')?.click()}
+                      >
+                        <div style={{ textAlign: 'center', padding: '1.5rem' }}>
+                          <div style={{ fontSize: '1.5rem', marginBottom: '0.4rem' }}>📷</div>
+                          <p style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>
+                            Click to upload (select multiple)
+                          </p>
+                          <p style={{ fontSize: '0.68rem', color: 'var(--text-light)', marginTop: '0.2rem' }}>
+                            JPEG, PNG, WebP · max 5MB each
+                          </p>
+                        </div>
+                        <input
+                          id="image-upload"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          multiple
+                          onChange={handleImageChange}
+                          style={{ display: 'none' }}
+                        />
+                      </div>
+
+                      {imagePreviews.length > 0 && (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+                          {imagePreviews.map((src, i) => (
+                            <div key={i} style={{ position: 'relative', width: '80px', height: '96px' }}>
+                              <img
+                                src={src}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
+                              />
+                              {i === 0 && existingImages.length === 0 && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    background: 'var(--blush-deep)',
+                                    fontSize: '0.55rem',
+                                    fontWeight: 700,
+                                    color: 'white',
+                                    textAlign: 'center',
+                                    padding: '2px',
+                                  }}
+                                >
+                                  PRIMARY
+                                </div>
+                              )}
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setImageFiles(prev => prev.filter((_, j) => j !== i));
+                                  setImagePreviews(prev => prev.filter((_, j) => j !== i));
+                                }}
+                                style={{
+                                  position: 'absolute',
+                                  top: '3px',
+                                  right: '3px',
+                                  width: '20px',
+                                  height: '20px',
+                                  borderRadius: '50%',
+                                  background: 'rgba(0,0,0,0.6)',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  color: 'white',
+                                  fontSize: '0.65rem',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {imagePreviews.length > 0 && (
+                        <p style={{ fontSize: '0.72rem', color: 'var(--blush-deep)', marginTop: '0.4rem' }}>
+                          ✓ {imagePreviews.length} image{imagePreviews.length !== 1 ? 's' : ''} ready to upload
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Active toggle */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <button
+                      onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
+                      style={{
+                        width: '44px',
+                        height: '24px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: form.is_active ? 'var(--blush-deep)' : 'var(--border-dark)',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.2s',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          background: 'white',
+                          position: 'absolute',
+                          top: '3px',
+                          left: form.is_active ? '23px' : '3px',
+                          transition: 'left 0.2s',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                        }}
+                      />
+                    </button>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-mid)' }}>
+                      {form.is_active ? 'Visible to customers' : 'Hidden from store'}
+                    </span>
+                  </div>
                 </div>
+              )}
 
-                {/* Set as primary hint */}
-                {modalMode === 'edit' && existingImages.length > 0 && imageFiles.length > 0 && (
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginTop: '0.4rem', fontStyle: 'italic' }}>
-                    New images will be uploaded as additional images.
+              {/* ── VARIANTS TAB ── */}
+              {activeTab === 'variants' && savedProductId && (
+                <div>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-mid)', marginBottom: '1rem', lineHeight: 1.6 }}>
+                    Add selectable variants for this product (e.g. Shades for lipstick, Colors for hair dye). Each variant
+                    can be linked to one of the product's images — clicking it on the product page will switch to that image.
                   </p>
-                )}
-              </div>
-
-              {/* Active toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <button
-                  onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
-                  style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: form.is_active ? 'var(--blush-deep)' : 'var(--border-dark)',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'background 0.2s',
-                    flexShrink: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '50%',
-                      background: 'white',
-                      position: 'absolute',
-                      top: '3px',
-                      left: form.is_active ? '23px' : '3px',
-                      transition: 'left 0.2s',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                    }}
-                  />
-                </button>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-mid)' }}>
-                  {form.is_active ? 'Visible to customers' : 'Hidden from store'}
-                </span>
-              </div>
+                  <VariantsEditor productId={savedProductId} existingImages={existingImages} />
+                </div>
+              )}
             </div>
 
             {/* Modal footer */}
@@ -1062,30 +1354,39 @@ export default function AdminProductsPage() {
                 padding: '1rem 1.5rem',
                 borderTop: '1px solid var(--border)',
                 display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '0.75rem',
+                justifyContent: 'space-between',
+                alignItems: 'center',
                 position: 'sticky',
                 bottom: 0,
                 background: 'var(--white)',
               }}
             >
-              <button onClick={closeModal} className="btn-outline">
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving || uploadingImage}
-                className="btn-primary"
-                style={{ opacity: saving || uploadingImage ? 0.7 : 1 }}
-              >
-                {saving
-                  ? 'Saving...'
-                  : uploadingImage
-                    ? 'Uploading...'
-                    : modalMode === 'add'
-                      ? 'Add Product'
-                      : 'Save Changes'}
-              </button>
+              {/* Left: done button on variants tab once product saved */}
+              {activeTab === 'variants' ? (
+                <button onClick={closeModal} className="btn-primary">
+                  Done
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '0.75rem', marginLeft: 'auto' }}>
+                  <button onClick={closeModal} className="btn-outline">
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving || uploadingImage}
+                    className="btn-primary"
+                    style={{ opacity: saving || uploadingImage ? 0.7 : 1 }}
+                  >
+                    {saving
+                      ? 'Saving...'
+                      : uploadingImage
+                        ? 'Uploading...'
+                        : modalMode === 'add' && !savedProductId
+                          ? 'Save & Continue'
+                          : 'Save Changes'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1142,7 +1443,7 @@ export default function AdminProductsPage() {
               Delete Product?
             </h3>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-light)', marginBottom: '1.5rem' }}>
-              This will permanently delete the product and all its images. This cannot be undone.
+              This will permanently delete the product, all its images, and all its variants. This cannot be undone.
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
               <button onClick={() => setDeletingId(null)} className="btn-outline">
