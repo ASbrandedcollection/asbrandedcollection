@@ -1,5 +1,3 @@
-// GET  /api/admin/products — All products (including inactive) with pagination
-// POST /api/admin/products — Create new product
 import { requireAdmin } from '@/lib/admin-auth';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getPaginationRange, toSlug } from '@/lib/utils';
