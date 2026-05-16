@@ -53,6 +53,20 @@ export interface Product {
   rating_avg: number;
 }
 
+export interface ProductVariant {
+  id: string;
+  product_id: string;
+  type_name: string;
+  label: string;
+  image_id: string | null;
+  display_order: number;
+  created_at: string;
+  image?: {
+    id: string;
+    image_url: string;
+  } | null;
+}
+
 export interface BrandItem {
   id: string;
   name: string;
