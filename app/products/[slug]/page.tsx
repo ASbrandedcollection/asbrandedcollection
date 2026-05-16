@@ -3,9 +3,9 @@
 import ReviewsSection from '@/components/ReviewSection';
 import { useCart } from '@/lib/cart-context';
 import { calcFinalPrice, formatPKR } from '@/lib/utils';
-import type { Product } from '@/types';
+import type { Product, ProductVariant } from '@/types';
 import Link from 'next/link';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function ProductDetailPage() {
@@ -21,6 +21,10 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
+  // Variants
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+
   useEffect(() => {
     fetch(`/api/products/${slug}`)
       .then(r => r.json())
@@ -34,7 +38,32 @@ export default function ProductDetailPage() {
         }
       })
       .finally(() => setLoading(false));
+
+    // Fetch variants in parallel
+    fetch(`/api/products/${slug}/variants`)
+      .then(r => r.json())
+      .then(res => {
+        if (res.success) setVariants(res.data);
+      });
   }, [slug]);
+
+  function handleVariantClick(variant: ProductVariant) {
+    // Toggle off if clicking the already-selected one
+    if (selectedVariant?.id === variant.id) {
+      setSelectedVariant(null);
+      // Revert to primary image
+      if (product) {
+        const primary = product.images?.find(i => i.is_primary)?.image_url;
+        setSelectedImage(primary ?? product.images?.[0]?.image_url ?? null);
+      }
+      return;
+    }
+    setSelectedVariant(variant);
+    // Switch main image if this variant has one linked
+    if (variant.image?.image_url) {
+      setSelectedImage(variant.image.image_url);
+    }
+  }
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -69,7 +98,6 @@ export default function ProductDetailPage() {
     router.push('/cart');
   };
 
-  // ── Loading ───────────────────────────────────
   if (loading)
     return (
       <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -91,17 +119,9 @@ export default function ProductDetailPage() {
       </div>
     );
 
-  // ── Not found ─────────────────────────────────
   if (notFound || !product)
     return (
-      <div
-        style={{
-          minHeight: '80vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', padding: '2rem' }}>
           <div
             style={{
@@ -147,32 +167,22 @@ export default function ProductDetailPage() {
   const inCart = isInCart(product.id);
   const outOfStock = product.stock_qty === 0;
 
-  // Smart back button logic
+  // Group variants by type_name (always one type per product, but guard anyway)
+  const variantTypeName = variants[0]?.type_name ?? null;
+
+  // Smart back button
   const subcat = searchParams.get('subcategory');
   const cat = searchParams.get('category');
   const search = searchParams.get('search');
-
   let backHref = '/products';
-  let backLabel = 'Back';
-
-  if (subcat && cat) {
-    backHref = `/products?category=${cat}&subcategory=${subcat}`;
-  } else if (cat) {
-    backHref = `/products?category=${cat}`;
-  } else if (search) {
-    backHref = `/products?search=${search}`;
-  }
+  if (subcat && cat) backHref = `/products?category=${cat}&subcategory=${subcat}`;
+  else if (cat) backHref = `/products?category=${cat}`;
+  else if (search) backHref = `/products?search=${search}`;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--off-white)' }}>
       {/* Smart Back Button */}
-      <div
-        style={{
-          background: 'var(--white)',
-          borderBottom: '1px solid var(--border)',
-          padding: '0.6rem 1.5rem',
-        }}
-      >
+      <div style={{ background: 'var(--white)', borderBottom: '1px solid var(--border)', padding: '0.6rem 1.5rem' }}>
         <Link
           href={backHref}
           style={{
@@ -193,17 +203,12 @@ export default function ProductDetailPage() {
             <line x1="19" y1="12" x2="5" y2="12" />
             <polyline points="12 19 5 12 12 5" />
           </svg>
-          {backLabel}
+          Back
         </Link>
       </div>
 
-      <div
-        style={{
-          background: 'var(--white)',
-          borderBottom: '1px solid var(--border)',
-          padding: '0.75rem 0',
-        }}
-      >
+      {/* Breadcrumb */}
+      <div style={{ background: 'var(--white)', borderBottom: '1px solid var(--border)', padding: '0.75rem 0' }}>
         <div className="container" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           {[
             { label: 'Home', href: '/' },
@@ -252,13 +257,7 @@ export default function ProductDetailPage() {
       {/* Product detail */}
       <div className="container" style={{ padding: '2.5rem 2rem' }}>
         <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '3rem',
-            alignItems: 'start',
-            position: 'relative',
-          }}
+          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', alignItems: 'start', position: 'relative' }}
           className="product-grid"
         >
           {/* ── Images ── */}
@@ -275,13 +274,20 @@ export default function ProductDetailPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: '0.75rem',
+                position: 'relative',
               }}
             >
               {selectedImage ? (
                 <img
                   src={selectedImage}
                   alt={product.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    display: 'block',
+                    transition: 'opacity 0.2s',
+                  }}
                 />
               ) : (
                 <div
@@ -301,7 +307,6 @@ export default function ProductDetailPage() {
                   </svg>
                 </div>
               )}
-
               {hasDiscount && (
                 <div
                   style={{
@@ -327,7 +332,10 @@ export default function ProductDetailPage() {
                 {product.images.map(img => (
                   <button
                     key={img.id}
-                    onClick={() => setSelectedImage(img.image_url)}
+                    onClick={() => {
+                      setSelectedImage(img.image_url);
+                      setSelectedVariant(null);
+                    }}
                     style={{
                       width: '72px',
                       height: '90px',
@@ -397,13 +405,7 @@ export default function ProductDetailPage() {
               </span>
               {hasDiscount && (
                 <>
-                  <span
-                    style={{
-                      fontSize: '1.1rem',
-                      color: 'var(--text-light)',
-                      textDecoration: 'line-through',
-                    }}
-                  >
+                  <span style={{ fontSize: '1.1rem', color: 'var(--text-light)', textDecoration: 'line-through' }}>
                     {formatPKR(product.price)}
                   </span>
                   <span
@@ -425,27 +427,141 @@ export default function ProductDetailPage() {
 
             {/* Description */}
             {product.description && (
-              <p
-                style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--text-mid)',
-                  lineHeight: 1.8,
-                  marginBottom: '1.5rem',
-                }}
-              >
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-mid)', lineHeight: 1.8, marginBottom: '1.5rem' }}>
                 {product.description}
               </p>
+            )}
+
+            {/* ── VARIANTS ── */}
+            {variants.length > 0 && variantTypeName && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <p
+                    style={{
+                      fontSize: '0.7rem',
+                      fontWeight: 500,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: 'var(--text-mid)',
+                    }}
+                  >
+                    {variantTypeName}
+                  </p>
+                  {selectedVariant && (
+                    <span style={{ fontSize: '0.78rem', color: 'var(--blush-deep)', fontWeight: 500 }}>
+                      — {selectedVariant.label}
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {variants.map(variant => {
+                    const isSelected = selectedVariant?.id === variant.id;
+                    const hasImg = !!variant.image?.image_url;
+                    return (
+                      <button
+                        key={variant.id}
+                        onClick={() => handleVariantClick(variant)}
+                        title={variant.label}
+                        style={{
+                          position: 'relative',
+                          padding: '0',
+                          border: '2px solid',
+                          borderColor: isSelected ? 'var(--blush-deep)' : 'var(--border)',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          background: 'var(--white)',
+                          transition: 'border-color 0.15s, transform 0.15s',
+                          transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                        }}
+                        onMouseEnter={e => {
+                          if (!isSelected) e.currentTarget.style.borderColor = 'var(--blush-deep)';
+                        }}
+                        onMouseLeave={e => {
+                          if (!isSelected) e.currentTarget.style.borderColor = 'var(--border)';
+                        }}
+                      >
+                        {hasImg ? (
+                          /* Image swatch — like real e-commerce sites */
+                          <div style={{ width: '52px', height: '66px' }}>
+                            <img
+                              src={variant.image!.image_url}
+                              alt={variant.label}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            />
+                            {/* Label below image */}
+                            <div
+                              style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                background: isSelected ? 'var(--blush-deep)' : 'rgba(0,0,0,0.5)',
+                                color: 'white',
+                                fontSize: '0.55rem',
+                                fontWeight: 600,
+                                textAlign: 'center',
+                                padding: '2px 2px',
+                                letterSpacing: '0.02em',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                transition: 'background 0.15s',
+                              }}
+                            >
+                              {variant.label}
+                            </div>
+                          </div>
+                        ) : (
+                          /* Text chip — when no image linked */
+                          <div
+                            style={{
+                              padding: '0.4rem 0.75rem',
+                              fontSize: '0.75rem',
+                              fontWeight: 500,
+                              color: isSelected ? 'var(--blush-deep)' : 'var(--text-dark)',
+                              fontFamily: 'var(--font-body)',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {variant.label}
+                          </div>
+                        )}
+
+                        {/* Selected checkmark */}
+                        {isSelected && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '3px',
+                              right: '3px',
+                              width: '14px',
+                              height: '14px',
+                              borderRadius: '50%',
+                              background: 'var(--blush-deep)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.5">
+                              <polyline points="2 6 5 9 10 3" />
+                            </svg>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             )}
 
             {/* Stock */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
               <div
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: outOfStock ? '#e57373' : '#81c784',
-                }}
+                style={{ width: '8px', height: '8px', borderRadius: '50%', background: outOfStock ? '#e57373' : '#81c784' }}
               />
               <span style={{ fontSize: '0.8rem', color: 'var(--text-mid)' }}>
                 {outOfStock ? 'Out of Stock' : product.stock_qty <= 5 ? `Only ${product.stock_qty} left` : 'In Stock'}
@@ -560,18 +676,14 @@ export default function ProductDetailPage() {
                 <button
                   onClick={handleAddToCart}
                   className="btn-primary"
-                  style={{
-                    flex: 1,
-                    background: added ? '#81c784' : undefined,
-                    transition: 'background 0.3s',
-                  }}
+                  style={{ flex: 1, background: added ? '#81c784' : undefined, transition: 'background 0.3s' }}
                 >
                   {added ? '✓ Added to Cart' : 'Add to Cart'}
                 </button>
               )}
             </div>
 
-            {/* Buy Now button — only when in stock */}
+            {/* Buy Now */}
             {!outOfStock && (
               <button
                 onClick={handleBuyNow}
