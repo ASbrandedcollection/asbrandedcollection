@@ -1612,8 +1612,8 @@ function BrandsSection({ brands }: { brands: BrandItem[] }) {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 140px)',
-              gridTemplateRows: 'repeat(2, 80px)',
+              gridTemplateColumns: 'repeat(3, 150px)',
+              gridTemplateRows: 'repeat(3, 90px)',
               gap: '1rem',
               gridAutoFlow: 'column',
               width: 'max-content',
@@ -1651,24 +1651,21 @@ function BrandCard({ brand }: { brand: BrandItem }) {
   return (
     <div
       style={{
-        width: '140px',
-        height: '80px',
-        border: '1px solid var(--border)',
+        width: '150px',
+        height: '90px',
         borderRadius: '8px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '0.75rem',
+        padding: '0.5rem',
         transition: 'all 0.2s ease',
         cursor: 'pointer',
         background: 'var(--white)',
       }}
       onMouseEnter={e => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--blush-deep)';
         (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)';
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)';
         (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
       }}
     >
