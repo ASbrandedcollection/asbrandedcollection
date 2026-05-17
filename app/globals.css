@@ -9,23 +9,45 @@
 }
 
 :root {
+  /* ── Core whites & backgrounds ── */
   --white: #ffffff;
-  --off-white: #fafafa;
-  --blush: #e8c4b8;
-  --blush-light: #fdf0eb;
-  --blush-deep: #c97d6a;
-  --rose-deep: #8b4a3f;
-  --nude: #c4a882;
-  --nude-light: #f5ede4;
-  --text-dark: #1a1a1a;
+  --off-white: #f9f7f5;
+  --surface: #f3f0ed; /* warm grey — section backgrounds */
+
+  /* ── Brand accent (single, consistent) ── */
+  --accent: #d4517a; /* rose-crimson — buttons, badges, dividers */
+  --accent-hover: #b8405f; /* darker on hover */
+  --accent-light: #faeef2; /* faint tint for tag/badge backgrounds */
+
+  /* ── Text ── */
+  --text-dark: #111111;
   --text-mid: #555555;
   --text-light: #999999;
-  --border: #ebebeb;
-  --border-dark: #d4d4d4;
 
+  /* ── Borders ── */
+  --border: #e8e4e0;
+  --border-dark: #d0cbc6;
+
+  /* ── Footer ── */
+  --footer-bg: #0f0f1a;
+  --footer-text: rgba(255, 255, 255, 0.65);
+  --footer-heading: rgba(255, 255, 255, 0.95);
+  --footer-accent: #d4517a;
+  --footer-border: rgba(255, 255, 255, 0.08);
+
+  /* ── Legacy aliases (so existing components don't break) ── */
+  --blush: var(--accent);
+  --blush-light: var(--accent-light);
+  --blush-deep: var(--accent);
+  --rose-deep: var(--accent-hover);
+  --nude: var(--accent);
+  --nude-light: var(--accent-light);
+
+  /* ── Typography ── */
   --font-display: 'Libre Baskerville', Georgia, serif;
   --font-body: 'Outfit', sans-serif;
 
+  /* ── Layout ── */
   --nav-height: 64px;
   --topbar-height: 36px;
   --max-width: 1280px;
@@ -48,15 +70,15 @@ body {
   width: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--off-white);
+  background: var(--surface);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--blush-deep);
+  background: var(--accent);
   border-radius: 4px;
 }
 
 ::selection {
-  background: var(--blush);
+  background: var(--accent-light);
   color: var(--text-dark);
 }
 
@@ -69,7 +91,7 @@ body {
 .divider {
   width: 48px;
   height: 3px;
-  background: var(--blush-deep);
+  background: var(--accent);
   border-radius: 2px;
 }
 
@@ -82,6 +104,7 @@ body {
   aspect-ratio: 3/4;
 }
 
+/* ── Animations ── */
 @keyframes fadeUp {
   from {
     opacity: 0;
@@ -132,25 +155,25 @@ body {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.7rem 1.75rem;
-  background: var(--text-dark);
+  background: var(--accent);
   color: var(--white);
   font-family: var(--font-body);
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-decoration: none;
-  border: 2px solid var(--text-dark);
+  border: 2px solid var(--accent);
   cursor: pointer;
   transition:
     background 0.2s,
-    color 0.2s,
+    border-color 0.2s,
     transform 0.1s;
   border-radius: 4px;
 }
 
 .btn-primary:hover {
-  background: var(--blush-deep);
-  border-color: var(--blush-deep);
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
   transform: translateY(-1px);
 }
 
@@ -161,23 +184,24 @@ body {
   gap: 0.5rem;
   padding: 0.7rem 1.75rem;
   background: transparent;
-  color: var(--text-dark);
+  color: var(--accent);
   font-family: var(--font-body);
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-decoration: none;
-  border: 2px solid var(--text-dark);
+  border: 2px solid var(--accent);
   cursor: pointer;
   transition: all 0.2s;
   border-radius: 4px;
 }
 
 .btn-outline:hover {
-  background: var(--text-dark);
+  background: var(--accent);
   color: var(--white);
 }
 
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .features-grid {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -214,7 +238,6 @@ body {
     max-height: 280px;
   }
 
-  /* Stack product detail layout vertically on mobile */
   .product-detail-layout {
     flex-direction: column !important;
   }

@@ -186,10 +186,10 @@ function ProductCard({ product }: { product: Product }) {
               marginTop: 'auto',
               width: '100%',
               padding: '0.45rem 0',
-              background: added ? 'var(--text-dark)' : 'transparent',
+              background: added ? 'var(--text-dark)' : 'var(--accent)',
               border: '1px solid',
-              borderColor: added ? 'var(--text-dark)' : 'var(--border-dark)',
-              color: added ? 'var(--white)' : 'var(--text-mid)',
+              borderColor: added ? 'var(--text-dark)' : 'var(--accent)',
+              color: 'var(--white)',
               fontFamily: 'var(--font-body)',
               fontSize: '0.68rem',
               fontWeight: 600,
@@ -1161,7 +1161,6 @@ function Footer({ categories }: { categories: Category[] }) {
   const { settings } = useSettings();
   const socialLinks = settings.social_media?.filter(s => s.enabled && s.url) ?? [];
 
-  // Mobile collapsible state
   const [expanded, setExpanded] = useState({
     categories: false,
     customerService: false,
@@ -1172,16 +1171,18 @@ function Footer({ categories }: { categories: Category[] }) {
     setExpanded(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
+  // Light warm footer — all tokens use dark text
+  const BG = '#f0e6e0'; // warm rose-beige, a step darker than #fdf6f0
+  const TEXT_MAIN = '#2a1a16'; // very dark brown — store name, body
+  const TEXT_MID = '#6b4a42'; // medium warm brown — paragraph text
+  const TEXT_LINK = '#5a3a32'; // links default
+  const TEXT_LABEL = '#a07060'; // muted warm for ALL-CAPS section labels
+  const BORDER_CLR = 'rgba(42,26,22,0.12)';
+
   return (
-    <footer
-      style={{
-        background: 'var(--text-dark)',
-        color: 'rgba(255,255,255,0.7)',
-        padding: '3rem 0 1.5rem',
-      }}
-    >
+    <footer style={{ background: BG, color: TEXT_MID, padding: '3rem 0 1.5rem' }}>
       <div className="container">
-        {/* Desktop layout */}
+        {/* ── Desktop ── */}
         <div
           className="footer-desktop"
           style={{
@@ -1191,40 +1192,40 @@ function Footer({ categories }: { categories: Category[] }) {
             marginBottom: '2.5rem',
           }}
         >
+          {/* Brand */}
           <div>
             <h3
               style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: '1.3rem',
                 fontWeight: 700,
-                color: 'white',
+                color: TEXT_MAIN,
                 marginBottom: '0.75rem',
               }}
             >
               {settings.store_name}
             </h3>
-            <p style={{ fontSize: '0.82rem', lineHeight: 1.7 }}>
+            <p style={{ fontSize: '0.82rem', lineHeight: 1.7, color: TEXT_MID }}>
               Premium fashion, makeup &amp; lifestyle products delivered across Pakistan.
             </p>
-
-            {/* Social icons */}
             {socialLinks.length > 0 && (
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1em' }}>
                 {socialLinks.map((social, i) => (
-                  <SocialIcon key={i} platform={social.platform as SocialPlatform} url={social.url} size={36} light />
+                  <SocialIcon key={i} platform={social.platform as SocialPlatform} url={social.url} size={36} />
                 ))}
               </div>
             )}
           </div>
 
+          {/* Categories */}
           <div>
             <p
               style={{
-                fontSize: '0.72rem',
+                fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                color: 'var(--blush)',
+                color: TEXT_LABEL,
                 marginBottom: '1rem',
               }}
             >
@@ -1235,14 +1236,9 @@ function Footer({ categories }: { categories: Category[] }) {
                 <Link
                   key={cat.id}
                   href={`/category/${cat.slug}`}
-                  style={{
-                    fontSize: '0.82rem',
-                    color: 'rgba(255,255,255,0.6)',
-                    textDecoration: 'none',
-                    transition: 'color 0.2s',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'white')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
+                  style={{ fontSize: '0.82rem', color: TEXT_LINK, textDecoration: 'none', transition: 'color 0.2s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+                  onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
                 >
                   {cat.name}
                 </Link>
@@ -1250,14 +1246,15 @@ function Footer({ categories }: { categories: Category[] }) {
             </div>
           </div>
 
+          {/* Customer Service */}
           <div>
             <p
               style={{
-                fontSize: '0.72rem',
+                fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                color: 'var(--blush)',
+                color: TEXT_LABEL,
                 marginBottom: '1rem',
               }}
             >
@@ -1271,14 +1268,9 @@ function Footer({ categories }: { categories: Category[] }) {
                 <Link
                   key={item.label}
                   href={item.href}
-                  style={{
-                    fontSize: '0.82rem',
-                    color: 'rgba(255,255,255,0.6)',
-                    textDecoration: 'none',
-                    transition: 'color 0.2s',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'white')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
+                  style={{ fontSize: '0.82rem', color: TEXT_LINK, textDecoration: 'none', transition: 'color 0.2s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+                  onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
                 >
                   {item.label}
                 </Link>
@@ -1286,14 +1278,15 @@ function Footer({ categories }: { categories: Category[] }) {
             </div>
           </div>
 
+          {/* Contact */}
           <div>
             <p
               style={{
-                fontSize: '0.72rem',
+                fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                color: 'var(--blush)',
+                color: TEXT_LABEL,
                 marginBottom: '1rem',
               }}
             >
@@ -1307,13 +1300,7 @@ function Footer({ categories }: { categories: Category[] }) {
               ].map(({ icon, text }) => (
                 <span
                   key={text}
-                  style={{
-                    fontSize: '0.82rem',
-                    color: 'rgba(255,255,255,0.6)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                  }}
+                  style={{ fontSize: '0.82rem', color: TEXT_LINK, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                 >
                   {icon} {text}
                 </span>
@@ -1322,62 +1309,57 @@ function Footer({ categories }: { categories: Category[] }) {
           </div>
         </div>
 
-        {/* Mobile layout with collapsible sections */}
+        {/* ── Mobile ── */}
         <div className="footer-mobile" style={{ marginBottom: '2.5rem' }}>
-          {/* Store info */}
           <div style={{ marginBottom: '1.5rem' }}>
             <h3
               style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: '1.1rem',
                 fontWeight: 700,
-                color: 'white',
+                color: TEXT_MAIN,
                 marginBottom: '0.5rem',
               }}
             >
               {settings.store_name}
             </h3>
-            <p style={{ fontSize: '0.75rem', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '0.75rem', lineHeight: 1.65, color: TEXT_MID }}>
               Premium fashion, makeup &amp; lifestyle products delivered across Pakistan.
             </p>
-
-            {/* Social icons */}
             {socialLinks.length > 0 && (
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75em' }}>
                 {socialLinks.map((social, i) => (
-                  <SocialIcon key={i} platform={social.platform as SocialPlatform} url={social.url} size={32} light />
+                  <SocialIcon key={i} platform={social.platform as SocialPlatform} url={social.url} size={32} />
                 ))}
               </div>
             )}
           </div>
 
           {/* Categories collapsible */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginBottom: '1rem' }}>
+          <div style={{ borderTop: `1px solid ${BORDER_CLR}`, paddingTop: '1rem', marginBottom: '1rem' }}>
             <button
               onClick={() => toggleSection('categories')}
               style={{
                 width: '100%',
                 background: 'transparent',
                 border: 'none',
-                color: 'var(--blush)',
-                fontSize: '0.72rem',
+                color: TEXT_LABEL,
+                fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 padding: '0.75rem 0',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 cursor: 'pointer',
-                transition: 'color 0.2s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'white')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'var(--blush)')}
+              onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+              onMouseLeave={e => (e.currentTarget.style.color = TEXT_LABEL)}
             >
               Categories
               <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{expanded.categories ? '−' : '+'}</span>
             </button>
-
             {expanded.categories && (
               <div
                 style={{
@@ -1394,13 +1376,13 @@ function Footer({ categories }: { categories: Category[] }) {
                     href={`/category/${cat.slug}`}
                     style={{
                       fontSize: '0.78rem',
-                      color: 'rgba(255,255,255,0.6)',
+                      color: TEXT_LINK,
                       textDecoration: 'none',
-                      transition: 'color 0.2s',
                       paddingLeft: '0.5rem',
+                      transition: 'color 0.2s',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.color = 'white')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
+                    onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+                    onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
                   >
                     {cat.name}
                   </Link>
@@ -1410,32 +1392,30 @@ function Footer({ categories }: { categories: Category[] }) {
           </div>
 
           {/* Customer Service collapsible */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginBottom: '1rem' }}>
+          <div style={{ borderTop: `1px solid ${BORDER_CLR}`, paddingTop: '1rem', marginBottom: '1rem' }}>
             <button
               onClick={() => toggleSection('customerService')}
               style={{
                 width: '100%',
                 background: 'transparent',
                 border: 'none',
-                color: 'var(--blush)',
-                fontSize: '0.72rem',
+                color: TEXT_LABEL,
+                fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 padding: '0.75rem 0',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 cursor: 'pointer',
-                transition: 'color 0.2s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'white')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'var(--blush)')}
+              onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+              onMouseLeave={e => (e.currentTarget.style.color = TEXT_LABEL)}
             >
               Customer Service
               <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{expanded.customerService ? '−' : '+'}</span>
             </button>
-
             {expanded.customerService && (
               <div
                 style={{
@@ -1455,13 +1435,13 @@ function Footer({ categories }: { categories: Category[] }) {
                     href={item.href}
                     style={{
                       fontSize: '0.78rem',
-                      color: 'rgba(255,255,255,0.6)',
+                      color: TEXT_LINK,
                       textDecoration: 'none',
-                      transition: 'color 0.2s',
                       paddingLeft: '0.5rem',
+                      transition: 'color 0.2s',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.color = 'white')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
+                    onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+                    onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
                   >
                     {item.label}
                   </Link>
@@ -1471,32 +1451,30 @@ function Footer({ categories }: { categories: Category[] }) {
           </div>
 
           {/* Contact collapsible */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginBottom: '1rem' }}>
+          <div style={{ borderTop: `1px solid ${BORDER_CLR}`, paddingTop: '1rem', marginBottom: '1rem' }}>
             <button
               onClick={() => toggleSection('contact')}
               style={{
                 width: '100%',
                 background: 'transparent',
                 border: 'none',
-                color: 'var(--blush)',
-                fontSize: '0.8rem',
+                color: TEXT_LABEL,
+                fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 padding: '0.75rem 0',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 cursor: 'pointer',
-                transition: 'color 0.2s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'white')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'var(--blush)')}
+              onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+              onMouseLeave={e => (e.currentTarget.style.color = TEXT_LABEL)}
             >
               Contact
               <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{expanded.contact ? '−' : '+'}</span>
             </button>
-
             {expanded.contact && (
               <div
                 style={{
@@ -1516,7 +1494,7 @@ function Footer({ categories }: { categories: Category[] }) {
                     key={text}
                     style={{
                       fontSize: '0.8rem',
-                      color: 'rgba(255,255,255,0.6)',
+                      color: TEXT_LINK,
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
@@ -1531,17 +1509,18 @@ function Footer({ categories }: { categories: Category[] }) {
           </div>
         </div>
 
-        {/* Footer bottom */}
+        {/* ── Bottom bar ── */}
         <div
           style={{
-            borderTop: '1px solid rgba(255,255,255,0.08)',
+            borderTop: `1px solid ${BORDER_CLR}`,
             paddingTop: '1.5rem',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: '0.5rem',
-            fontSize: '0.75rem',
+            fontSize: '0.73rem',
+            color: TEXT_LABEL,
           }}
         >
           <p>
@@ -1554,23 +1533,17 @@ function Footer({ categories }: { categories: Category[] }) {
       <style>{`
         @media (min-width: 769px) {
           .footer-desktop { display: grid !important; }
-          .footer-mobile { display: none !important; }
+          .footer-mobile  { display: none  !important; }
         }
-
+ 
         @media (max-width: 768px) {
-          .footer-desktop { display: none !important; }
-          .footer-mobile { display: block !important; }
+          .footer-desktop { display: none  !important; }
+          .footer-mobile  { display: block !important; }
         }
-
+ 
         @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(-10px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </footer>

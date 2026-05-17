@@ -692,8 +692,8 @@ export default function ProductDetailPage() {
                   marginTop: '1rem',
                   width: '100%',
                   padding: '0.9rem 2rem',
-                  background: 'linear-gradient(135deg, var(--blush-deep) 0%, #c2185b 100%)',
-                  color: 'var(--white)',
+                  background: '#1a0a00',
+                  color: '#fff',
                   border: 'none',
                   fontSize: '0.8rem',
                   fontWeight: 600,
@@ -706,18 +706,19 @@ export default function ProductDetailPage() {
                   justifyContent: 'center',
                   gap: '0.5rem',
                   animation: 'buyNowBounce 1.8s ease-in-out infinite',
-                  boxShadow: '0 4px 15px rgba(194, 24, 91, 0.35)',
+                  boxShadow: '0 4px 15px rgba(26,10,0,0.25)',
                   transition: 'box-shadow 0.2s, transform 0.2s',
+                  borderRadius: '4px',
                 }}
                 onMouseEnter={e => {
                   (e.currentTarget as HTMLButtonElement).style.animationPlayState = 'paused';
                   (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 8px 24px rgba(194, 24, 91, 0.5)';
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 8px 24px rgba(26,10,0,0.4)';
                 }}
                 onMouseLeave={e => {
                   (e.currentTarget as HTMLButtonElement).style.animationPlayState = 'running';
                   (e.currentTarget as HTMLButtonElement).style.transform = '';
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 15px rgba(194, 24, 91, 0.35)';
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 15px rgba(26,10,0,0.25)';
                 }}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
