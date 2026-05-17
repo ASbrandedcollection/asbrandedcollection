@@ -634,7 +634,7 @@ function FeaturesStrip() {
 
 function SectionHeader({ label, title }: { label: string; title: string }) {
   return (
-    <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+    <div style={{ textAlign: 'center', marginBottom: '2.5rem' }} className="section-brand-header">
       <p
         style={{
           fontSize: '0.72rem',
@@ -658,6 +658,14 @@ function SectionHeader({ label, title }: { label: string; title: string }) {
         {title}
       </h2>
       <div className="divider" style={{ margin: '0.85rem auto 0' }} />
+
+      <style>{`
+        @media (max-width: 768px) {
+          .section-brand-header {
+            margin-bottom: 1rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -1597,8 +1605,8 @@ function EmptyState() {
 function BrandsSection({ brands }: { brands: BrandItem[] }) {
   if (brands.length === 0) return null;
   return (
-    <section style={{ padding: '3rem 0', background: 'var(--white)', borderTop: '1px solid var(--border)' }}>
-      <div className="container">
+    <section style={{ padding: '2rem 0', background: 'var(--white)', borderTop: '1px solid var(--border)' }}>
+      <div className="container" style={{ padding: '0' }}>
         <SectionHeader label="Trusted Names" title="Our Brands" />
 
         {/* Desktop */}
@@ -1626,12 +1634,12 @@ function BrandsSection({ brands }: { brands: BrandItem[] }) {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 150px)',
+              gridTemplateColumns: 'repeat(3, 135px)',
               gridTemplateRows: 'repeat(3, 90px)',
-              gap: '1rem',
+              // gap: '1rem',
               gridAutoFlow: 'column',
               width: 'max-content',
-              padding: '0 1rem',
+              // padding: '0 1rem',
             }}
           >
             {brands.map(brand => (
@@ -1670,7 +1678,7 @@ function BrandCard({ brand }: { brand: BrandItem }) {
         borderRadius: '8px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         padding: '0.5rem',
         transition: 'all 0.2s ease',
         cursor: 'pointer',
