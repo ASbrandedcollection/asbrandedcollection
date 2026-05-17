@@ -157,7 +157,7 @@ function ProductCard({ product }: { product: Product }) {
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '.5rem' }}>
             <span
               style={{ fontSize: '0.78rem', fontWeight: 600, color: hasDiscount ? 'var(--blush-deep)' : 'var(--text-dark)' }}
             >

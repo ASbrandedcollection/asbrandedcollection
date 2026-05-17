@@ -13,6 +13,25 @@ function ProductCard({ product }: { product: Product }) {
   const finalPrice = calcFinalPrice(product.price, product.discount_percent);
   const image = product.images?.find(i => i.is_primary)?.image_url ?? null;
   const hasDiscount = product.discount_percent > 0;
+  const { addItem } = useCart();
+  const [added, setAdded] = useState(false);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem({
+      product_id: product.id,
+      name: product.name,
+      slug: product.slug,
+      image_url: image ?? '',
+      unit_price: finalPrice,
+      original_price: product.price,
+      discount_percent: product.discount_percent,
+      quantity: 1,
+    });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  };
 
   return (
     <Link href={`/products/${product.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -138,7 +157,7 @@ function ProductCard({ product }: { product: Product }) {
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '.5rem' }}>
             <span
               style={{
                 fontSize: '0.9rem',
@@ -160,6 +179,28 @@ function ProductCard({ product }: { product: Product }) {
               </span>
             )}
           </div>
+
+          <button
+            onClick={handleAddToCart}
+            style={{
+              marginTop: 'auto',
+              width: '100%',
+              padding: '0.45rem 0',
+              background: added ? 'var(--text-dark)' : 'transparent',
+              border: '1px solid',
+              borderColor: added ? 'var(--text-dark)' : 'var(--border-dark)',
+              color: added ? 'var(--white)' : 'var(--text-mid)',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.68rem',
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {added ? '✓ Added' : 'Add to Cart'}
+          </button>
         </div>
       </div>
     </Link>
