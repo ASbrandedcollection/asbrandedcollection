@@ -1058,9 +1058,27 @@ function PromoBanner() {
 }
 
 function StatsSection() {
+  const [products, setProducts] = useState<number | null>(null);
+  const [customers, setCustomers] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          setProducts(d.products);
+          setCustomers(d.happy_customers);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const fmt = (n: number | null, fallback: string) =>
+    n === null ? fallback : n >= 1000 ? `${(n / 1000).toFixed(1)}k+` : `${n}+`;
+
   const stats = [
-    { value: '5,000+', label: 'Happy Customers' },
-    { value: '500+', label: 'Products Available' },
+    { value: fmt(customers, '5,000+'), label: 'Happy Customers' },
+    { value: fmt(products, '500+'), label: 'Products Available' },
     { value: '100%', label: 'Original Products' },
   ];
 
@@ -1800,22 +1818,20 @@ function DealCard({ deal }: { deal: Deal }) {
         </h3>
 
         {/* Products side by side */}
+        {/* Products side by side */}
         <div
           style={{
             display: 'flex',
-            gap: '1rem',
+            gap: '0.5rem',
             alignItems: 'stretch',
             marginBottom: '1.5rem',
-            overflowX: 'auto',
-            WebkitOverflowScrolling: 'touch' as any,
-            paddingBottom: '0.25rem',
           }}
         >
           {products.map((product, i) => {
             const image = product.images?.find((img: any) => img.is_primary)?.image_url ?? null;
             return (
               <div key={product.id} style={{ display: 'contents' }}>
-                <Link href={`/products/${product.slug}`} style={{ textDecoration: 'none', flex: '1', minWidth: '140px' }}>
+                <Link href={`/products/${product.slug}`} style={{ textDecoration: 'none', flex: '1', minWidth: 0 }}>
                   <div
                     style={{
                       border: '1px solid var(--border)',
@@ -1827,7 +1843,7 @@ function DealCard({ deal }: { deal: Deal }) {
                     onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)')}
                     onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.boxShadow = 'none')}
                   >
-                    <div style={{ height: '140px', background: 'var(--blush-light)', overflow: 'hidden' }}>
+                    <div style={{ aspectRatio: '1', background: 'var(--blush-light)', overflow: 'hidden' }}>
                       {image ? (
                         <img src={image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
@@ -1844,7 +1860,8 @@ function DealCard({ deal }: { deal: Deal }) {
                         </div>
                       )}
                     </div>
-                    <div style={{ padding: '0.75rem' }}>
+                    {/* Name + price hidden on mobile, shown on desktop */}
+                    <div className="deal-product-info" style={{ padding: '0.75rem' }}>
                       <p
                         style={{
                           fontSize: '0.82rem',
@@ -1863,21 +1880,14 @@ function DealCard({ deal }: { deal: Deal }) {
                   </div>
                 </Link>
 
-                {/* Plus sign between products */}
                 {i < products.length - 1 && (
                   <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      width: '32px',
-                    }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: '28px' }}
                   >
                     <div
                       style={{
-                        width: '28px',
-                        height: '28px',
+                        width: '24px',
+                        height: '24px',
                         borderRadius: '50%',
                         background: 'var(--blush-light)',
                         display: 'flex',
@@ -1886,7 +1896,6 @@ function DealCard({ deal }: { deal: Deal }) {
                         fontSize: '1rem',
                         color: 'var(--blush-deep)',
                         fontWeight: 700,
-                        flexShrink: 0,
                       }}
                     >
                       +

@@ -252,6 +252,9 @@ body {
   :root {
     --topbar-height: auto;
   }
+  .deal-product-info {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {
