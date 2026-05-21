@@ -106,19 +106,20 @@ function ProductCard({ product }: { product: Product }) {
             onClick={handleAddToCart}
             style={{
               width: '100%',
-              padding: '0.45rem 0',
-              background: added ? 'var(--text-dark)' : 'var(--accent)',
-              border: '1px solid',
+              padding: '0.6rem 0',
+              background: added ? 'var(--text-dark)' : '#f94144',
+              border: 'none',
               borderColor: added ? 'var(--text-dark)' : 'var(--accent)',
               color: 'var(--white)',
               fontFamily: 'var(--font-body)',
-              fontSize: '0.68rem',
-              fontWeight: 600,
+              fontSize: '0.7rem',
+              fontWeight: 800,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               marginBottom: '0.5rem',
+              borderRadius: '100px',
             }}
           >
             {added ? '✓ Added' : 'Add to Cart'}
