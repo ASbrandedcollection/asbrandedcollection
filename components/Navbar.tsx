@@ -143,7 +143,7 @@ function TickerTrack() {
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
-          font-size: 0.72rem;
+          font-size: 0.82rem;
           color: rgba(255, 255, 255, 0.88);
           transition:
             opacity 0.4s ease,
@@ -163,9 +163,18 @@ function TickerTrack() {
           transition: none;
         }
         .ticker-icon {
-          font-size: 0.75rem;
+          font-size: 0.85rem;
           display: inline-flex;
           align-items: center;
+        }
+
+        @media (max-width: 768px) {
+          .ticker-item {
+            font-size: 0.78rem; /* slightly smaller than desktop but bigger than before */
+          }
+          .ticker-icon {
+            font-size: 0.8rem;
+          }
         }
       `}</style>
     </div>
@@ -178,7 +187,7 @@ function TopBar() {
       style={{
         background: 'var(--rose-deep)',
         fontFamily: 'var(--font-body)',
-        height: 'var(--topbar-height)',
+        height: '2.25rem',
         overflow: 'hidden',
         padding: '.5rem 0',
       }}
@@ -777,9 +786,9 @@ export default function Navbar() {
               <Image
                 src="/logox.png"
                 alt="A&S Branded Collection"
-                height={52}
-                width={120}
-                style={{ objectFit: 'contain', width: 'auto', height: '48px' }}
+                height={72}
+                width={160}
+                style={{ objectFit: 'contain', width: 'auto', height: '64px' }}
                 priority
               />
             </Link>

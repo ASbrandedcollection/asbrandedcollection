@@ -91,7 +91,7 @@ function ProductCard({ product }: { product: Product }) {
                 position: 'absolute',
                 top: '10px',
                 left: '10px',
-                background: 'var(--blush-deep)',
+                background: '#10b981',
                 color: 'var(--white)',
                 fontSize: '0.68rem',
                 fontWeight: 700,
@@ -1127,16 +1127,12 @@ function StatsSection() {
 }
 
 function AboutSection() {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <section style={{ padding: '4rem 0', background: 'var(--white)' }}>
       <div className="container">
-        <div
-          style={{
-            maxWidth: '680px',
-            margin: '0 auto',
-            textAlign: 'center',
-          }}
-        >
+        <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
           <p
             style={{
               fontSize: '0.72rem',
@@ -1161,28 +1157,63 @@ function AboutSection() {
             Your Trusted Fashion &amp; Beauty Destination
           </h2>
           <div className="divider" style={{ margin: '0 auto 1.5rem' }} />
-          <p
+
+          {/* Both paragraphs collapse together */}
+          <div
+            className="about-body"
             style={{
-              fontSize: '0.95rem',
-              color: 'var(--text-mid)',
-              lineHeight: 1.8,
-              marginBottom: '1rem',
+              overflow: 'hidden',
+              maxHeight: expanded ? '400px' : '0',
+              opacity: expanded ? 1 : 0,
+              transition: 'max-height 0.4s ease, opacity 0.35s ease',
             }}
           >
-            We are a Pakistani fashion and beauty store dedicated to bringing you the finest collection of garments, makeup,
-            skincare, and lifestyle products. Every product we carry is carefully selected for quality and authenticity.
-          </p>
-          <p
+            <p style={{ fontSize: '0.95rem', color: 'var(--text-mid)', lineHeight: 1.8, marginBottom: '1rem' }}>
+              We are a Pakistani fashion and beauty store dedicated to bringing you the finest collection of garments,
+              makeup, skincare, and lifestyle products. Every product we carry is carefully selected for quality and
+              authenticity.
+            </p>
+            <p style={{ fontSize: '0.95rem', color: 'var(--text-mid)', lineHeight: 1.8, marginBottom: '2rem' }}>
+              From everyday essentials to special occasion outfits, we have something for everyone in the family. Shop with
+              confidence — all products are 100% original and delivered right to your door across Pakistan.
+            </p>
+          </div>
+
+          {/* Toggle button — mobile only */}
+          <button
+            onClick={() => setExpanded(prev => !prev)}
+            className="about-toggle-btn"
             style={{
-              fontSize: '0.95rem',
-              color: 'var(--text-mid)',
-              lineHeight: 1.8,
-              marginBottom: '2rem',
+              background: 'none',
+              border: 'none',
+              color: 'var(--blush-deep)',
+              fontSize: '1rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'none',
+              alignItems: 'center',
+              gap: '0.3rem',
+              margin: '0 auto 1.75rem',
+              padding: 0,
             }}
           >
-            From everyday essentials to special occasion outfits, we have something for everyone in the family. Shop with
-            confidence — all products are 100% original and delivered right to your door across Pakistan.
-          </p>
+            {expanded ? 'About us -' : 'About us +'}
+          </button>
+
+          <style>{`
+            @media (max-width: 768px) {
+              .about-toggle-btn {
+                display: flex !important;
+              }
+            }
+            @media (min-width: 769px) {
+              .about-body {
+                max-height: 400px !important;
+                opacity: 1 !important;
+              }
+            }
+          `}</style>
+
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/products" className="btn-primary">
               Browse Products
