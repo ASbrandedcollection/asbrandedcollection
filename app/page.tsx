@@ -114,6 +114,7 @@ function ProductCard({ product }: { product: Product }) {
               textTransform: 'uppercase',
               color: 'var(--text-light)',
               marginBottom: '0.3rem',
+              textAlign: 'center',
             }}
           >
             {product.category?.name}
@@ -125,6 +126,7 @@ function ProductCard({ product }: { product: Product }) {
               color: 'var(--text-dark)',
               marginBottom: '0.5rem',
               lineHeight: 1.3,
+              textAlign: 'center',
             }}
           >
             {product.name}
@@ -132,7 +134,15 @@ function ProductCard({ product }: { product: Product }) {
 
           {/* Stars + review count */}
           {(product.review_count ?? 0) > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                marginBottom: '0.25rem',
+                justifyContent: 'center',
+              }}
+            >
               <div style={{ display: 'flex', gap: '1px' }}>
                 {[1, 2, 3, 4, 5].map(star => {
                   const fill = Math.min(1, Math.max(0, (product.rating_avg ?? 0) - (star - 1)));
@@ -157,7 +167,9 @@ function ProductCard({ product }: { product: Product }) {
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '.5rem' }}>
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '.5rem', justifyContent: 'center' }}
+          >
             <span
               style={{
                 fontSize: '0.9rem',

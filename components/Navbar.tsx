@@ -86,6 +86,8 @@ function SubcategoryCard({
 
 function TickerTrack() {
   const { settings } = useSettings();
+  const [current, setCurrent] = useState(0);
+  const [phase, setPhase] = useState('show');
 
   const items = [
     {
@@ -103,62 +105,67 @@ function TickerTrack() {
     },
   ];
 
-  const doubled = [...items, ...items];
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPhase('exit');
+      setTimeout(() => {
+        setCurrent(prev => (prev + 1) % items.length);
+        setPhase('enter');
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setPhase('show');
+          });
+        });
+      }, 400);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [items.length]);
+
+  const item = items[current];
 
   return (
     <div className="ticker-wrapper">
-      <div className="ticker-track">
-        {doubled.map((item, i) => (
-          <span key={i} className="ticker-item">
-            <span className="ticker-icon">{item.icon}</span>
-            {item.label}
-          </span>
-        ))}
-      </div>
-
+      <span className={`ticker-item ${phase}`}>
+        <span className="ticker-icon">{item.icon}</span>
+        {item.label}
+      </span>
       <style jsx>{`
         .ticker-wrapper {
-          overflow: hidden;
           width: 100%;
           height: 100%;
           display: flex;
           align-items: center;
+          justify-content: center;
+          overflow: hidden;
         }
-
-        .ticker-track {
-          display: flex;
-          white-space: nowrap;
-          animation: ticker-scroll 22s linear infinite;
-          will-change: transform;
-        }
-
-        .ticker-track:hover {
-          animation-play-state: paused;
-        }
-
         .ticker-item {
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
-          padding: 0 2.5rem;
           font-size: 0.72rem;
           color: rgba(255, 255, 255, 0.88);
-          border-right: 1px solid rgba(255, 255, 255, 0.15);
+          transition:
+            opacity 0.4s ease,
+            transform 0.4s ease;
         }
-
+        .ticker-item.show {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        .ticker-item.exit {
+          opacity: 0;
+          transform: translateX(-40px);
+        }
+        .ticker-item.enter {
+          opacity: 0;
+          transform: translateX(40px);
+          transition: none;
+        }
         .ticker-icon {
           font-size: 0.75rem;
           display: inline-flex;
           align-items: center;
-        }
-
-        @keyframes ticker-scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
         }
       `}</style>
     </div>
