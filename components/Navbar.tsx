@@ -509,8 +509,8 @@ function MobileMenu({
           borderBottom: '1px solid var(--border)',
           textDecoration: 'none',
           fontFamily: 'var(--font-body)',
-          fontSize: '0.9rem',
-          fontWeight: 600,
+          fontSize: '1.2rem',
+          fontWeight: 900,
           color: 'var(--text-dark)',
         }}
       >
@@ -529,8 +529,8 @@ function MobileMenu({
           borderBottom: '1px solid var(--border)',
           textDecoration: 'none',
           fontFamily: 'var(--font-body)',
-          fontSize: '0.9rem',
-          fontWeight: 600,
+          fontSize: '1.2rem',
+          fontWeight: 900,
           color: 'var(--text-dark)',
         }}
       >
@@ -546,7 +546,7 @@ function MobileMenu({
 
       <p
         style={{
-          fontSize: '0.68rem',
+          fontSize: '0.8rem',
           fontWeight: 700,
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
@@ -567,8 +567,8 @@ function MobileMenu({
           <span
             style={{
               fontFamily: 'var(--font-body)',
-              fontSize: '0.88rem',
-              fontWeight: 500,
+              fontSize: '1.2rem',
+              fontWeight: 900,
               color: 'var(--text-dark)',
               display: 'flex',
               alignItems: 'center',
