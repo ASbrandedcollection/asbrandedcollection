@@ -38,7 +38,7 @@ function ProductCard({ product }: { product: Product }) {
       <div
         style={{
           background: 'var(--white)',
-          border: '1px solid var(--border)',
+          // border: '1px solid var(--border)',
           borderRadius: '6px',
           overflow: 'hidden',
           transition: 'transform 0.25s ease, box-shadow 0.25s ease',
@@ -153,7 +153,7 @@ function ProductCard({ product }: { product: Product }) {
               textAlign: 'center',
             }}
           >
-            {product.name}
+            {product.name.slice(0, 20).concat('...')}
           </p>
 
           {/* Stars + review count */}
