@@ -144,6 +144,7 @@ function TickerTrack() {
           align-items: center;
           gap: 0.4rem;
           font-size: 0.82rem;
+          font-weight: 500;
           color: rgba(255, 255, 255, 0.88);
           transition:
             opacity 0.4s ease,
@@ -170,7 +171,7 @@ function TickerTrack() {
 
         @media (max-width: 768px) {
           .ticker-item {
-            font-size: 0.78rem; /* slightly smaller than desktop but bigger than before */
+            font-size: 0.8rem; /* slightly smaller than desktop but bigger than before */
           }
           .ticker-icon {
             font-size: 0.8rem;
@@ -185,7 +186,7 @@ function TopBar() {
   return (
     <div
       style={{
-        background: 'var(--rose-deep)',
+        background: '#e63946',
         fontFamily: 'var(--font-body)',
         height: '2.25rem',
         overflow: 'hidden',
