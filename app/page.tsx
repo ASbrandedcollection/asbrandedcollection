@@ -111,19 +111,20 @@ function ProductCard({ product }: { product: Product }) {
             onClick={handleAddToCart}
             style={{
               width: '100%',
-              padding: '0.45rem 0',
-              background: added ? 'var(--text-dark)' : 'var(--accent)',
-              border: '1px solid',
+              padding: '0.6rem 0',
+              background: added ? 'var(--text-dark)' : '#f94144',
+              border: 'none',
               borderColor: added ? 'var(--text-dark)' : 'var(--accent)',
               color: 'var(--white)',
               fontFamily: 'var(--font-body)',
-              fontSize: '0.68rem',
-              fontWeight: 600,
+              fontSize: '0.7rem',
+              fontWeight: 800,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               marginBottom: '0.5rem',
+              borderRadius: '100px',
             }}
           >
             {added ? '✓ Added' : 'Add to Cart'}
@@ -654,8 +655,13 @@ function SectionHeader({ label, title }: { label: string; title: string }) {
           fontWeight: 700,
           letterSpacing: '0.15em',
           textTransform: 'uppercase',
-          color: 'var(--blush-deep)',
+          color: 'var(--off-white)',
           marginBottom: '0.6rem',
+          backgroundColor: '#861657',
+          width: 'max-content',
+          textAlign: 'center',
+          display: 'inline-block',
+          padding: '.5rem 1rem',
         }}
       >
         {label}
@@ -1087,10 +1093,11 @@ function StatsSection() {
       <div className="container">
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            display: 'flex',
+            // gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '2rem',
             textAlign: 'center',
+            justifyContent: 'center',
           }}
           className="stats-grid"
         >
@@ -1101,7 +1108,7 @@ function StatsSection() {
                   fontFamily: 'var(--font-display)',
                   fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
                   fontWeight: 700,
-                  color: 'var(--blush-deep)',
+                  color: '#e63946',
                   lineHeight: 1,
                   marginBottom: '0.4rem',
                 }}
@@ -1110,8 +1117,8 @@ function StatsSection() {
               </p>
               <p
                 style={{
-                  fontSize: '0.82rem',
-                  fontWeight: 600,
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
                   color: 'var(--text-mid)',
                   letterSpacing: '0.03em',
                 }}
@@ -1135,11 +1142,11 @@ function AboutSection() {
         <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
           <p
             style={{
-              fontSize: '0.72rem',
-              fontWeight: 700,
+              fontSize: '1.2rem',
+              fontWeight: 900,
               letterSpacing: '0.15em',
               textTransform: 'uppercase',
-              color: 'var(--blush-deep)',
+              color: '#e63946',
               marginBottom: '0.75rem',
             }}
           >
@@ -1187,7 +1194,7 @@ function AboutSection() {
               background: 'none',
               border: 'none',
               color: 'var(--blush-deep)',
-              fontSize: '1rem',
+              fontSize: '1.3rem',
               fontWeight: 600,
               cursor: 'pointer',
               display: 'none',
@@ -1197,7 +1204,7 @@ function AboutSection() {
               padding: 0,
             }}
           >
-            {expanded ? 'About us -' : 'About us +'}
+            {expanded ? 'Read less -' : 'Read more +'}
           </button>
 
           <style>{`
@@ -1251,7 +1258,7 @@ function Footer({ categories }: { categories: Category[] }) {
   const BORDER_CLR = 'rgba(42,26,22,0.12)';
 
   return (
-    <footer style={{ background: BG, color: TEXT_MID, padding: '3rem 0 1.5rem' }}>
+    <footer style={{ background: '#861657', color: TEXT_MID, padding: '3rem 0 1.5rem' }}>
       <div className="container">
         {/* ── Desktop ── */}
         <div
@@ -1270,13 +1277,13 @@ function Footer({ categories }: { categories: Category[] }) {
                 fontFamily: 'var(--font-display)',
                 fontSize: '1.3rem',
                 fontWeight: 700,
-                color: TEXT_MAIN,
+                color: 'var(--off-white)',
                 marginBottom: '0.75rem',
               }}
             >
               {settings.store_name}
             </h3>
-            <p style={{ fontSize: '0.82rem', lineHeight: 1.7, color: TEXT_MID }}>
+            <p style={{ fontSize: '0.82rem', lineHeight: 1.7, color: 'var(--off-white)' }}>
               Premium fashion, makeup &amp; lifestyle products delivered across Pakistan.
             </p>
             {socialLinks.length > 0 && (
@@ -1296,7 +1303,7 @@ function Footer({ categories }: { categories: Category[] }) {
                 fontWeight: 700,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                color: TEXT_LABEL,
+                color: 'var(--off-white)',
                 marginBottom: '1rem',
               }}
             >
@@ -1307,9 +1314,14 @@ function Footer({ categories }: { categories: Category[] }) {
                 <Link
                   key={cat.id}
                   href={`/category/${cat.slug}`}
-                  style={{ fontSize: '0.82rem', color: TEXT_LINK, textDecoration: 'none', transition: 'color 0.2s' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
-                  onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
+                  style={{
+                    fontSize: '0.82rem',
+                    color: 'var(--off-white)',
+                    textDecoration: 'none',
+                    transition: 'color 0.2s',
+                  }}
+                  // onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+                  // onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
                 >
                   {cat.name}
                 </Link>
@@ -1325,7 +1337,7 @@ function Footer({ categories }: { categories: Category[] }) {
                 fontWeight: 700,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                color: TEXT_LABEL,
+                color: 'var(--off-white)',
                 marginBottom: '1rem',
               }}
             >
@@ -1339,9 +1351,14 @@ function Footer({ categories }: { categories: Category[] }) {
                 <Link
                   key={item.label}
                   href={item.href}
-                  style={{ fontSize: '0.82rem', color: TEXT_LINK, textDecoration: 'none', transition: 'color 0.2s' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
-                  onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
+                  style={{
+                    fontSize: '0.82rem',
+                    color: 'var(--off-white)',
+                    textDecoration: 'none',
+                    transition: 'color 0.2s',
+                  }}
+                  // onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+                  // onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
                 >
                   {item.label}
                 </Link>
@@ -1357,7 +1374,7 @@ function Footer({ categories }: { categories: Category[] }) {
                 fontWeight: 700,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
-                color: TEXT_LABEL,
+                color: 'var(--off-white)',
                 marginBottom: '1rem',
               }}
             >
@@ -1371,7 +1388,13 @@ function Footer({ categories }: { categories: Category[] }) {
               ].map(({ icon, text }) => (
                 <span
                   key={text}
-                  style={{ fontSize: '0.82rem', color: TEXT_LINK, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  style={{
+                    fontSize: '0.82rem',
+                    color: 'var(--off-white)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
                 >
                   {icon} {text}
                 </span>
@@ -1386,15 +1409,15 @@ function Footer({ categories }: { categories: Category[] }) {
             <h3
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: '1.1rem',
+                fontSize: '1.5rem',
                 fontWeight: 700,
-                color: TEXT_MAIN,
+                color: 'var(--off-white)',
                 marginBottom: '0.5rem',
               }}
             >
               {settings.store_name}
             </h3>
-            <p style={{ fontSize: '0.75rem', lineHeight: 1.65, color: TEXT_MID }}>
+            <p style={{ fontSize: '0.9rem', lineHeight: 1.65, color: 'var(--off-white)' }}>
               Premium fashion, makeup &amp; lifestyle products delivered across Pakistan.
             </p>
             {socialLinks.length > 0 && (
@@ -1414,8 +1437,8 @@ function Footer({ categories }: { categories: Category[] }) {
                 width: '100%',
                 background: 'transparent',
                 border: 'none',
-                color: TEXT_LABEL,
-                fontSize: '0.7rem',
+                color: 'var(--off-white)',
+                fontSize: '1rem',
                 fontWeight: 700,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
@@ -1425,8 +1448,8 @@ function Footer({ categories }: { categories: Category[] }) {
                 alignItems: 'center',
                 cursor: 'pointer',
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
-              onMouseLeave={e => (e.currentTarget.style.color = TEXT_LABEL)}
+              // onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+              // onMouseLeave={e => (e.currentTarget.style.color = TEXT_LABEL)}
             >
               Categories
               <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{expanded.categories ? '−' : '+'}</span>
@@ -1446,14 +1469,14 @@ function Footer({ categories }: { categories: Category[] }) {
                     key={cat.id}
                     href={`/category/${cat.slug}`}
                     style={{
-                      fontSize: '0.78rem',
-                      color: TEXT_LINK,
+                      fontSize: '0.9rem',
+                      color: 'var(--off-white)',
                       textDecoration: 'none',
                       paddingLeft: '0.5rem',
                       transition: 'color 0.2s',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
-                    onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
+                    // onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+                    // onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
                   >
                     {cat.name}
                   </Link>
@@ -1470,8 +1493,8 @@ function Footer({ categories }: { categories: Category[] }) {
                 width: '100%',
                 background: 'transparent',
                 border: 'none',
-                color: TEXT_LABEL,
-                fontSize: '0.7rem',
+                color: 'var(--off-white)',
+                fontSize: '1rem',
                 fontWeight: 700,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
@@ -1481,8 +1504,8 @@ function Footer({ categories }: { categories: Category[] }) {
                 alignItems: 'center',
                 cursor: 'pointer',
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
-              onMouseLeave={e => (e.currentTarget.style.color = TEXT_LABEL)}
+              // onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+              // onMouseLeave={e => (e.currentTarget.style.color = TEXT_LABEL)}
             >
               Customer Service
               <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{expanded.customerService ? '−' : '+'}</span>
@@ -1505,14 +1528,14 @@ function Footer({ categories }: { categories: Category[] }) {
                     key={item.label}
                     href={item.href}
                     style={{
-                      fontSize: '0.78rem',
-                      color: TEXT_LINK,
+                      fontSize: '0.9rem',
+                      color: 'var(--off-white)',
                       textDecoration: 'none',
                       paddingLeft: '0.5rem',
                       transition: 'color 0.2s',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
-                    onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
+                    // onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+                    // onMouseLeave={e => (e.currentTarget.style.color = TEXT_LINK)}
                   >
                     {item.label}
                   </Link>
@@ -1529,8 +1552,8 @@ function Footer({ categories }: { categories: Category[] }) {
                 width: '100%',
                 background: 'transparent',
                 border: 'none',
-                color: TEXT_LABEL,
-                fontSize: '0.7rem',
+                color: 'var(--off-white)',
+                fontSize: '1rem',
                 fontWeight: 700,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
@@ -1540,8 +1563,8 @@ function Footer({ categories }: { categories: Category[] }) {
                 alignItems: 'center',
                 cursor: 'pointer',
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
-              onMouseLeave={e => (e.currentTarget.style.color = TEXT_LABEL)}
+              // onMouseEnter={e => (e.currentTarget.style.color = TEXT_MAIN)}
+              // onMouseLeave={e => (e.currentTarget.style.color = TEXT_LABEL)}
             >
               Contact
               <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{expanded.contact ? '−' : '+'}</span>
@@ -1564,8 +1587,8 @@ function Footer({ categories }: { categories: Category[] }) {
                   <span
                     key={text}
                     style={{
-                      fontSize: '0.8rem',
-                      color: TEXT_LINK,
+                      fontSize: '0.9rem',
+                      color: 'var(--off-white)',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
@@ -1590,8 +1613,8 @@ function Footer({ categories }: { categories: Category[] }) {
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: '0.5rem',
-            fontSize: '0.73rem',
-            color: TEXT_LABEL,
+            fontSize: '0.8rem',
+            color: 'var(--off-white)',
           }}
         >
           <p>
