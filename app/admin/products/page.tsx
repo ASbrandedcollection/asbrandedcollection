@@ -319,9 +319,14 @@ export default function AdminProductsPage() {
 
   const [form, setForm] = useState(emptyForm);
 
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+
   async function fetchProducts() {
     setLoading(true);
-    const res = await fetch(`/api/admin/products?page=${page}&limit=10`);
+    const params = new URLSearchParams({ page: String(page), limit: '10' });
+    if (search) params.set('search', search);
+    const res = await fetch(`/api/admin/products?${params}`);
     const data = await res.json();
     if (data.success) {
       setProducts(data.data.data);
@@ -331,8 +336,16 @@ export default function AdminProductsPage() {
   }
 
   useEffect(() => {
+    const t = setTimeout(() => {
+      setPage(1);
+      setSearch(searchInput);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
     fetchProducts();
-  }, [page]);
+  }, [page, search]);
 
   useEffect(() => {
     fetch('/api/admin/categories')
@@ -581,6 +594,27 @@ export default function AdminProductsPage() {
             {total} total product{total !== 1 ? 's' : ''}
           </p>
         </div>
+
+        <input
+          type="text"
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
+          placeholder="Search products..."
+          style={{
+            padding: '0.55rem 0.9rem',
+            border: '1px solid var(--border)',
+            borderRadius: '4px',
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.82rem',
+            color: 'var(--text-dark)',
+            background: 'var(--off-white)',
+            outline: 'none',
+            width: '220px',
+          }}
+          onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
+          onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+        />
+
         <button onClick={openAdd} className="btn-primary">
           + Add Product
         </button>

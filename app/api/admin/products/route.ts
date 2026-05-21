@@ -8,17 +8,21 @@ const supabaseAdmin = getSupabaseAdmin();
 export async function GET(request: NextRequest) {
   const { error: authError } = await requireAdmin(request);
   if (authError) return authError;
-
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
   const limit = Math.min(50, parseInt(searchParams.get('limit') ?? '20'));
+  const search = searchParams.get('search')?.trim() ?? ''; // ← add this
   const { from, to } = getPaginationRange(page, limit);
 
-  const { data, error, count } = await supabaseAdmin
+  let query = supabaseAdmin
     .from('products')
     .select('*, category:categories(*), images:product_images(*)', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to);
+
+  if (search) query = query.ilike('name', `%${search}%`);
+
+  const { data, error, count } = await query;
 
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
 

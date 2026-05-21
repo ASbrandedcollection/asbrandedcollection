@@ -697,7 +697,7 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
   ];
 
   return (
-    <section style={{ padding: '3.5rem 0', background: 'var(--off-white)' }}>
+    <section style={{ padding: '3.5rem 0', background: 'var(--off-white)' }} className="shop-category">
       <div className="container">
         <SectionHeader label="Browse by Category" title="Shop Our Collections" />
 
@@ -896,6 +896,7 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
           .categories-mobile { display: flex !important; }
           .categories-mobile::-webkit-scrollbar { display: none; }
           .categories-mobile { -ms-overflow-style: none; scrollbar-width: none; }
+          .shop-category {padding: 1.2rem 0px !important;}
         }
       `}</style>
     </section>
