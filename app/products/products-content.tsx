@@ -101,14 +101,38 @@ function ProductCard({ product }: { product: Product }) {
         </div>
 
         <div className="product-card-info" style={{ padding: '0.6rem' }}>
+          {/* Add to Cart button — now at the top */}
+          <button
+            onClick={handleAddToCart}
+            style={{
+              width: '100%',
+              padding: '0.45rem 0',
+              background: added ? 'var(--text-dark)' : 'var(--accent)',
+              border: '1px solid',
+              borderColor: added ? 'var(--text-dark)' : 'var(--accent)',
+              color: 'var(--white)',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.68rem',
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              marginBottom: '0.5rem',
+            }}
+          >
+            {added ? '✓ Added' : 'Add to Cart'}
+          </button>
+
           <p
             style={{
-              fontSize: '0.55rem',
+              fontSize: '0.56rem',
               fontWeight: 500,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               color: 'var(--text-light)',
               marginBottom: '0.2rem',
+              textAlign: 'center',
             }}
           >
             {product.category?.name}
@@ -125,6 +149,7 @@ function ProductCard({ product }: { product: Product }) {
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical' as any,
               overflow: 'hidden',
+              textAlign: 'center',
             }}
           >
             {product.name}
@@ -132,7 +157,15 @@ function ProductCard({ product }: { product: Product }) {
 
           {/* Stars + review count */}
           {(product.review_count ?? 0) > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                marginBottom: '0.25rem',
+                justifyContent: 'center',
+              }}
+            >
               <div style={{ display: 'flex', gap: '1px' }}>
                 {[1, 2, 3, 4, 5].map(star => {
                   const fill = Math.min(1, Math.max(0, (product.rating_avg ?? 0) - (star - 1)));
@@ -157,7 +190,16 @@ function ProductCard({ product }: { product: Product }) {
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '.5rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              flexWrap: 'wrap',
+              marginBottom: '.5rem',
+              justifyContent: 'center',
+            }}
+          >
             <span
               style={{ fontSize: '0.78rem', fontWeight: 600, color: hasDiscount ? 'var(--blush-deep)' : 'var(--text-dark)' }}
             >
@@ -169,29 +211,6 @@ function ProductCard({ product }: { product: Product }) {
               </span>
             )}
           </div>
-
-          {/* Add to Cart button — mt-auto pushes it to the bottom */}
-          <button
-            onClick={handleAddToCart}
-            style={{
-              marginTop: 'auto',
-              width: '100%',
-              padding: '0.45rem 0',
-              background: added ? 'var(--text-dark)' : 'var(--accent)',
-              border: '1px solid',
-              borderColor: added ? 'var(--text-dark)' : 'var(--accent)',
-              color: 'var(--white)',
-              fontFamily: 'var(--font-body)',
-              fontSize: '0.68rem',
-              fontWeight: 600,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {added ? '✓ Added' : 'Add to Cart'}
-          </button>
         </div>
       </div>
     </Link>

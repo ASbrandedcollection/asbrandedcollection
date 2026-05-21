@@ -106,6 +106,29 @@ function ProductCard({ product }: { product: Product }) {
 
         {/* Info */}
         <div style={{ padding: '0.85rem' }}>
+          {/* Add to Cart button — now at the top */}
+          <button
+            onClick={handleAddToCart}
+            style={{
+              width: '100%',
+              padding: '0.45rem 0',
+              background: added ? 'var(--text-dark)' : 'var(--accent)',
+              border: '1px solid',
+              borderColor: added ? 'var(--text-dark)' : 'var(--accent)',
+              color: 'var(--white)',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.68rem',
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              marginBottom: '0.5rem',
+            }}
+          >
+            {added ? '✓ Added' : 'Add to Cart'}
+          </button>
+
           <p
             style={{
               fontSize: '0.65rem',
@@ -191,28 +214,6 @@ function ProductCard({ product }: { product: Product }) {
               </span>
             )}
           </div>
-
-          <button
-            onClick={handleAddToCart}
-            style={{
-              marginTop: 'auto',
-              width: '100%',
-              padding: '0.45rem 0',
-              background: added ? 'var(--text-dark)' : 'var(--accent)',
-              border: '1px solid',
-              borderColor: added ? 'var(--text-dark)' : 'var(--accent)',
-              color: 'var(--white)',
-              fontFamily: 'var(--font-body)',
-              fontSize: '0.68rem',
-              fontWeight: 600,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {added ? '✓ Added' : 'Add to Cart'}
-          </button>
         </div>
       </div>
     </Link>
