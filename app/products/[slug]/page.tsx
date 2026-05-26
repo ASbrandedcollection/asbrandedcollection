@@ -676,7 +676,27 @@ export default function ProductDetailPage() {
                 <button
                   onClick={handleAddToCart}
                   className="btn-primary"
-                  style={{ flex: 1, background: added ? '#81c784' : undefined, transition: 'background 0.3s' }}
+                  style={
+                    // { flex: 1, background: added ? '#81c784' : undefined, transition: 'background 0.3s' }
+                    {
+                      flex: 1,
+                      width: '100%',
+                      padding: '0.8rem 0',
+                      background: added ? 'var(--text-dark)' : '#f94144',
+                      border: 'none',
+                      borderColor: added ? 'var(--text-dark)' : 'var(--accent)',
+                      color: 'var(--white)',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.8rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      marginBottom: '0.5rem',
+                      borderRadius: '100px',
+                    }
+                  }
                 >
                   {added ? '✓ Added to Cart' : 'Add to Cart'}
                 </button>
