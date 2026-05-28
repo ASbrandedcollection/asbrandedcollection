@@ -342,11 +342,11 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="container" style={{ padding: '2rem' }}>
+      <div className="container" style={{ padding: '2rem 0' }}>
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 360px',
+            gridTemplateColumns: 'minmax(0, 1fr) min(360px, 100%)',
             gap: '2rem',
             alignItems: 'flex-start',
           }}
@@ -532,8 +532,9 @@ export default function CheckoutPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
                     {[
                       ['Bank', 'Meezan Bank'],
-                      ['Account Title', 'Mohammad Jahanzaib'],
-                      ['Account No', '9927 0102 926236'],
+                      ['Account Title', 'Muhammad Shoaib'],
+                      ['Account No', '99270111918894'],
+                      ['IBAN', 'PK57 MEZN 0099270111918894'],
                     ].map(([key, val]) => (
                       <div key={key} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.82rem' }}>
                         <span style={{ color: '#6b7280', minWidth: '100px', flexShrink: 0 }}>{key}</span>
@@ -553,7 +554,7 @@ export default function CheckoutPage() {
                     }}
                   >
                     📩 After payment, send your receipt screenshot to{' '}
-                    <strong style={{ color: '#15803d' }}>0332 3330819</strong> on WhatsApp to confirm your order.
+                    <strong style={{ color: '#15803d' }}>0309 1225130</strong> on WhatsApp to confirm your order.
                   </div>
                 </div>
               )}
@@ -565,6 +566,8 @@ export default function CheckoutPage() {
             style={{
               position: 'sticky',
               top: 'calc(var(--nav-height) + 1rem)',
+              width: '100%',
+              minWidth: 0,
             }}
           >
             <div
@@ -572,6 +575,8 @@ export default function CheckoutPage() {
                 background: 'var(--white)',
                 border: '1px solid var(--border)',
                 padding: '1.5rem',
+                width: '100%',
+                boxSizing: 'border-box',
               }}
             >
               <h2
@@ -838,6 +843,12 @@ export default function CheckoutPage() {
           }
           .checkout-grid > div:last-child {
             position: static !important;
+          }
+          .container {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            max-width: 100vw !important;
+            overflow-x: hidden !important;
           }
         }
       `}</style>
