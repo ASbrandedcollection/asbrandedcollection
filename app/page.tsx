@@ -946,11 +946,13 @@ function ProductsGrid({
   title,
   products,
   bg = 'var(--white)',
+  viewAllHref = '/products',
 }: {
   label: string;
   title: string;
   products: Product[];
   bg?: string;
+  viewAllHref?: string;
 }) {
   if (products.length === 0) return null;
 
@@ -973,7 +975,7 @@ function ProductsGrid({
           ))}
         </div>
         <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
-          <Link href="/products" className="btn-outline">
+          <Link href={viewAllHref} className="btn-outline">
             View All Products
           </Link>
         </div>
@@ -2089,7 +2091,15 @@ export default function HomePage() {
           <EmptyState />
         ))}
 
-      {onSale.length > 0 && <ProductsGrid label="Special Offers" title="On Sale" products={onSale} bg="var(--off-white)" />}
+      {onSale.length > 0 && (
+        <ProductsGrid
+          label="Special Offers"
+          title="On Sale"
+          products={onSale}
+          bg="var(--off-white)"
+          viewAllHref="/products?discount=true"
+        />
+      )}
       {deals.length > 0 && <DealsSection deals={deals} />}
       {brands.length > 0 && <BrandsSection brands={brands} />}
       <StatsSection />

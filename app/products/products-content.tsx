@@ -237,6 +237,7 @@ export default function ProductsPage() {
   const currentPage = parseInt(searchParams.get('page') ?? '1');
 
   const [searchInput, setSearchInput] = useState(currentSearch);
+  const currentDiscount = searchParams.get('discount') ?? '';
 
   // FIX: separate page updates from filter updates so page param isn't deleted
   const updateParams = useCallback(
@@ -261,6 +262,8 @@ export default function ProductsPage() {
     if (currentSort) params.set('sort', currentSort);
     if (currentMinPrice) params.set('min_price', currentMinPrice);
     if (currentMaxPrice) params.set('max_price', currentMaxPrice);
+    if (currentDiscount) params.set('discount', currentDiscount);
+
     params.set('page', currentPage.toString());
     params.set('limit', '80');
 
@@ -274,7 +277,16 @@ export default function ProductsPage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [currentCategory, currentSubcategory, currentSearch, currentSort, currentMinPrice, currentMaxPrice, currentPage]);
+  }, [
+    currentCategory,
+    currentSubcategory,
+    currentSearch,
+    currentSort,
+    currentMinPrice,
+    currentMaxPrice,
+    currentPage,
+    currentDiscount,
+  ]);
 
   useEffect(() => {
     fetch('/api/categories')
