@@ -756,7 +756,7 @@ export default function ProductDetailPage() {
                 { label: 'SKU', value: product.sku },
                 { label: 'Category', value: product.category?.name },
                 { label: 'Availability', value: outOfStock ? 'Out of Stock' : 'In Stock' },
-                { label: 'Payment', value: 'Cash on Delivery' },
+                { label: 'Payment', value: 'Cash on Delivery, Bank Transfer' },
               ].map(
                 ({ label, value }) =>
                   value && (

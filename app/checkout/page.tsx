@@ -85,12 +85,15 @@ export default function CheckoutPage() {
     notes: '',
   });
 
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'advance'>('cod');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [placing, setPlacing] = useState(false);
   const [serverError, setServerError] = useState('');
 
   const shipping = totalAmount >= 3000 ? 0 : 200;
-  const grandTotal = totalAmount + shipping;
+  // Apply 5% discount on subtotal when advance payment selected
+  const advanceDiscount = paymentMethod === 'advance' ? Math.floor(totalAmount * 0.05) : 0;
+  const grandTotal = totalAmount + shipping - advanceDiscount;
 
   if (items.length === 0) {
     return (
@@ -174,7 +177,7 @@ export default function CheckoutPage() {
           city: form.city.trim(),
           postal_code: form.postal_code.trim(),
           notes: form.notes.trim(),
-          payment_method: 'cod',
+          payment_method: paymentMethod,
           items: items.map(i => ({
             product_id: i.product_id,
             quantity: i.quantity,
@@ -219,6 +222,66 @@ export default function CheckoutPage() {
     textTransform: 'uppercase',
     color: 'var(--text-mid)',
     marginBottom: '0.4rem',
+  };
+
+  const radioOption = (
+    value: 'cod' | 'advance',
+    emoji: string,
+    title: string,
+    subtitle: string,
+    accentColor: string,
+    bgColor: string,
+  ) => {
+    const selected = paymentMethod === value;
+    return (
+      <div
+        onClick={() => setPaymentMethod(value)}
+        style={{
+          border: `2px solid ${selected ? accentColor : 'var(--border)'}`,
+          borderRadius: '4px',
+          padding: '1rem',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '0.75rem',
+          background: selected ? bgColor : 'var(--white)',
+          cursor: 'pointer',
+          transition: 'border-color 0.2s, background 0.2s',
+        }}
+      >
+        {/* Radio dot */}
+        <div
+          style={{
+            width: '18px',
+            height: '18px',
+            borderRadius: '50%',
+            border: `2px solid ${selected ? accentColor : 'var(--border)'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            marginTop: '1px',
+            transition: 'border-color 0.2s',
+          }}
+        >
+          {selected && (
+            <div
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: accentColor,
+              }}
+            />
+          )}
+        </div>
+        <div>
+          <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-dark)' }}>
+            {emoji} {title}
+          </p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-mid)', marginTop: '0.15rem' }}>{subtitle}</p>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -409,7 +472,7 @@ export default function CheckoutPage() {
               />
             </div>
 
-            {/* Payment method — COD only */}
+            {/* Payment method */}
             <div style={{ marginTop: '1.5rem' }}>
               <h3
                 style={{
@@ -422,45 +485,79 @@ export default function CheckoutPage() {
               >
                 Payment Method
               </h3>
-              <div
-                style={{
-                  border: '2px solid var(--blush-deep)',
-                  borderRadius: '4px',
-                  padding: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  background: 'var(--blush-light)',
-                }}
-              >
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {radioOption(
+                  'cod',
+                  '💵',
+                  'Cash on Delivery',
+                  'Pay when your order arrives at your door',
+                  'var(--blush-deep)',
+                  'var(--blush-light)',
+                )}
+                {radioOption(
+                  'advance',
+                  '💸',
+                  'Pay in Advance — Save 5%',
+                  'Transfer before delivery and get 5% off your entire order',
+                  '#16a34a',
+                  '#f0fdf4',
+                )}
+              </div>
+
+              {/* Advance payment details panel — shown only when selected */}
+              {paymentMethod === 'advance' && (
                 <div
                   style={{
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    border: '2px solid var(--blush-deep)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
+                    marginTop: '0.75rem',
+                    border: '1px solid #bbf7d0',
+                    borderRadius: '4px',
+                    background: '#f0fdf4',
+                    padding: '1.25rem',
                   }}
                 >
+                  <p
+                    style={{
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      color: '#15803d',
+                      marginBottom: '0.75rem',
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    🏦 Bank Transfer Details
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                    {[
+                      ['Bank', 'Meezan Bank'],
+                      ['Account Title', 'Muhammad Shoaib'],
+                      ['Account No', '99270111918894'],
+                      ['IBN', 'PK57 MEZN 0099270111918894'],
+                    ].map(([key, val]) => (
+                      <div key={key} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.82rem' }}>
+                        <span style={{ color: '#6b7280', minWidth: '100px', flexShrink: 0 }}>{key}</span>
+                        <span style={{ color: 'var(--text-dark)', fontWeight: 500 }}>{val}</span>
+                      </div>
+                    ))}
+                  </div>
+
                   <div
                     style={{
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      background: 'var(--blush-deep)',
+                      marginTop: '0.85rem',
+                      paddingTop: '0.85rem',
+                      borderTop: '1px solid #bbf7d0',
+                      fontSize: '0.78rem',
+                      color: '#374151',
+                      lineHeight: 1.6,
                     }}
-                  />
+                  >
+                    📩 After payment, send your receipt screenshot to{' '}
+                    <strong style={{ color: '#15803d' }}>0309 1225130</strong> on WhatsApp to confirm your order.
+                  </div>
                 </div>
-                <div>
-                  <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-dark)' }}>💵 Cash on Delivery</p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-mid)', marginTop: '0.15rem' }}>
-                    Pay when your order arrives at your door
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -621,6 +718,15 @@ export default function CheckoutPage() {
                     Add {formatPKR(3000 - totalAmount)} more for free shipping
                   </p>
                 )}
+                {/* Advance discount row — only shown when applicable */}
+                {paymentMethod === 'advance' && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.85rem', color: '#16a34a' }}>Advance discount (5%)</span>
+                    <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 500 }}>
+                      − {formatPKR(advanceDiscount)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div style={{ height: '1px', background: 'var(--border)', marginBottom: '1rem' }} />
@@ -697,7 +803,10 @@ export default function CheckoutPage() {
                   lineHeight: 1.5,
                 }}
               >
-                By placing your order you agree to our terms. We'll call you to confirm before delivery.
+                By placing your order you agree to our terms.{' '}
+                {paymentMethod === 'cod'
+                  ? "We'll call you to confirm before delivery."
+                  : 'Send your payment receipt to confirm your order.'}
               </p>
             </div>
 
