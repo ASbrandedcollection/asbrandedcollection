@@ -285,7 +285,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--off-white)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--off-white)', overflowX: 'hidden' }}>
       {/* Header */}
       <div
         style={{
@@ -532,9 +532,8 @@ export default function CheckoutPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
                     {[
                       ['Bank', 'Meezan Bank'],
-                      ['Account Title', 'Muhammad Shoaib'],
-                      ['Account No', '99270111918894'],
-                      ['IBN', 'PK57 MEZN 0099270111918894'],
+                      ['Account Title', 'Mohammad Jahanzaib'],
+                      ['Account No', '9927 0102 926236'],
                     ].map(([key, val]) => (
                       <div key={key} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.82rem' }}>
                         <span style={{ color: '#6b7280', minWidth: '100px', flexShrink: 0 }}>{key}</span>
@@ -554,7 +553,7 @@ export default function CheckoutPage() {
                     }}
                   >
                     📩 After payment, send your receipt screenshot to{' '}
-                    <strong style={{ color: '#15803d' }}>0309 1225130</strong> on WhatsApp to confirm your order.
+                    <strong style={{ color: '#15803d' }}>0332 3330819</strong> on WhatsApp to confirm your order.
                   </div>
                 </div>
               )}
@@ -720,10 +719,12 @@ export default function CheckoutPage() {
                 )}
                 {/* Advance discount row — only shown when applicable */}
                 {paymentMethod === 'advance' && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.85rem', color: '#16a34a' }}>Advance discount (5%)</span>
-                    <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 500 }}>
-                      − {formatPKR(advanceDiscount)}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.85rem', color: '#16a34a', flexShrink: 1, minWidth: 0 }}>
+                      Advance (5% off)
+                    </span>
+                    <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 500, flexShrink: 0 }}>
+                      -{formatPKR(advanceDiscount)}
                     </span>
                   </div>
                 )}
@@ -834,6 +835,9 @@ export default function CheckoutPage() {
         @media (max-width: 768px) {
           .checkout-grid {
             grid-template-columns: 1fr !important;
+          }
+          .checkout-grid > div:last-child {
+            position: static !important;
           }
         }
       `}</style>
