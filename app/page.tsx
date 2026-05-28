@@ -735,7 +735,7 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
 
   return (
     <section style={{ padding: '3.5rem 0', background: 'var(--off-white)' }} className="shop-category">
-      <div className="container">
+      <div className="container container-mobile">
         <SectionHeader label="Browse by Category" title="Shop Our Collections" />
 
         {/* Desktop grid */}
@@ -841,9 +841,9 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                 <div
                   style={{
                     flexShrink: 0,
-                    width: 'calc(100vw - 2rem)',
-                    maxWidth: '150px',
-                    padding: '1rem',
+                    width: '90px',
+                    maxWidth: '90px',
+                    padding: '0.5rem 0.25rem',
                     textAlign: 'center',
                     transition: 'all 0.2s ease',
                     animation: `fadeUp 0.4s ease ${i * 0.06}s both`,
@@ -867,8 +867,8 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
                 >
                   <div
                     style={{
-                      width: '100px',
-                      height: '100px',
+                      width: '90px',
+                      height: '90px',
                       borderRadius: '50%',
                       background: 'var(--blush-light)',
                       overflow: 'hidden',
@@ -934,6 +934,7 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
           .categories-mobile::-webkit-scrollbar { display: none; }
           .categories-mobile { -ms-overflow-style: none; scrollbar-width: none; }
           .shop-category {padding: 1.2rem 0px !important;}
+          .container-mobile {padding: 0 1rem !important}
         }
       `}</style>
     </section>
@@ -2079,7 +2080,6 @@ export default function HomePage() {
   return (
     <div>
       <BannerSlider />
-      <FeaturesStrip />
       <CategoryLinks categories={categories} />
 
       {!loading &&
@@ -2093,6 +2093,7 @@ export default function HomePage() {
       {deals.length > 0 && <DealsSection deals={deals} />}
       {brands.length > 0 && <BrandsSection brands={brands} />}
       <StatsSection />
+      <FeaturesStrip />
       <AboutSection />
       <Footer categories={categories} />
     </div>
