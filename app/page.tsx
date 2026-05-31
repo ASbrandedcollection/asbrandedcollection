@@ -730,7 +730,15 @@ function CategoryLinks({ categories }: { categories: Category[] }) {
       id: 'all',
       name: showAll ? 'Show Less' : 'All',
       href: '#',
-      image_url: null,
+      image_url: `data:image/svg+xml,${encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <rect width="100" height="100" fill="#fce7f3"/>
+        <rect x="18" y="18" width="26" height="26" rx="5" fill="#db2777"/>
+        <rect x="56" y="18" width="26" height="26" rx="5" fill="#db2777"/>
+        <rect x="18" y="56" width="26" height="26" rx="5" fill="#db2777"/>
+        <rect x="56" y="56" width="26" height="26" rx="5" fill="#db2777"/>
+      </svg>
+      `)}`,
       isButton: true,
     },
   ];
