@@ -1725,7 +1725,7 @@ function BrandsSection({ brands }: { brands: BrandItem[] }) {
         >
           {brands.map(brand => (
             <Link key={brand.id} href={`/products?category=brands&subcategory=${brand.slug}`}>
-              <BrandCard key={brand.id} brand={brand} />
+              <BrandCard key={brand.id} brand={brand} mobile={false} />
             </Link>
           ))}
         </div>
@@ -1743,9 +1743,10 @@ function BrandsSection({ brands }: { brands: BrandItem[] }) {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 135px)',
+              // gridTemplateColumns: 'repeat(3, 110px)',
               gridTemplateRows: 'repeat(3, 90px)',
-              // gap: '1rem',
+              gap: '4px',
+              gridAutoColumns: '90px',
               gridAutoFlow: 'column',
               width: 'max-content',
               // padding: '0 1rem',
@@ -1754,7 +1755,7 @@ function BrandsSection({ brands }: { brands: BrandItem[] }) {
             {brands.map(brand => (
               <div key={brand.id} style={{ scrollSnapAlign: 'start' }}>
                 <Link href={`/products?category=brands&subcategory=${brand.slug}`}>
-                  <BrandCard brand={brand} />
+                  <BrandCard brand={brand} mobile />
                 </Link>
               </div>
             ))}
@@ -1778,20 +1779,21 @@ function BrandsSection({ brands }: { brands: BrandItem[] }) {
   );
 }
 
-function BrandCard({ brand }: { brand: BrandItem }) {
+function BrandCard({ brand, mobile }: { brand: BrandItem; mobile: boolean }) {
   return (
     <div
       style={{
-        width: '150px',
-        height: '90px',
+        width: mobile ? '100%' : '150px', // ← fills the grid cell on mobile
+        height: mobile ? '100%' : '90px',
         borderRadius: '8px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'flex-start',
+        justifyContent: 'center',
         padding: '0.5rem',
         transition: 'all 0.2s ease',
         cursor: 'pointer',
         background: 'var(--white)',
+        textAlign: 'center',
       }}
       onMouseEnter={e => {
         (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)';
