@@ -610,15 +610,17 @@ function FeaturesStrip() {
               key={i}
               style={{
                 flexShrink: 0,
-                width: 'calc(100vw - 2rem)',
+                // width: 'calc(100vw - 2rem)',
                 maxWidth: '280px',
                 padding: '1rem',
                 display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
+                flexDirection: 'column', // ← changed
+                alignItems: 'center', // ← changed
+                gap: '0.6rem', // ← slightly tighter than 1rem for column layout
                 background: 'var(--off-white)',
                 borderRadius: '6px',
                 scrollSnapAlign: 'start',
+                textAlign: 'center', // ← added
               }}
             >
               <div
