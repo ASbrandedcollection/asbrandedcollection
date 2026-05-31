@@ -295,7 +295,7 @@ export default function AdminProductsPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const totalPages = Math.ceil(total / 10);
+  const totalPages = Math.ceil(total / 80);
 
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -324,7 +324,7 @@ export default function AdminProductsPage() {
 
   async function fetchProducts() {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: '10' });
+    const params = new URLSearchParams({ page: String(page), limit: '80' });
     if (search) params.set('search', search);
     const res = await fetch(`/api/admin/products?${params}`);
     const data = await res.json();
