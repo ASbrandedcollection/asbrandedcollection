@@ -519,8 +519,7 @@ export default function AdminOrdersPage() {
                           <span
                             style={{
                               overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
+                              wordBreak: 'break-word',
                             }}
                           >
                             {item.product_name}
