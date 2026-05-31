@@ -511,11 +511,21 @@ export default function AdminOrdersPage() {
                             color: 'var(--text-dark)',
                             flex: 1,
                             overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '2px',
                           }}
                         >
-                          {item.product_name} × {item.quantity}
+                          <span
+                            style={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {item.product_name}
+                          </span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>Qty: {item.quantity}</span>
                         </span>
                         <span style={{ color: 'var(--text-mid)', flexShrink: 0 }}>
                           {formatPKR(item.unit_price * item.quantity)}
