@@ -967,7 +967,7 @@ function ProductsGrid({
   if (products.length === 0) return null;
 
   return (
-    <section style={{ padding: '3.5rem 0', background: bg }}>
+    <section style={{ padding: '3.5rem 0', background: bg }} className="section-products-grid">
       <div className="container">
         <SectionHeader label={label} title={title} />
         <div
@@ -984,12 +984,18 @@ function ProductsGrid({
             </div>
           ))}
         </div>
-        <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
+        <div style={{ textAlign: 'center', marginTop: '2.5rem' }} className="view-all-btn-container">
           <Link href={viewAllHref} className="btn-outline">
             View All Products
           </Link>
         </div>
       </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .section-products-grid {padding: 1.5rem 0 !important}
+          .view-all-btn-container {margin-top: 0 !important}
+        }
+      `}</style>
     </section>
   );
 }
@@ -1168,7 +1174,7 @@ function AboutSection() {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <section style={{ padding: '4rem 0', background: 'var(--white)' }}>
+    <section style={{ padding: '4rem 0', background: 'var(--white)' }} className="section-about">
       <div className="container">
         <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
           <p
@@ -1262,6 +1268,11 @@ function AboutSection() {
           </div>
         </div>
       </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .section-about {padding: 1.5rem 0 !important}
+        }
+      `}</style>
     </section>
   );
 }
@@ -1289,7 +1300,7 @@ function Footer({ categories }: { categories: Category[] }) {
   const BORDER_CLR = 'rgba(42,26,22,0.12)';
 
   return (
-    <footer style={{ background: '#861657', color: TEXT_MID, padding: '3rem 0 1.5rem' }}>
+    <footer style={{ background: '#861657', color: TEXT_MID, padding: '3rem 0 1.5rem' }} className="section-footer">
       <div className="container">
         {/* ── Desktop ── */}
         <div
@@ -1664,6 +1675,7 @@ function Footer({ categories }: { categories: Category[] }) {
         @media (max-width: 768px) {
           .footer-desktop { display: none  !important; }
           .footer-mobile  { display: block !important; }
+          .section-footer {padding: 1rem 0 !important}
         }
  
         @keyframes slideDown {
@@ -1822,7 +1834,7 @@ function BrandCard({ brand, mobile }: { brand: BrandItem; mobile: boolean }) {
 function DealsSection({ deals }: { deals: Deal[] }) {
   if (deals.length === 0) return null;
   return (
-    <section style={{ padding: '3.5rem 0', background: 'var(--off-white)' }}>
+    <section style={{ padding: '3.5rem 0', background: 'var(--off-white)' }} className="section-deals">
       <div className="container">
         <SectionHeader label="Limited Time" title="Bundle Deals" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -1831,6 +1843,11 @@ function DealsSection({ deals }: { deals: Deal[] }) {
           ))}
         </div>
       </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .section-deals {padding: 1rem 0 !important}
+        }
+      `}</style>
     </section>
   );
 }
