@@ -1446,7 +1446,7 @@ function Footer({ categories }: { categories: Category[] }) {
         </div>
 
         {/* ── Mobile ── */}
-        <div className="footer-mobile" style={{ marginBottom: '2.5rem' }}>
+        <div className="footer-mobile" style={{ marginBottom: '1.5rem' }}>
           <div style={{ marginBottom: '1.5rem' }}>
             <h3
               style={{
@@ -1472,7 +1472,7 @@ function Footer({ categories }: { categories: Category[] }) {
           </div>
 
           {/* Categories collapsible */}
-          <div style={{ borderTop: `1px solid ${BORDER_CLR}`, paddingTop: '1rem', marginBottom: '1rem' }}>
+          <div style={{ borderTop: `1px solid ${BORDER_CLR}`, paddingTop: '1rem', marginBottom: '0.3rem' }}>
             <button
               onClick={() => toggleSection('categories')}
               style={{
@@ -1528,7 +1528,7 @@ function Footer({ categories }: { categories: Category[] }) {
           </div>
 
           {/* Customer Service collapsible */}
-          <div style={{ borderTop: `1px solid ${BORDER_CLR}`, paddingTop: '1rem', marginBottom: '1rem' }}>
+          <div style={{ borderTop: `1px solid ${BORDER_CLR}`, paddingTop: '1rem', marginBottom: '0.3rem' }}>
             <button
               onClick={() => toggleSection('customerService')}
               style={{
@@ -1587,7 +1587,7 @@ function Footer({ categories }: { categories: Category[] }) {
           </div>
 
           {/* Contact collapsible */}
-          <div style={{ borderTop: `1px solid ${BORDER_CLR}`, paddingTop: '1rem', marginBottom: '1rem' }}>
+          <div style={{ borderTop: `1px solid ${BORDER_CLR}`, paddingTop: '1rem', marginBottom: '0.3rem' }}>
             <button
               onClick={() => toggleSection('contact')}
               style={{
