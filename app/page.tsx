@@ -1446,9 +1446,9 @@ function Footer({ categories }: { categories: Category[] }) {
         </div>
 
         {/* ── Mobile ── */}
-        <div className="footer-mobile" style={{ marginBottom: '1.5rem' }}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <h3
+        <div className="footer-mobile" style={{ marginBottom: '0.8rem' }}>
+          <div style={{ marginBottom: '0.8rem' }}>
+            {/* <h3
               style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: '1.5rem',
@@ -1458,12 +1458,12 @@ function Footer({ categories }: { categories: Category[] }) {
               }}
             >
               {settings.store_name}
-            </h3>
-            <p style={{ fontSize: '0.9rem', lineHeight: 1.65, color: 'var(--off-white)' }}>
+            </h3> */}
+            {/* <p style={{ fontSize: '0.9rem', lineHeight: 1.65, color: 'var(--off-white)' }}>
               Premium fashion, makeup &amp; lifestyle products delivered across Pakistan.
-            </p>
+            </p> */}
             {socialLinks.length > 0 && (
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75em' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {socialLinks.map((social, i) => (
                   <SocialIcon key={i} platform={social.platform as SocialPlatform} url={social.url} size={32} />
                 ))}
