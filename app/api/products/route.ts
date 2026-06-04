@@ -5,15 +5,14 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = getSupabaseAdmin();
     const { searchParams } = new URL(req.url);
-
     const search = searchParams.get('search')?.trim() ?? '';
     const category = searchParams.get('category') ?? '';
     const subcategory = searchParams.get('subcategory') ?? '';
+    const brand = searchParams.get('brand') ?? ''; // NEW: brand slug
     const sort = searchParams.get('sort') ?? 'newest';
     const minPrice = searchParams.get('min_price') ?? '';
     const maxPrice = searchParams.get('max_price') ?? '';
     const discount = searchParams.get('discount') ?? '';
-
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '80')));
     const offset = (page - 1) * limit;
@@ -26,7 +25,8 @@ export async function GET(req: NextRequest) {
         category:categories!products_category_id_fkey(id, name, slug),
         subcategory:subcategories!products_subcategory_id_fkey(id, name, slug),
         images:product_images(image_url, is_primary),
-        reviews:reviews(rating)
+        reviews:reviews(rating),
+        brands:product_brands(brand:subcategories(id, name, slug))
         `,
         { count: 'exact' },
       )
@@ -36,19 +36,60 @@ export async function GET(req: NextRequest) {
       query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
-    if (category) {
+    if (category && category !== 'brands') {
       const { data: catData } = await supabase.from('categories').select('id').eq('slug', category).single();
-
       if (catData) {
         query = query.eq('category_id', catData.id);
       }
     }
 
     if (subcategory) {
-      const { data: subData } = await supabase.from('subcategories').select('id').eq('slug', subcategory).single();
+      const { data: subData } = await supabase
+        .from('subcategories')
+        .select('id, category:categories(slug)')
+        .eq('slug', subcategory)
+        .single();
 
       if (subData) {
-        query = query.eq('subcategory_id', subData.id);
+        if ((subData.category as any)?.slug === 'brands') {
+          const { data: linkedProducts } = await supabase
+            .from('product_brands')
+            .select('product_id')
+            .eq('brand_id', subData.id);
+
+          const productIds = (linkedProducts ?? []).map((r: any) => r.product_id);
+
+          if (productIds.length === 0) {
+            return NextResponse.json({
+              success: true,
+              data: { data: [], total: 0, page, limit, total_pages: 0 },
+            });
+          }
+          query = query.in('id', productIds);
+        } else {
+          query = query.eq('subcategory_id', subData.id);
+        }
+      }
+    }
+
+    // NEW: filter by brand slug — find products linked to this brand subcategory
+    if (brand) {
+      const { data: brandData } = await supabase.from('subcategories').select('id').eq('slug', brand).single();
+      if (brandData) {
+        // Get product IDs linked to this brand
+        const { data: linkedProducts } = await supabase
+          .from('product_brands')
+          .select('product_id')
+          .eq('brand_id', brandData.id);
+        const productIds = (linkedProducts ?? []).map((r: any) => r.product_id);
+        if (productIds.length === 0) {
+          // No products for this brand — return empty
+          return NextResponse.json({
+            success: true,
+            data: { data: [], total: 0, page, limit, total_pages: 0 },
+          });
+        }
+        query = query.in('id', productIds);
       }
     }
 
@@ -67,7 +108,7 @@ export async function GET(req: NextRequest) {
         query = query.order('name', { ascending: true });
         break;
       default:
-        query = query.order('created_at', { ascending: false }); // newest
+        query = query.order('created_at', { ascending: false });
     }
 
     query = query.range(offset, offset + limit - 1);
@@ -83,8 +124,10 @@ export async function GET(req: NextRequest) {
       const reviews = product.reviews ?? [];
       const review_count = reviews.length;
       const rating_avg = review_count > 0 ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / review_count : 0;
-      const { reviews: _, ...rest } = product;
-      return { ...rest, review_count, rating_avg };
+      // Flatten brands: product_brands -> brand -> { id, name, slug }
+      const brands = (product.brands ?? []).map((pb: any) => pb.brand).filter(Boolean);
+      const { reviews: _, brands: __, ...rest } = product;
+      return { ...rest, review_count, rating_avg, brands };
     });
 
     return NextResponse.json({

@@ -18,6 +18,165 @@ const emptyForm = {
   sku: '',
 };
 
+// ── BrandsLinker ──────────────────────────────────────────────────────────────
+// Fetches all subcategories under the "Brands" category, shows which are linked,
+// and lets admin toggle them on/off.
+function BrandsLinker({ productId }: { productId: string }) {
+  const [allBrands, setAllBrands] = useState<{ id: string; name: string; slug: string }[]>([]);
+  const [linked, setLinked] = useState<{ linkId: string; id: string; name: string; slug: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      // Fetch the "Brands" category then its subcategories
+      const [brandsRes, linkedRes] = await Promise.all([
+        fetch('/api/admin/brands'),
+        fetch(`/api/admin/products/${productId}/brands`),
+      ]);
+      const brandsData = await brandsRes.json();
+      const linkedData = await linkedRes.json();
+      if (brandsData.success) setAllBrands(brandsData.data);
+      if (linkedData.success) setLinked(linkedData.data);
+      setLoading(false);
+    }
+    load();
+  }, [productId]);
+
+  const linkedIds = new Set(linked.map(l => l.id));
+
+  async function handleToggle(brand: { id: string; name: string; slug: string }) {
+    setTogglingId(brand.id);
+    setErr('');
+
+    if (linkedIds.has(brand.id)) {
+      // Unlink
+      const linkId = linked.find(l => l.id === brand.id)?.linkId;
+      if (!linkId) {
+        setTogglingId(null);
+        return;
+      }
+      const res = await fetch(`/api/admin/products/${productId}/brands?link_id=${linkId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setLinked(prev => prev.filter(l => l.id !== brand.id));
+      } else {
+        setErr(data.error);
+      }
+    } else {
+      // Link
+      const res = await fetch(`/api/admin/products/${productId}/brands`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand_id: brand.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLinked(prev => [...prev, data.data]);
+      } else {
+        setErr(data.error);
+      }
+    }
+    setTogglingId(null);
+  }
+
+  if (loading) {
+    return <p style={{ fontSize: '0.78rem', color: 'var(--text-light)', padding: '0.5rem 0' }}>Loading brands...</p>;
+  }
+
+  if (allBrands.length === 0) {
+    return (
+      <p style={{ fontSize: '0.82rem', color: 'var(--text-light)', lineHeight: 1.6 }}>
+        No brands found. Go to <strong>Categories → Brands</strong> and add subcategories (e.g. Loreal, Garnier) first.
+      </p>
+    );
+  }
+
+  return (
+    <div>
+      <p style={{ fontSize: '0.8rem', color: 'var(--text-mid)', marginBottom: '1rem', lineHeight: 1.6 }}>
+        Select which brands this product belongs to. It will appear under <strong>Brands → [Brand Name]</strong> on the
+        storefront in addition to its own category.
+      </p>
+
+      {err && <p style={{ fontSize: '0.75rem', color: '#dc2626', marginBottom: '0.75rem' }}>{err}</p>}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        {allBrands.map(brand => {
+          const isLinked = linkedIds.has(brand.id);
+          const isToggling = togglingId === brand.id;
+          return (
+            <div
+              key={brand.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.65rem 0.9rem',
+                border: `1px solid ${isLinked ? 'var(--blush-deep)' : 'var(--border)'}`,
+                borderRadius: '6px',
+                background: isLinked ? 'var(--blush-light)' : 'var(--off-white)',
+                transition: 'all 0.15s',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span style={{ fontSize: '1rem' }}>🏷</span>
+                <span
+                  style={{
+                    fontSize: '0.85rem',
+                    fontWeight: isLinked ? 600 : 400,
+                    color: isLinked ? 'var(--blush-deep)' : 'var(--text-dark)',
+                  }}
+                >
+                  {brand.name}
+                </span>
+                {isLinked && (
+                  <span
+                    style={{
+                      fontSize: '0.62rem',
+                      fontWeight: 600,
+                      letterSpacing: '0.07em',
+                      textTransform: 'uppercase',
+                      color: 'var(--blush-deep)',
+                      background: 'white',
+                      padding: '1px 7px',
+                      borderRadius: '10px',
+                      border: '1px solid var(--blush-deep)',
+                    }}
+                  >
+                    Linked
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => handleToggle(brand)}
+                disabled={isToggling}
+                style={{
+                  padding: '0.35rem 0.9rem',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: isToggling ? 'not-allowed' : 'pointer',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  fontFamily: 'var(--font-body)',
+                  opacity: isToggling ? 0.6 : 1,
+                  background: isLinked ? '#fee2e2' : 'var(--blush-deep)',
+                  color: isLinked ? '#dc2626' : 'white',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {isToggling ? '…' : isLinked ? 'Unlink' : 'Link'}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function VariantsEditor({
   productId,
   existingImages,
@@ -28,8 +187,6 @@ function VariantsEditor({
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // The "type name" is shared across all variants of a product (e.g. "Shade").
-  // We infer it from existing variants, or let admin set it when adding the first one.
   const [typeName, setTypeName] = useState('');
   const [newLabel, setNewLabel] = useState('');
   const [newImageId, setNewImageId] = useState('');
@@ -124,7 +281,6 @@ function VariantsEditor({
 
   return (
     <div>
-      {/* Type name — locked once variants exist */}
       <div style={{ marginBottom: '0.75rem' }}>
         <label style={labelStyle}>Variant Type (e.g. Shade, Color, Size)</label>
         <input
@@ -146,7 +302,6 @@ function VariantsEditor({
         )}
       </div>
 
-      {/* Existing variants list */}
       {variants.length > 0 && (
         <div style={{ marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {variants.map(v => {
@@ -165,10 +320,7 @@ function VariantsEditor({
                   border: '1px solid var(--border)',
                 }}
               >
-                {/* Label */}
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-dark)', fontWeight: 500 }}>{v.label}</span>
-
-                {/* Image picker */}
                 <select
                   value={v.image_id ?? ''}
                   onChange={e => handleImageChange(v.id, e.target.value)}
@@ -181,8 +333,6 @@ function VariantsEditor({
                     </option>
                   ))}
                 </select>
-
-                {/* Linked image thumb */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   {linkedImg && (
                     <img
@@ -225,7 +375,6 @@ function VariantsEditor({
         </div>
       )}
 
-      {/* Add new variant row */}
       {err && <p style={{ fontSize: '0.75rem', color: '#dc2626', marginBottom: '0.4rem' }}>{err}</p>}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.5rem', alignItems: 'end' }}>
         <div>
@@ -312,10 +461,10 @@ export default function AdminProductsPage() {
   const [existingImages, setExistingImages] = useState<{ id: string; image_url: string; is_primary: boolean }[]>([]);
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
-  // Track the saved product id so VariantsEditor can load even for a brand-new product
   const [savedProductId, setSavedProductId] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'details' | 'variants'>('details');
+  // 'details' | 'variants' | 'brands'
+  const [activeTab, setActiveTab] = useState<'details' | 'variants' | 'brands'>('details');
 
   const [form, setForm] = useState(emptyForm);
 
@@ -427,7 +576,6 @@ export default function AdminProductsPage() {
       const data = await res.json();
       if (data.success) uploaded.push(data.data);
     }
-    // Update existingImages so VariantsEditor can immediately see new images
     setExistingImages(prev => [...prev, ...uploaded]);
   }
 
@@ -496,7 +644,6 @@ export default function AdminProductsPage() {
     setSuccessMsg(modalMode === 'add' && !savedProductId ? 'Product added!' : 'Product updated!');
     setTimeout(() => setSuccessMsg(''), 3000);
 
-    // If adding: switch to Variants tab so admin can immediately add shades/colors
     if (modalMode === 'add') {
       setActiveTab('variants');
     }
@@ -968,7 +1115,7 @@ export default function AdminProductsPage() {
               </button>
             </div>
 
-            {/* Tabs — only show Variants tab once product is saved */}
+            {/* Tabs */}
             <div
               style={{
                 display: 'flex',
@@ -994,7 +1141,21 @@ export default function AdminProductsPage() {
                 }}
                 title={!savedProductId ? 'Save the product first to add variants' : ''}
               >
-                Variants {!savedProductId && <span style={{ fontSize: '0.62rem', marginLeft: '0.2rem' }}>(save first)</span>}
+                Variants{!savedProductId && <span style={{ fontSize: '0.62rem', marginLeft: '0.2rem' }}>(save first)</span>}
+              </button>
+              {/* ── NEW: Brands tab — only visible in edit mode (product already exists) ── */}
+              <button
+                style={{
+                  ...tabStyle(activeTab === 'brands'),
+                  opacity: savedProductId ? 1 : 0.4,
+                  cursor: savedProductId ? 'pointer' : 'not-allowed',
+                }}
+                onClick={() => {
+                  if (savedProductId) setActiveTab('brands');
+                }}
+                title={!savedProductId ? 'Save the product first to link brands' : ''}
+              >
+                🏷 Brands{!savedProductId && <span style={{ fontSize: '0.62rem', marginLeft: '0.2rem' }}>(save first)</span>}
               </button>
             </div>
 
@@ -1380,6 +1541,9 @@ export default function AdminProductsPage() {
                   <VariantsEditor productId={savedProductId} existingImages={existingImages} />
                 </div>
               )}
+
+              {/* ── BRANDS TAB ── */}
+              {activeTab === 'brands' && savedProductId && <BrandsLinker productId={savedProductId} />}
             </div>
 
             {/* Modal footer */}
@@ -1395,8 +1559,7 @@ export default function AdminProductsPage() {
                 background: 'var(--white)',
               }}
             >
-              {/* Left: done button on variants tab once product saved */}
-              {activeTab === 'variants' ? (
+              {activeTab === 'variants' || activeTab === 'brands' ? (
                 <button onClick={closeModal} className="btn-primary">
                   Done
                 </button>
