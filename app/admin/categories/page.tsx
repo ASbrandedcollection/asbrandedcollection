@@ -7,6 +7,8 @@ const COMMON_ICONS = ['👗', '👔', '🧒', '💄', '🧴', '✨', '🧸', '�
 
 export default function AdminCategoriesPage() {
   const [dragOverCatId, setDragOverCatId] = useState<string | null>(null);
+  const [dragOverSubId, setDragOverSubId] = useState<string | null>(null);
+
   const [reordering, setReordering] = useState(false);
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -274,6 +276,45 @@ export default function AdminCategoriesPage() {
     );
     setReordering(false);
     showSuccess('Order saved!');
+  }
+
+  function handleSubDragStart(e: React.DragEvent, id: string) {
+    e.dataTransfer.setData('subId', id);
+  }
+
+  function handleSubDragOver(e: React.DragEvent, id: string) {
+    e.preventDefault();
+    setDragOverSubId(id);
+  }
+
+  async function handleSubDrop(e: React.DragEvent, targetId: string, catSubs: Subcategory[]) {
+    e.preventDefault();
+    setDragOverSubId(null);
+    const draggedId = e.dataTransfer.getData('subId');
+    if (draggedId === targetId) return;
+
+    const draggedIndex = catSubs.findIndex(s => s.id === draggedId);
+    const targetIndex = catSubs.findIndex(s => s.id === targetId);
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const updated = [...catSubs];
+    const [dragged] = updated.splice(draggedIndex, 1);
+    updated.splice(targetIndex, 0, dragged);
+
+    setCategories(prev => prev.map(c => (c.id === updated[0]?.category_id ? { ...c, subcategories: updated } : c)));
+
+    setReordering(true);
+    await Promise.all(
+      updated.map((sub, i) =>
+        fetch(`/api/admin/subcategories/${sub.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ display_order: i + 1 }),
+        }),
+      ),
+    );
+    setReordering(false);
+    showSuccess('Brand order saved!');
   }
 
   async function handleSaveSub() {
@@ -683,28 +724,58 @@ export default function AdminCategoriesPage() {
                       cat.subcategories?.map(sub => (
                         <div
                           key={sub.id}
+                          draggable
+                          onDragStart={e => handleSubDragStart(e, sub.id)}
+                          onDragOver={e => handleSubDragOver(e, sub.id)}
+                          onDrop={e => handleSubDrop(e, sub.id, cat.subcategories ?? [])}
+                          onDragLeave={() => setDragOverSubId(null)}
                           style={{
                             display: 'grid',
-                            gridTemplateColumns: '80px 1fr 120px 80px 120px',
+                            gridTemplateColumns: '24px 56px 1fr 120px 80px 120px',
                             padding: '0.65rem 1rem',
                             borderBottom: '1px solid var(--border)',
                             gap: '0.75rem',
                             alignItems: 'center',
+                            background: dragOverSubId === sub.id ? 'var(--blush-light)' : 'transparent',
+                            transition: 'background 0.15s',
+                            cursor: 'grab',
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', paddingLeft: '2rem' }}>
+                          {/* Drag handle */}
+                          <div
+                            style={{
+                              color: 'var(--text-light)',
+                              fontSize: '0.85rem',
+                              userSelect: 'none',
+                              textAlign: 'center',
+                              paddingLeft: '1.5rem',
+                            }}
+                          >
+                            ⠿
+                          </div>
+
+                          {/* Indent line */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', paddingLeft: '0.5rem' }}>
                             <div style={{ width: '16px', height: '1px', background: 'var(--border-dark)' }} />
                           </div>
+
+                          {/* Name + slug */}
                           <div>
                             <p style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-dark)' }}>{sub.name}</p>
                             <p style={{ fontSize: '0.68rem', color: 'var(--text-light)' }}>/{sub.slug}</p>
                           </div>
+
+                          {/* Slug monospace */}
                           <p style={{ fontSize: '0.72rem', color: 'var(--text-light)', fontFamily: 'monospace' }}>
                             {sub.slug}
                           </p>
+
+                          {/* Active toggle */}
                           <button onClick={() => toggleSubActive(sub)} style={badgeStyle(sub.is_active)}>
                             {sub.is_active ? 'Active' : 'Hidden'}
                           </button>
+
+                          {/* Edit / Delete */}
                           <div style={{ display: 'flex', gap: '0.4rem' }}>
                             {[
                               { label: 'Edit', color: 'var(--blush-deep)', onClick: () => openEditSub(sub, cat) },
