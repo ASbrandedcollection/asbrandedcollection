@@ -52,10 +52,12 @@ export async function POST(request: NextRequest) {
       slug,
       description: body.description?.trim() ?? null,
       category_id: body.category_id,
+      subcategory_id: body.subcategory_id || null,
       price: parseFloat(body.price),
       discount_percent: parseFloat(body.discount_percent ?? 0),
       stock_qty: parseInt(body.stock_qty ?? 0),
       is_active: body.is_active ?? true,
+      sku: body.sku?.trim() || null,
     })
     .select()
     .single();
