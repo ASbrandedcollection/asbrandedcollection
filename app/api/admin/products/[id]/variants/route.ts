@@ -58,3 +58,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   return NextResponse.json({ success: true, data }, { status: 201 });
 }
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { error: authError } = await requireAdmin(request);
+  if (authError) return authError;
+
+  const body = await request.json();
+  if (!body.type_name?.trim()) {
+    return NextResponse.json({ success: false, error: 'type_name is required' }, { status: 400 });
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('product_variants')
+    .update({ type_name: body.type_name.trim() })
+    .eq('product_id', id)
+    .select('*, image:product_images(id, image_url, is_primary)');
+
+  if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true, data });
+}

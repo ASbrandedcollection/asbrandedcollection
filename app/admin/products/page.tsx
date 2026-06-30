@@ -193,6 +193,32 @@ function VariantsEditor({
   const [adding, setAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [err, setErr] = useState('');
+  const [savedTypeName, setSavedTypeName] = useState('');
+  const [savingType, setSavingType] = useState(false);
+
+  async function handleTypeNameSave() {
+    const trimmed = typeName.trim();
+    if (!trimmed || variants.length === 0 || trimmed === savedTypeName) {
+      setTypeName(savedTypeName);
+      return;
+    }
+    setSavingType(true);
+    setErr('');
+    const res = await fetch(`/api/admin/products/${productId}/variants`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type_name: trimmed }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setVariants(data.data);
+      setSavedTypeName(trimmed);
+    } else {
+      setErr(data.error);
+      setTypeName(savedTypeName);
+    }
+    setSavingType(false);
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -201,7 +227,10 @@ function VariantsEditor({
       .then(res => {
         if (res.success) {
           setVariants(res.data);
-          if (res.data.length > 0) setTypeName(res.data[0].type_name);
+          if (res.data.length > 0) {
+            setTypeName(res.data[0].type_name);
+            setSavedTypeName(res.data[0].type_name);
+          }
         }
       })
       .finally(() => setLoading(false));
@@ -287,19 +316,15 @@ function VariantsEditor({
           type="text"
           value={typeName}
           onChange={e => setTypeName(e.target.value)}
-          placeholder="e.g. Shade"
-          disabled={variants.length > 0}
-          style={{
-            ...inputStyle,
-            opacity: variants.length > 0 ? 0.6 : 1,
-            cursor: variants.length > 0 ? 'not-allowed' : 'text',
+          onBlur={handleTypeNameSave}
+          onKeyDown={e => {
+            if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
           }}
+          placeholder="e.g. Shade"
+          disabled={savingType}
+          style={{ ...inputStyle, opacity: savingType ? 0.6 : 1 }}
         />
-        {variants.length > 0 && (
-          <p style={{ fontSize: '0.68rem', color: 'var(--text-light)', marginTop: '0.2rem' }}>
-            Delete all variants to change the type name.
-          </p>
-        )}
+        {savingType && <p style={{ fontSize: '0.68rem', color: 'var(--text-light)', marginTop: '0.2rem' }}>Saving…</p>}
       </div>
 
       {variants.length > 0 && (
