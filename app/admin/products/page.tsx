@@ -2,7 +2,7 @@
 
 import { calcFinalPrice, formatPKR } from '@/lib/utils';
 import type { Category, Product, ProductVariant } from '@/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, forwardRef, useImperativeHandle, useRef } from 'react';
 
 type ModalMode = 'add' | 'edit' | null;
 
@@ -177,13 +177,16 @@ function BrandsLinker({ productId }: { productId: string }) {
   );
 }
 
-function VariantsEditor({
-  productId,
-  existingImages,
-}: {
-  productId: string;
-  existingImages: { id: string; image_url: string; is_primary: boolean }[];
-}) {
+const VariantsEditor = forwardRef(function VariantsEditor(
+  {
+    productId,
+    existingImages,
+  }: {
+    productId: string;
+    existingImages: { id: string; image_url: string; is_primary: boolean }[];
+  },
+  ref: React.Ref<{ saveTypeName: () => Promise<void> }>,
+) {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -198,8 +201,11 @@ function VariantsEditor({
 
   async function handleTypeNameSave() {
     const trimmed = typeName.trim();
-    if (!trimmed || variants.length === 0 || trimmed === savedTypeName) {
+    if (!trimmed) {
       setTypeName(savedTypeName);
+      return;
+    }
+    if (variants.length === 0 || trimmed === savedTypeName) {
       return;
     }
     setSavingType(true);
@@ -219,6 +225,10 @@ function VariantsEditor({
     }
     setSavingType(false);
   }
+
+  useImperativeHandle(ref, () => ({
+    saveTypeName: handleTypeNameSave,
+  }));
 
   useEffect(() => {
     setLoading(true);
@@ -316,10 +326,6 @@ function VariantsEditor({
           type="text"
           value={typeName}
           onChange={e => setTypeName(e.target.value)}
-          onBlur={handleTypeNameSave}
-          onKeyDown={e => {
-            if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-          }}
           placeholder="e.g. Shade"
           disabled={savingType}
           style={{ ...inputStyle, opacity: savingType ? 0.6 : 1 }}
@@ -458,7 +464,7 @@ function VariantsEditor({
       )}
     </div>
   );
-}
+});
 
 // ── Main page ──────────────────────────────────────────────────────────────────
 export default function AdminProductsPage() {
@@ -495,6 +501,8 @@ export default function AdminProductsPage() {
 
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
+
+  const variantsEditorRef = useRef<{ saveTypeName: () => Promise<void> } | null>(null);
 
   async function fetchProducts() {
     setLoading(true);
@@ -1327,7 +1335,7 @@ export default function AdminProductsPage() {
                       value={form.description}
                       onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                       placeholder="Product description..."
-                      rows={3}
+                      rows={8}
                       style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }}
                       onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
                       onBlur={e => (e.target.style.borderColor = 'var(--border)')}
@@ -1563,7 +1571,7 @@ export default function AdminProductsPage() {
                     Add selectable variants for this product (e.g. Shades for lipstick, Colors for hair dye). Each variant
                     can be linked to one of the product's images — clicking it on the product page will switch to that image.
                   </p>
-                  <VariantsEditor productId={savedProductId} existingImages={existingImages} />
+                  <VariantsEditor ref={variantsEditorRef} productId={savedProductId} existingImages={existingImages} />
                 </div>
               )}
 
@@ -1585,7 +1593,15 @@ export default function AdminProductsPage() {
               }}
             >
               {activeTab === 'variants' || activeTab === 'brands' ? (
-                <button onClick={closeModal} className="btn-primary">
+                <button
+                  onClick={async () => {
+                    if (activeTab === 'variants') {
+                      await variantsEditorRef.current?.saveTypeName();
+                    }
+                    closeModal();
+                  }}
+                  className="btn-primary"
+                >
                   Done
                 </button>
               ) : (

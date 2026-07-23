@@ -427,7 +427,15 @@ export default function ProductDetailPage() {
 
             {/* Description */}
             {product.description && (
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-mid)', lineHeight: 1.8, marginBottom: '1.5rem' }}>
+              <p
+                style={{
+                  fontSize: '0.9rem',
+                  color: 'var(--text-mid)',
+                  lineHeight: 1.8,
+                  marginBottom: '1.5rem',
+                  whiteSpace: 'pre-line',
+                }}
+              >
                 {product.description}
               </p>
             )}
