@@ -26,6 +26,8 @@ function ProductCard({ product }: { product: Product }) {
       original_price: product.price,
       discount_percent: product.discount_percent,
       quantity: 1,
+      variant_id: null,
+      variant_label: null,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
