@@ -521,7 +521,6 @@ export default function AdminOrdersPage() {
                             <span style={{ fontSize: '0.72rem', color: 'var(--text-light)' }}>{item.variant_label}</span>
                           )}
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>Qty: {item.quantity}</span>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>Qty: {item.quantity}</span>
                         </span>
                         <span style={{ color: 'var(--text-mid)', flexShrink: 0 }}>
                           {formatPKR(item.unit_price * item.quantity)}
