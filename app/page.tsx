@@ -28,6 +28,8 @@ function ProductCard({ product }: { product: Product }) {
       original_price: product.price,
       discount_percent: product.discount_percent,
       quantity: 1,
+      variant_id: null,
+      variant_label: null,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
@@ -1853,22 +1855,25 @@ function DealsSection({ deals }: { deals: Deal[] }) {
 }
 
 function DealCard({ deal }: { deal: Deal }) {
-  const { addItem } = useCart(); // whatever your cart hook is
+  const { addItem } = useCart();
   const router = useRouter();
 
   const handleShopDeal = () => {
     const products = deal.deal_products.map(dp => dp.product);
     products.forEach(product => {
       const image = product.images?.find(img => img.is_primary)?.image_url ?? null;
+      const finalPrice = calcFinalPrice(product.price, product.discount_percent);
       addItem({
         product_id: product.id,
         name: product.name,
         slug: product.slug,
-        image_url: image,
-        unit_price: deal.deal_price / products.length, // split deal price equally
+        image_url: image ?? '',
+        unit_price: finalPrice,
         original_price: product.price,
         discount_percent: product.discount_percent,
         quantity: 1,
+        variant_id: null,
+        variant_label: null,
       });
     });
     router.push('/cart');
