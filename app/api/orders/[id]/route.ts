@@ -14,7 +14,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       address, city, postal_code, notes,
       total_amount, payment_method, status, created_at,
       order_items (
-        product_name, product_image_url, unit_price, quantity
+      product_name, product_image_url, unit_price, quantity, variant_id, variant_label
       )
     `,
     )

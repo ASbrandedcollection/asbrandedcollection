@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useEffect, useReducer, ReactNode } from 'react';
 import type { CartItem } from '@/types';
+import { createContext, ReactNode, useContext, useEffect, useReducer } from 'react';
 
 interface CartState {
   items: CartItem[];
@@ -9,8 +9,8 @@ interface CartState {
 
 type CartAction =
   | { type: 'ADD_ITEM'; payload: CartItem }
-  | { type: 'REMOVE_ITEM'; payload: { product_id: string } }
-  | { type: 'UPDATE_QTY'; payload: { product_id: string; quantity: number } }
+  | { type: 'REMOVE_ITEM'; payload: { product_id: string; variant_id: string | null } }
+  | { type: 'UPDATE_QTY'; payload: { product_id: string; variant_id: string | null; quantity: number } }
   | { type: 'CLEAR_CART' }
   | { type: 'HYDRATE'; payload: CartItem[] };
 
@@ -19,10 +19,10 @@ interface CartContextValue {
   itemCount: number;
   totalAmount: number;
   addItem: (item: CartItem) => void;
-  removeItem: (product_id: string) => void;
-  updateQty: (product_id: string, quantity: number) => void;
+  removeItem: (product_id: string, variant_id: string | null) => void;
+  updateQty: (product_id: string, variant_id: string | null, quantity: number) => void;
   clearCart: () => void;
-  isInCart: (product_id: string) => boolean;
+  isInCart: (product_id: string, variant_id?: string | null) => boolean;
 }
 
 function cartReducer(state: CartState, action: CartAction): CartState {
@@ -31,11 +31,15 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return { items: action.payload };
 
     case 'ADD_ITEM': {
-      const exists = state.items.find(i => i.product_id === action.payload.product_id);
+      const exists = state.items.find(
+        i => i.product_id === action.payload.product_id && i.variant_id === action.payload.variant_id,
+      );
       if (exists) {
         return {
           items: state.items.map(i =>
-            i.product_id === action.payload.product_id ? { ...i, quantity: i.quantity + action.payload.quantity } : i,
+            i.product_id === action.payload.product_id && i.variant_id === action.payload.variant_id
+              ? { ...i, quantity: i.quantity + action.payload.quantity }
+              : i,
           ),
         };
       }
@@ -43,15 +47,26 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     }
 
     case 'REMOVE_ITEM':
-      return { items: state.items.filter(i => i.product_id !== action.payload.product_id) };
+      return {
+        items: state.items.filter(
+          i => !(i.product_id === action.payload.product_id && i.variant_id === action.payload.variant_id),
+        ),
+      };
 
     case 'UPDATE_QTY': {
       if (action.payload.quantity <= 0) {
-        return { items: state.items.filter(i => i.product_id !== action.payload.product_id) };
+        return {
+          items: state.items.filter(
+            i => !(i.product_id === action.payload.product_id && i.variant_id === action.payload.variant_id),
+          ),
+        };
       }
+
       return {
         items: state.items.map(i =>
-          i.product_id === action.payload.product_id ? { ...i, quantity: action.payload.quantity } : i,
+          i.product_id === action.payload.product_id && i.variant_id === action.payload.variant_id
+            ? { ...i, quantity: action.payload.quantity }
+            : i,
         ),
       };
     }
@@ -95,10 +110,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     itemCount,
     totalAmount,
     addItem: item => dispatch({ type: 'ADD_ITEM', payload: item }),
-    removeItem: id => dispatch({ type: 'REMOVE_ITEM', payload: { product_id: id } }),
-    updateQty: (id, qty) => dispatch({ type: 'UPDATE_QTY', payload: { product_id: id, quantity: qty } }),
-    clearCart: () => dispatch({ type: 'CLEAR_CART' }),
+
+    removeItem: (id, variantId) =>
+      dispatch({ type: 'REMOVE_ITEM', payload: { product_id: id, variant_id: variantId ?? null } }),
+
+    updateQty: (id, variantId, qty) =>
+      dispatch({ type: 'UPDATE_QTY', payload: { product_id: id, variant_id: variantId ?? null, quantity: qty } }),
+
     isInCart: id => state.items.some(i => i.product_id === id),
+
+    clearCart: () => dispatch({ type: 'CLEAR_CART' }),
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

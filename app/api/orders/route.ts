@@ -69,7 +69,17 @@ export async function POST(request: NextRequest) {
 
   const imageMap = new Map((images ?? []).map((img: any) => [img.product_id, img.image_url]));
 
+  const variantIds = body.items.map(i => i.variant_id).filter(Boolean) as string[];
+
+  const { data: variants } = await supabaseAdmin
+    .from('product_variants')
+    .select('id, label')
+    .in('id', variantIds.length > 0 ? variantIds : ['00000000-0000-0000-0000-000000000000']);
+
+  const variantMap = new Map((variants ?? []).map((v: any) => [v.id, v.label]));
+
   let totalAmount = 0;
+
   const orderItems = body.items.map(item => {
     const product = productMap.get(item.product_id);
     const unitPrice = calcFinalPrice(product.price, product.discount_percent);
@@ -80,6 +90,8 @@ export async function POST(request: NextRequest) {
       product_image_url: imageMap.get(item.product_id) ?? null,
       unit_price: unitPrice,
       quantity: item.quantity,
+      variant_id: item.variant_id ?? null,
+      variant_label: item.variant_id ? (variantMap.get(item.variant_id) ?? null) : null,
     };
   });
 

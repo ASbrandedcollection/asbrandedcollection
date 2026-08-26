@@ -516,14 +516,11 @@ export default function AdminOrdersPage() {
                             gap: '2px',
                           }}
                         >
-                          <span
-                            style={{
-                              overflow: 'hidden',
-                              wordBreak: 'break-word',
-                            }}
-                          >
-                            {item.product_name}
-                          </span>
+                          <span style={{ overflow: 'hidden', wordBreak: 'break-word' }}>{item.product_name}</span>
+                          {item.variant_label && (
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-light)' }}>{item.variant_label}</span>
+                          )}
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>Qty: {item.quantity}</span>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>Qty: {item.quantity}</span>
                         </span>
                         <span style={{ color: 'var(--text-mid)', flexShrink: 0 }}>

@@ -140,7 +140,7 @@ export default function CartPage() {
 
             {items.map(item => (
               <div
-                key={item.product_id}
+                key={`${item.product_id}-${item.variant_id ?? 'default'}`}
                 style={{
                   background: 'var(--white)',
                   border: '1px solid var(--border)',
@@ -211,6 +211,12 @@ export default function CartPage() {
                     </p>
                   </Link>
 
+                  {item.variant_label && (
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-mid)', marginBottom: '0.5rem' }}>
+                      {item.variant_label}
+                    </p>
+                  )}
+
                   {/* Price */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
                     <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text-dark)' }}>
@@ -241,7 +247,7 @@ export default function CartPage() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <button
-                        onClick={() => updateQty(item.product_id, item.quantity - 1)}
+                        onClick={() => updateQty(item.product_id, item.variant_id, item.quantity - 1)}
                         style={{
                           width: '32px',
                           height: '32px',
@@ -276,7 +282,7 @@ export default function CartPage() {
                         {item.quantity}
                       </div>
                       <button
-                        onClick={() => updateQty(item.product_id, item.quantity + 1)}
+                        onClick={() => updateQty(item.product_id, item.variant_id, item.quantity + 1)}
                         style={{
                           width: '32px',
                           height: '32px',
@@ -299,7 +305,7 @@ export default function CartPage() {
                         {formatPKR(item.unit_price * item.quantity)}
                       </span>
                       <button
-                        onClick={() => removeItem(item.product_id)}
+                        onClick={() => removeItem(item.product_id, item.variant_id)}
                         style={{
                           background: 'none',
                           border: 'none',
@@ -352,7 +358,7 @@ export default function CartPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1rem' }}>
               {items.map(item => (
                 <div
-                  key={item.product_id}
+                  key={`${item.product_id}-${item.variant_id ?? 'default'}`}
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -369,7 +375,8 @@ export default function CartPage() {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {item.name} × {item.quantity}
+                    {item.name}
+                    {item.variant_label ? ` (${item.variant_label})` : ''} × {item.quantity}
                   </span>
                   <span style={{ flexShrink: 0 }}>{formatPKR(item.unit_price * item.quantity)}</span>
                 </div>

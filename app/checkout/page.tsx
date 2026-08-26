@@ -180,6 +180,7 @@ export default function CheckoutPage() {
           payment_method: paymentMethod,
           items: items.map(i => ({
             product_id: i.product_id,
+            variant_id: i.variant_id,
             quantity: i.quantity,
           })),
         }),

@@ -159,6 +159,8 @@ export interface OrderItem {
   unit_price: number;
   quantity: number;
   created_at: string;
+  variant_id: string | null;
+  variant_label: string | null;
 }
 
 export interface OrderStatusHistoryEntry {
@@ -228,6 +230,8 @@ export interface CartItem {
   original_price: number;
   discount_percent: number;
   quantity: number;
+  variant_id: string | null;
+  variant_label: string | null;
 }
 
 export interface CheckoutPayload {
@@ -239,7 +243,7 @@ export interface CheckoutPayload {
   postal_code: string;
   notes?: string;
   payment_method: PaymentMethod;
-  items: { product_id: string; quantity: number }[];
+  items: { product_id: string; variant_id: string | null; quantity: number }[];
 }
 
 export interface ProductFilters {

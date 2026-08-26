@@ -77,6 +77,8 @@ export default function ProductDetailPage() {
       original_price: product.price,
       discount_percent: product.discount_percent,
       quantity,
+      variant_id: selectedVariant?.id ?? null,
+      variant_label: selectedVariant?.label ?? null,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -94,6 +96,8 @@ export default function ProductDetailPage() {
       original_price: product.price,
       discount_percent: product.discount_percent,
       quantity: 1,
+      variant_id: selectedVariant?.id ?? null,
+      variant_label: selectedVariant?.label ?? null,
     });
     router.push('/cart');
   };

@@ -10,6 +10,7 @@ type OrderItem = {
   product_image_url: string | null;
   unit_price: number;
   quantity: number;
+  variant_label: string | null;
 };
 
 type Order = {
@@ -361,6 +362,11 @@ function OrderConfirmationContent() {
                       >
                         {item.product_name}
                       </p>
+                      {item.variant_label && (
+                        <p style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginBottom: '0.15rem' }}>
+                          {item.variant_label}
+                        </p>
+                      )}
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>Qty: {item.quantity}</p>
                     </div>
                     <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-dark)', flexShrink: 0 }}>
