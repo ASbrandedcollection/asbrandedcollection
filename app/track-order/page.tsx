@@ -7,9 +7,11 @@ import { useState } from 'react';
 interface Order {
   id: string;
   customer_name: string;
-  customer_email: string;
   customer_phone: string;
   customer_address: string;
+  subtotal_amount: number;
+  shipping_cost: number;
+  discount_amount: number;
   total_amount: number;
   status: string;
   estimated_delivery_date?: string;

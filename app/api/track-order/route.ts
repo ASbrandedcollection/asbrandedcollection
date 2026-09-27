@@ -21,29 +21,12 @@ export async function POST(request: NextRequest) {
       .from('orders')
       .select(
         `
-    id,
-    first_name,
-    last_name,
-    phone,
-    address,
-    city,
-    postal_code,
-    total_amount,
-    status,
-    estimated_delivery_date,
-    shipping_carrier,
-    tracking_number,
-    notes,
-    payment_method,
-    created_at,
-    order_items (
-      id,
-      product_id,
-      product_name,
-      unit_price,
-      quantity
-    )
-  `,
+  id, first_name, last_name, phone, address, city, postal_code,
+  subtotal_amount, shipping_cost, discount_amount, total_amount,
+  status, estimated_delivery_date, shipping_carrier,
+  tracking_number, notes, payment_method, created_at,
+  order_items ( id, product_id, product_name, unit_price, quantity )
+`,
       )
       .eq('order_number', cleanOrderNumber)
       .single();

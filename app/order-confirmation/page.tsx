@@ -22,6 +22,9 @@ type Order = {
   city: string;
   postal_code: string;
   notes: string | null;
+  subtotal_amount: number;
+  shipping_cost: number;
+  discount_amount: number;
   total_amount: number;
   payment_method: string;
   status: string;
@@ -79,8 +82,6 @@ function OrderConfirmationContent() {
       </div>
     );
   }
-
-  const shipping = order ? (order.total_amount >= 3000 ? 0 : 200) : 0;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--off-white)', padding: '2rem 1rem' }}>
@@ -382,14 +383,20 @@ function OrderConfirmationContent() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.82rem', color: 'var(--text-mid)' }}>Subtotal</span>
-                  <span style={{ fontSize: '0.82rem', color: 'var(--text-dark)' }}>{formatPKR(order.total_amount)}</span>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-dark)' }}>{formatPKR(order.subtotal_amount)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.82rem', color: 'var(--text-mid)' }}>Shipping</span>
-                  <span style={{ fontSize: '0.82rem', color: shipping === 0 ? '#16a34a' : 'var(--text-dark)' }}>
-                    {shipping === 0 ? 'Free' : formatPKR(shipping)}
+                  <span style={{ fontSize: '0.82rem', color: order.shipping_cost === 0 ? '#16a34a' : 'var(--text-dark)' }}>
+                    {order.shipping_cost === 0 ? 'Free' : formatPKR(order.shipping_cost)}
                   </span>
                 </div>
+                {order.discount_amount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.82rem', color: '#16a34a' }}>Advance Discount</span>
+                    <span style={{ fontSize: '0.82rem', color: '#16a34a' }}>-{formatPKR(order.discount_amount)}</span>
+                  </div>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem' }}>
                   <span
                     style={{
@@ -409,7 +416,7 @@ function OrderConfirmationContent() {
                       fontWeight: 500,
                     }}
                   >
-                    {formatPKR(order.total_amount + shipping)}
+                    {formatPKR(order.total_amount)}
                   </span>
                 </div>
               </div>

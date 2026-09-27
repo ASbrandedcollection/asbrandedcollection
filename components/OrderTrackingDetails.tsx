@@ -16,9 +16,11 @@ interface OrderTrackingDetailsProps {
   order: {
     id: string;
     customer_name: string;
-    customer_email: string;
     customer_phone: string;
     customer_address: string;
+    subtotal_amount: number;
+    shipping_cost: number;
+    discount_amount: number;
     total_amount: number;
     status: string;
     estimated_delivery_date?: string;
@@ -98,6 +100,12 @@ export default function OrderTrackingDetails({ order, onCancel, onUpdate }: Orde
             </div>
             <div style={{ fontSize: '24px', fontWeight: '600', color: 'var(--blush-deep)' }}>
               {formatPKR(order.total_amount)}
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-light)', marginTop: '4px' }}>
+              Subtotal {formatPKR(order.subtotal_amount)}
+              {' · '}
+              Shipping {order.shipping_cost === 0 ? 'Free' : formatPKR(order.shipping_cost)}
+              {order.discount_amount > 0 && ` · -${formatPKR(order.discount_amount)} discount`}
             </div>
           </div>
         </div>
@@ -200,11 +208,10 @@ export default function OrderTrackingDetails({ order, onCancel, onUpdate }: Orde
               <div>{order.customer_address}</div>
               <div style={{ marginTop: '8px' }}>
                 <div style={{ fontSize: '13px', color: 'var(--text-light)' }}>{order.customer_phone}</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-light)' }}>{order.customer_email}</div>
               </div>
             </div>
           </div>
-          
+
           {/* 
           <div>
             {order.shipping_carrier && (
@@ -252,7 +259,6 @@ export default function OrderTrackingDetails({ order, onCancel, onUpdate }: Orde
               </>
             )}
           </div> */}
-
         </div>
       </div>
 
