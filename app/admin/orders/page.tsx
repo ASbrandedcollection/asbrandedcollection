@@ -534,6 +534,29 @@ export default function AdminOrdersPage() {
               <div style={{ height: '1px', background: 'var(--border)' }} />
 
               {/* Total */}
+              {/* Breakdown */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                  <span style={{ color: 'var(--text-mid)' }}>Subtotal</span>
+                  <span style={{ color: 'var(--text-dark)' }}>{formatPKR(selectedOrder.subtotal_amount)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                  <span style={{ color: 'var(--text-mid)' }}>Shipping</span>
+                  <span style={{ color: selectedOrder.shipping_cost === 0 ? '#16a34a' : 'var(--text-dark)' }}>
+                    {selectedOrder.shipping_cost === 0 ? 'Free' : formatPKR(selectedOrder.shipping_cost)}
+                  </span>
+                </div>
+                {selectedOrder.discount_amount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                    <span style={{ color: '#16a34a' }}>Advance Discount</span>
+                    <span style={{ color: '#16a34a' }}>-{formatPKR(selectedOrder.discount_amount)}</span>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ height: '1px', background: 'var(--border)' }} />
+
+              {/* Total */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span
                   style={{
@@ -561,12 +584,7 @@ export default function AdminOrdersPage() {
                   color: 'var(--text-mid)',
                 }}
               >
-                💳{' '}
-                {selectedOrder.payment_method === 'cod'
-                  ? 'Cash on Delivery'
-                  : selectedOrder.payment_method === 'jazzcash'
-                    ? 'JazzCash'
-                    : 'EasyPaisa'}
+                💳 {selectedOrder.payment_method === 'cod' ? 'Cash on Delivery' : 'Advance Payment (Bank Transfer)'}
               </div>
 
               <div style={{ height: '1px', background: 'var(--border)' }} />

@@ -5,6 +5,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const supabaseAdmin = getSupabaseAdmin();
 
+const DEFAULT_FREE_DELIVERY_THRESHOLD = 3000;
+const FLAT_SHIPPING_COST = 200;
+const ADVANCE_DISCOUNT_RATE = 0.05;
+
 export async function POST(request: NextRequest) {
   let body: CheckoutPayload;
 
@@ -78,12 +82,12 @@ export async function POST(request: NextRequest) {
 
   const variantMap = new Map((variants ?? []).map((v: any) => [v.id, v.label]));
 
-  let totalAmount = 0;
+  let subtotalAmount = 0;
 
   const orderItems = body.items.map(item => {
     const product = productMap.get(item.product_id);
     const unitPrice = calcFinalPrice(product.price, product.discount_percent);
-    totalAmount += unitPrice * item.quantity;
+    subtotalAmount += unitPrice * item.quantity;
     return {
       product_id: item.product_id,
       product_name: product.name,
@@ -95,6 +99,22 @@ export async function POST(request: NextRequest) {
     };
   });
 
+  // Fetch free delivery threshold from settings — never trust a client-sent value
+  const { data: settingRow } = await supabaseAdmin
+    .from('store_settings')
+    .select('value')
+    .eq('key', 'free_delivery_threshold')
+    .maybeSingle();
+
+  const freeDeliveryThreshold = settingRow?.value ? Number(settingRow.value) : DEFAULT_FREE_DELIVERY_THRESHOLD;
+
+  const shippingCost = subtotalAmount >= freeDeliveryThreshold ? 0 : FLAT_SHIPPING_COST;
+
+  const paymentMethod = body.payment_method ?? 'cod';
+  const advanceDiscount = paymentMethod === 'advance' ? Math.floor(subtotalAmount * ADVANCE_DISCOUNT_RATE) : 0;
+
+  const grandTotal = subtotalAmount + shippingCost - advanceDiscount;
+
   const { data: order, error: orderError } = await supabaseAdmin
     .from('orders')
     .insert({
@@ -105,8 +125,11 @@ export async function POST(request: NextRequest) {
       city: body.city.trim(),
       postal_code: body.postal_code.trim(),
       notes: body.notes?.trim() ?? null,
-      total_amount: +totalAmount.toFixed(2),
-      payment_method: body.payment_method ?? 'cod',
+      subtotal_amount: +subtotalAmount.toFixed(2),
+      shipping_cost: shippingCost,
+      discount_amount: advanceDiscount,
+      total_amount: +grandTotal.toFixed(2),
+      payment_method: paymentMethod,
       status: 'pending',
     })
     .select()

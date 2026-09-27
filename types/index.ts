@@ -130,7 +130,7 @@ export interface Banner {
 
 export type OrderStatus = 'pending' | 'confirmed' | 'ready_to_ship' | 'shipped' | 'delivered' | 'cancelled';
 
-export type PaymentMethod = 'cod';
+export type PaymentMethod = 'cod' | 'advance';
 
 export interface Order {
   id: string;
@@ -143,6 +143,9 @@ export interface Order {
   postal_code: string;
   notes: string | null;
   total_amount: number;
+  subtotal_amount: number;
+  shipping_cost: number;
+  discount_amount: number;
   status: OrderStatus;
   payment_method: PaymentMethod;
   created_at: string;
