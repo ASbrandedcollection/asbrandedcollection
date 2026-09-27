@@ -4,7 +4,7 @@ import { useCart } from '@/lib/cart-context';
 import { formatPKR } from '@/lib/utils';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function Field({
   label,
@@ -74,6 +74,17 @@ function Field({
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalAmount, clearCart } = useCart();
+  const [freeDeliveryThreshold, setFreeDeliveryThreshold] = useState(3000);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && res.data.free_delivery_threshold) {
+          setFreeDeliveryThreshold(Number(res.data.free_delivery_threshold));
+        }
+      });
+  }, []);
 
   const [form, setForm] = useState({
     first_name: '',
@@ -90,7 +101,7 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  const shipping = totalAmount >= 3000 ? 0 : 200;
+  const shipping = totalAmount >= freeDeliveryThreshold ? 0 : 200;
   // Apply 5% discount on subtotal when advance payment selected
   const advanceDiscount = paymentMethod === 'advance' ? Math.floor(totalAmount * 0.05) : 0;
   const grandTotal = totalAmount + shipping - advanceDiscount;
@@ -720,7 +731,7 @@ export default function CheckoutPage() {
                       padding: '0.5rem 0.75rem',
                     }}
                   >
-                    Add {formatPKR(3000 - totalAmount)} more for free shipping
+                    Add {formatPKR(freeDeliveryThreshold - totalAmount)} more for free shipping
                   </p>
                 )}
                 {/* Advance discount row — only shown when applicable */}

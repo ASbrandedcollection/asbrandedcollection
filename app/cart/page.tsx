@@ -3,9 +3,21 @@
 import { useCart } from '@/lib/cart-context';
 import { formatPKR } from '@/lib/utils';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function CartPage() {
   const { items, itemCount, totalAmount, removeItem, updateQty, clearCart } = useCart();
+  const [freeDeliveryThreshold, setFreeDeliveryThreshold] = useState(3000);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && res.data.free_delivery_threshold) {
+          setFreeDeliveryThreshold(Number(res.data.free_delivery_threshold));
+        }
+      });
+  }, []);
 
   if (itemCount === 0)
     return (
@@ -394,10 +406,12 @@ export default function CartPage() {
             {/* Shipping */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <span style={{ fontSize: '0.85rem', color: 'var(--text-mid)' }}>Shipping</span>
-              <span style={{ fontSize: '0.85rem', color: '#81c784' }}>{totalAmount >= 3000 ? 'Free' : formatPKR(200)}</span>
+              <span style={{ fontSize: '0.85rem', color: '#81c784' }}>
+                {totalAmount >= freeDeliveryThreshold ? 'Free' : formatPKR(200)}
+              </span>
             </div>
 
-            {totalAmount < 3000 && (
+            {totalAmount < freeDeliveryThreshold && (
               <div
                 style={{
                   background: 'var(--blush-light)',
@@ -408,7 +422,7 @@ export default function CartPage() {
                   lineHeight: 1.5,
                 }}
               >
-                Add {formatPKR(3000 - totalAmount)} more for <strong>free shipping</strong>
+                Add {formatPKR(freeDeliveryThreshold - totalAmount)} more for <strong>free shipping</strong>
               </div>
             )}
 
@@ -434,7 +448,7 @@ export default function CartPage() {
                   color: 'var(--text-dark)',
                 }}
               >
-                {formatPKR(totalAmount >= 3000 ? totalAmount : totalAmount + 200)}
+                {formatPKR(totalAmount >= freeDeliveryThreshold ? totalAmount : totalAmount + 200)}
               </span>
             </div>
 
