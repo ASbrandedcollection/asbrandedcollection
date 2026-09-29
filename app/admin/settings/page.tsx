@@ -17,6 +17,7 @@ interface Settings {
   store_name: string;
   free_delivery_threshold: string;
   delivery_days: string;
+  flat_shipping_cost: string;
   tagline: string;
 }
 
@@ -34,6 +35,7 @@ const STORE_FIELDS: { key: keyof Settings; label: string; placeholder: string; h
   { key: 'address', label: 'Address', placeholder: 'Karachi, Pakistan' },
   { key: 'free_delivery_threshold', label: 'Free Delivery Above (PKR)', placeholder: '3000' },
   { key: 'delivery_days', label: 'Delivery Timeframe', placeholder: '3-5', hint: 'e.g. 3-5 (shown as "3-5 working days")' },
+  { key: 'flat_shipping_cost', label: 'Flat Shipping Cost (PKR)', placeholder: '200' },
 ];
 
 const PLATFORM_OPTIONS: { value: SocialPlatform; label: string }[] = [
@@ -54,6 +56,7 @@ export default function AdminSettingsPage() {
     store_name: '',
     free_delivery_threshold: '3000',
     delivery_days: '3-5',
+    flat_shipping_cost: '200',
     tagline: '',
   });
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);

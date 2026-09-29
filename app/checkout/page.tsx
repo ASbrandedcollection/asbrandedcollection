@@ -75,13 +75,15 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalAmount, clearCart } = useCart();
   const [freeDeliveryThreshold, setFreeDeliveryThreshold] = useState(3000);
+  const [flatShippingCost, setFlatShippingCost] = useState(200);
 
   useEffect(() => {
     fetch('/api/settings')
       .then(r => r.json())
       .then(res => {
-        if (res.success && res.data.free_delivery_threshold) {
-          setFreeDeliveryThreshold(Number(res.data.free_delivery_threshold));
+        if (res.success) {
+          if (res.data.free_delivery_threshold) setFreeDeliveryThreshold(Number(res.data.free_delivery_threshold));
+          if (res.data.flat_shipping_cost) setFlatShippingCost(Number(res.data.flat_shipping_cost));
         }
       });
   }, []);
@@ -101,7 +103,7 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  const shipping = totalAmount >= freeDeliveryThreshold ? 0 : 200;
+  const shipping = totalAmount >= freeDeliveryThreshold ? 0 : flatShippingCost;
   // Apply 5% discount on subtotal when advance payment selected
   const advanceDiscount = paymentMethod === 'advance' ? Math.floor(totalAmount * 0.05) : 0;
   const grandTotal = totalAmount + shipping - advanceDiscount;

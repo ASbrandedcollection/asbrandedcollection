@@ -8,13 +8,15 @@ import { useEffect, useState } from 'react';
 export default function CartPage() {
   const { items, itemCount, totalAmount, removeItem, updateQty, clearCart } = useCart();
   const [freeDeliveryThreshold, setFreeDeliveryThreshold] = useState(3000);
+  const [flatShippingCost, setFlatShippingCost] = useState(200);
 
   useEffect(() => {
     fetch('/api/settings')
       .then(r => r.json())
       .then(res => {
-        if (res.success && res.data.free_delivery_threshold) {
-          setFreeDeliveryThreshold(Number(res.data.free_delivery_threshold));
+        if (res.success) {
+          if (res.data.free_delivery_threshold) setFreeDeliveryThreshold(Number(res.data.free_delivery_threshold));
+          if (res.data.flat_shipping_cost) setFlatShippingCost(Number(res.data.flat_shipping_cost));
         }
       });
   }, []);
@@ -407,7 +409,7 @@ export default function CartPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <span style={{ fontSize: '0.85rem', color: 'var(--text-mid)' }}>Shipping</span>
               <span style={{ fontSize: '0.85rem', color: '#81c784' }}>
-                {totalAmount >= freeDeliveryThreshold ? 'Free' : formatPKR(200)}
+                {totalAmount >= freeDeliveryThreshold ? 'Free' : formatPKR(flatShippingCost)}
               </span>
             </div>
 
@@ -448,7 +450,7 @@ export default function CartPage() {
                   color: 'var(--text-dark)',
                 }}
               >
-                {formatPKR(totalAmount >= freeDeliveryThreshold ? totalAmount : totalAmount + 200)}
+                {formatPKR(totalAmount >= freeDeliveryThreshold ? totalAmount : totalAmount + flatShippingCost)}
               </span>
             </div>
 

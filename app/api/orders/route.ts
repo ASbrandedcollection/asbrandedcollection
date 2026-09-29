@@ -5,8 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const supabaseAdmin = getSupabaseAdmin();
 
+const DEFAULT_FLAT_SHIPPING_COST = 200;
 const DEFAULT_FREE_DELIVERY_THRESHOLD = 3000;
-const FLAT_SHIPPING_COST = 200;
 const ADVANCE_DISCOUNT_RATE = 0.05;
 
 export async function POST(request: NextRequest) {
@@ -100,16 +100,23 @@ export async function POST(request: NextRequest) {
   });
 
   // Fetch free delivery threshold from settings — never trust a client-sent value
-  const { data: settingRow } = await supabaseAdmin
+  // Fetch shipping settings — never trust a client-sent value
+  const { data: settingRows } = await supabaseAdmin
     .from('store_settings')
-    .select('value')
-    .eq('key', 'free_delivery_threshold')
-    .maybeSingle();
+    .select('key, value')
+    .in('key', ['free_delivery_threshold', 'flat_shipping_cost']);
 
-  const freeDeliveryThreshold = settingRow?.value ? Number(settingRow.value) : DEFAULT_FREE_DELIVERY_THRESHOLD;
+  const settingsMap = new Map((settingRows ?? []).map(r => [r.key, r.value]));
 
-  const shippingCost = subtotalAmount >= freeDeliveryThreshold ? 0 : FLAT_SHIPPING_COST;
+  const freeDeliveryThreshold = settingsMap.has('free_delivery_threshold')
+    ? Number(settingsMap.get('free_delivery_threshold'))
+    : DEFAULT_FREE_DELIVERY_THRESHOLD;
 
+  const flatShippingCost = settingsMap.has('flat_shipping_cost')
+    ? Number(settingsMap.get('flat_shipping_cost'))
+    : DEFAULT_FLAT_SHIPPING_COST;
+
+  const shippingCost = subtotalAmount >= freeDeliveryThreshold ? 0 : flatShippingCost;
   const paymentMethod = body.payment_method ?? 'cod';
   const advanceDiscount = paymentMethod === 'advance' ? Math.floor(subtotalAmount * ADVANCE_DISCOUNT_RATE) : 0;
 
