@@ -79,6 +79,7 @@ export default function ProductDetailPage() {
       quantity,
       variant_id: selectedVariant?.id ?? null,
       variant_label: selectedVariant?.label ?? null,
+      free_delivery: product.free_delivery,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -98,6 +99,7 @@ export default function ProductDetailPage() {
       quantity: 1,
       variant_id: selectedVariant?.id ?? null,
       variant_label: selectedVariant?.label ?? null,
+      free_delivery: product.free_delivery,
     });
     router.push('/cart');
   };

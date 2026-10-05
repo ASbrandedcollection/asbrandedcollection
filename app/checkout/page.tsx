@@ -103,7 +103,9 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  const shipping = totalAmount >= freeDeliveryThreshold ? 0 : flatShippingCost;
+  const allItemsFreeDelivery = items.length > 0 && items.every(item => item.free_delivery);
+  const shipping = allItemsFreeDelivery || totalAmount >= freeDeliveryThreshold ? 0 : flatShippingCost;
+
   // Apply 5% discount on subtotal when advance payment selected
   const advanceDiscount = paymentMethod === 'advance' ? Math.floor(totalAmount * 0.05) : 0;
   const grandTotal = totalAmount + shipping - advanceDiscount;

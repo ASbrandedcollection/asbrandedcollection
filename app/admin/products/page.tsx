@@ -16,6 +16,7 @@ const emptyForm = {
   stock_qty: '0',
   is_active: true,
   sku: '',
+  free_delivery: false,
 };
 
 // ── BrandsLinker ──────────────────────────────────────────────────────────────
@@ -561,6 +562,7 @@ export default function AdminProductsPage() {
       stock_qty: product.stock_qty.toString(),
       is_active: product.is_active,
       sku: product.sku ?? '',
+      free_delivery: product.free_delivery ?? false,
     });
     setEditingProduct(product);
     setSavedProductId(product.id);
@@ -632,6 +634,7 @@ export default function AdminProductsPage() {
       stock_qty: parseInt(form.stock_qty),
       is_active: form.is_active,
       sku: form.sku.trim() || null,
+      free_delivery: form.free_delivery,
     };
 
     let productId = editingProduct?.id ?? savedProductId;

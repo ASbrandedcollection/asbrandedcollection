@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       stock_qty: parseInt(body.stock_qty ?? 0),
       is_active: body.is_active ?? true,
       sku: body.sku?.trim() || null,
+      free_delivery: body.free_delivery ?? false,
     })
     .select()
     .single();

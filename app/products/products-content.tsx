@@ -28,6 +28,7 @@ function ProductCard({ product }: { product: Product }) {
       quantity: 1,
       variant_id: null,
       variant_label: null,
+      free_delivery: product.free_delivery,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);

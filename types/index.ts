@@ -46,6 +46,7 @@ export interface Product {
   created_at: string;
   updated_at: string;
   category?: Category;
+  free_delivery: boolean;
   subcategory?: Subcategory;
   images?: ProductImage[];
   final_price?: number;
@@ -235,6 +236,7 @@ export interface CartItem {
   quantity: number;
   variant_id: string | null;
   variant_label: string | null;
+  free_delivery: boolean;
 }
 
 export interface CheckoutPayload {

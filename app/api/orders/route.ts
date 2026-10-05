@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
   const { data: products, error: prodError } = await supabaseAdmin
     .from('products')
-    .select('id, name, price, discount_percent, stock_qty, is_active')
+    .select('id, name, price, discount_percent, stock_qty, is_active, free_delivery')
     .in('id', productIds);
 
   if (prodError) {
@@ -116,7 +116,10 @@ export async function POST(request: NextRequest) {
     ? Number(settingsMap.get('flat_shipping_cost'))
     : DEFAULT_FLAT_SHIPPING_COST;
 
-  const shippingCost = subtotalAmount >= freeDeliveryThreshold ? 0 : flatShippingCost;
+  const allItemsFreeDelivery = body.items.every(item => productMap.get(item.product_id)?.free_delivery === true);
+
+  const shippingCost = allItemsFreeDelivery ? 0 : subtotalAmount >= freeDeliveryThreshold ? 0 : flatShippingCost;
+
   const paymentMethod = body.payment_method ?? 'cod';
   const advanceDiscount = paymentMethod === 'advance' ? Math.floor(subtotalAmount * ADVANCE_DISCOUNT_RATE) : 0;
 
