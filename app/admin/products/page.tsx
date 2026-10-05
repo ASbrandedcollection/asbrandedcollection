@@ -1299,6 +1299,40 @@ export default function AdminProductsPage() {
                     </div>
                   </div>
 
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <button
+                      onClick={() => setForm(f => ({ ...f, free_delivery: !f.free_delivery }))}
+                      style={{
+                        width: '44px',
+                        height: '24px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: form.free_delivery ? 'var(--blush-deep)' : 'var(--border-dark)',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.2s',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          background: 'white',
+                          position: 'absolute',
+                          top: '3px',
+                          left: form.free_delivery ? '23px' : '3px',
+                          transition: 'left 0.2s',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                        }}
+                      />
+                    </button>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-mid)' }}>
+                      {form.free_delivery ? 'Free delivery on this product' : 'Standard delivery charges apply'}
+                    </span>
+                  </div>
+
                   {/* Stock */}
                   <div>
                     <label style={labelStyle}>Stock Quantity</label>
