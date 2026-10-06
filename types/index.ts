@@ -82,6 +82,7 @@ export interface DealProduct {
     slug: string;
     price: number;
     discount_percent: number;
+    free_delivery: boolean;
     images: { image_url: string; is_primary: boolean }[];
   };
 }

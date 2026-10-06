@@ -30,6 +30,7 @@ function ProductCard({ product }: { product: Product }) {
       quantity: 1,
       variant_id: null,
       variant_label: null,
+      free_delivery: product.free_delivery,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
@@ -352,7 +353,13 @@ function BannerSlider() {
           <img
             src={banner.image_url}
             alt={banner.title ?? 'Banner'}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.5s ease' }}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              transition: 'opacity 0.5s ease',
+            }}
           />
 
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
@@ -480,7 +487,7 @@ function BannerSlider() {
           padding: 0;
         }
         .banner-height {
-          height: clamp(300px, 50vh, 520px);
+            height: clamp(340px, 58vh, 600px);
         }
         @media (max-width: 768px) {
           .banner-wrapper {
@@ -488,7 +495,7 @@ function BannerSlider() {
             margin-top: 0.5rem !important;
           }
           .banner-height {
-            height: 220px !important;
+            height: 260px !important;
           }
         }
       `}</style>
@@ -1874,6 +1881,7 @@ function DealCard({ deal }: { deal: Deal }) {
         quantity: 1,
         variant_id: null,
         variant_label: null,
+        free_delivery: product.free_delivery,
       });
     });
     router.push('/cart');
