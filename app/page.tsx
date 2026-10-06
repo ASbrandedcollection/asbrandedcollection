@@ -341,7 +341,6 @@ function BannerSlider() {
     <div className="banner-container">
       <div className="banner-wrapper">
         <div
-          className="banner-height"
           style={{
             position: 'relative',
             width: '100%',
@@ -356,8 +355,7 @@ function BannerSlider() {
             style={{
               width: '100%',
               height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center',
+              display: 'block',
               transition: 'opacity 0.5s ease',
             }}
           />
