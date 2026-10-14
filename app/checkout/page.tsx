@@ -4,7 +4,8 @@ import { useCart } from '@/lib/cart-context';
 import { formatPKR } from '@/lib/utils';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
 
 function Field({
   label,
@@ -74,8 +75,46 @@ function Field({
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalAmount, clearCart } = useCart();
+
+  
+  const checkoutTracked = useRef(false);
+
   const [freeDeliveryThreshold, setFreeDeliveryThreshold] = useState(3000);
   const [flatShippingCost, setFlatShippingCost] = useState(200);
+
+  
+  // Track Meta Pixel InitiateCheckout once per checkout visit
+  useEffect(() => {
+    if (checkoutTracked.current || items.length === 0) return;
+
+    const fbq = (
+      window as Window & {
+        fbq?: (
+          action: string,
+          event: string,
+          params?: Record<string, unknown>
+        ) => void;
+      }
+    ).fbq;
+
+    if (typeof fbq !== 'function') return;
+
+    fbq('track', 'InitiateCheckout', {
+      content_ids: items.map(item => item.product_id),
+      content_type: 'product',
+      contents: items.map(item => ({
+        id: item.product_id,
+        quantity: item.quantity,
+        item_price: item.unit_price,
+      })),
+      num_items: items.reduce((sum, item) => sum + item.quantity, 0),
+      value: totalAmount,
+      currency: 'PKR',
+    });
+
+    checkoutTracked.current = true;
+  }, [items, totalAmount]);
+
 
   useEffect(() => {
     fetch('/api/settings')
