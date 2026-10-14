@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCart } from '@/lib/cart-context';
@@ -5,7 +6,14 @@ import { formatPKR } from '@/lib/utils';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 
+type MetaPixel = (
+  action: string,
+  event: string,
+  params?: Record<string, unknown>,
+  options?: Record<string, unknown>
+) => void;
 
 function Field({
   label,
@@ -31,23 +39,29 @@ function Field({
   return (
     <div style={{ gridColumn: half ? 'span 1' : 'span 2' }}>
       <label
+        htmlFor={name}
         style={{
           display: 'block',
           fontSize: '0.72rem',
           fontWeight: 500,
           letterSpacing: '0.08em',
-          textTransform: 'uppercase' as const,
+          textTransform: 'uppercase',
           color: 'var(--text-mid)',
           marginBottom: '0.4rem',
         }}
       >
         {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
       </label>
+
       <input
+        id={name}
+        name={name}
         type={type}
+        required={required}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
+        aria-invalid={Boolean(error)}
         style={{
           width: '100%',
           padding: '0.75rem',
@@ -61,13 +75,29 @@ function Field({
           borderRadius: '2px',
         }}
         onFocus={e => {
-          if (!error) e.target.style.borderColor = 'var(--blush-deep)';
+          if (!error) {
+            e.target.style.borderColor = 'var(--blush-deep)';
+          }
         }}
         onBlur={e => {
-          if (!error) e.target.style.borderColor = 'var(--border)';
+          if (!error) {
+            e.target.style.borderColor = 'var(--border)';
+          }
         }}
       />
-      {error && <p style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '0.3rem' }}>{error}</p>}
+
+      {error && (
+        <p
+          role="alert"
+          style={{
+            fontSize: '0.72rem',
+            color: '#ef4444',
+            marginTop: '0.3rem',
+          }}
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -76,56 +106,12 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalAmount, clearCart } = useCart();
 
-  
+  // Meta Pixel and duplicate submission guards
   const checkoutTracked = useRef(false);
+  const placingRef = useRef(false);
 
   const [freeDeliveryThreshold, setFreeDeliveryThreshold] = useState(3000);
   const [flatShippingCost, setFlatShippingCost] = useState(200);
-
-  
-  // Track Meta Pixel InitiateCheckout once per checkout visit
-  useEffect(() => {
-    if (checkoutTracked.current || items.length === 0) return;
-
-    const fbq = (
-      window as Window & {
-        fbq?: (
-          action: string,
-          event: string,
-          params?: Record<string, unknown>
-        ) => void;
-      }
-    ).fbq;
-
-    if (typeof fbq !== 'function') return;
-
-    fbq('track', 'InitiateCheckout', {
-      content_ids: items.map(item => item.product_id),
-      content_type: 'product',
-      contents: items.map(item => ({
-        id: item.product_id,
-        quantity: item.quantity,
-        item_price: item.unit_price,
-      })),
-      num_items: items.reduce((sum, item) => sum + item.quantity, 0),
-      value: totalAmount,
-      currency: 'PKR',
-    });
-
-    checkoutTracked.current = true;
-  }, [items, totalAmount]);
-
-
-  useEffect(() => {
-    fetch('/api/settings')
-      .then(r => r.json())
-      .then(res => {
-        if (res.success) {
-          if (res.data.free_delivery_threshold) setFreeDeliveryThreshold(Number(res.data.free_delivery_threshold));
-          if (res.data.flat_shipping_cost) setFlatShippingCost(Number(res.data.flat_shipping_cost));
-        }
-      });
-  }, []);
 
   const [form, setForm] = useState({
     first_name: '',
@@ -142,87 +128,156 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  const allItemsFreeDelivery = items.length > 0 && items.every(item => item.free_delivery);
-  const shipping = allItemsFreeDelivery || totalAmount >= freeDeliveryThreshold ? 0 : flatShippingCost;
+  // Meta Pixel InitiateCheckout
+  useEffect(() => {
+    if (checkoutTracked.current || items.length === 0) return;
 
-  // Apply 5% discount on subtotal when advance payment selected
-  const advanceDiscount = paymentMethod === 'advance' ? Math.floor(totalAmount * 0.05) : 0;
+    const fbq = (window as Window & { fbq?: MetaPixel }).fbq;
+
+    if (typeof fbq !== 'function') return;
+
+    try {
+      fbq('track', 'InitiateCheckout', {
+        content_ids: items.map(item => item.product_id),
+        content_type: 'product',
+        contents: items.map(item => ({
+          id: item.product_id,
+          quantity: item.quantity,
+          item_price: item.unit_price,
+        })),
+        num_items: items.reduce(
+          (sum, item) => sum + item.quantity,
+          0
+        ),
+        value: totalAmount,
+        currency: 'PKR',
+      });
+
+      checkoutTracked.current = true;
+    } catch (error) {
+      console.error('InitiateCheckout tracking failed:', error);
+    }
+  }, [items, totalAmount]);
+
+  // Fetch shipping settings
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function fetchSettings() {
+      try {
+        const response = await fetch('/api/settings', {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) return;
+
+        const result = await response.json();
+
+        if (controller.signal.aborted || !result.success) return;
+
+        const threshold = Number(
+          result.data?.free_delivery_threshold
+        );
+
+        const shippingCost = Number(
+          result.data?.flat_shipping_cost
+        );
+
+        if (Number.isFinite(threshold) && threshold >= 0) {
+          setFreeDeliveryThreshold(threshold);
+        }
+
+        if (Number.isFinite(shippingCost) && shippingCost >= 0) {
+          setFlatShippingCost(shippingCost);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error('Shipping settings fetch failed:', error);
+        }
+      }
+    }
+
+    fetchSettings();
+
+    return () => controller.abort();
+  }, []);
+
+  const allItemsFreeDelivery =
+    items.length > 0 &&
+    items.every(item => item.free_delivery);
+
+  const shipping =
+    allItemsFreeDelivery || totalAmount >= freeDeliveryThreshold
+      ? 0
+      : flatShippingCost;
+
+  const advanceDiscount =
+    paymentMethod === 'advance'
+      ? Math.floor(totalAmount * 0.05)
+      : 0;
+
   const grandTotal = totalAmount + shipping - advanceDiscount;
-
-  if (items.length === 0) {
-    return (
-      <div
-        style={{
-          minHeight: '80vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <div
-            style={{
-              width: '72px',
-              height: '72px',
-              borderRadius: '50%',
-              background: 'var(--blush-light)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.5rem',
-              fontSize: '1.8rem',
-            }}
-          >
-            🛍
-          </div>
-          <h2
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '1.6rem',
-              fontStyle: 'italic',
-              color: 'var(--text-dark)',
-              marginBottom: '0.5rem',
-            }}
-          >
-            Your cart is empty
-          </h2>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-light)', marginBottom: '1.5rem' }}>
-            Add some products before checking out.
-          </p>
-          <Link href="/products" className="btn-primary">
-            Browse Products
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   function validate() {
     const newErrors: Record<string, string> = {};
 
-    if (!form.first_name.trim()) newErrors.first_name = 'First name is required';
-    if (!form.last_name.trim()) newErrors.last_name = 'Last name is required';
-    if (!form.phone.trim()) newErrors.phone = 'Phone number is required';
-    else if (!/^(\+92|0)3[0-9]{9}$/.test(form.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Enter a valid Pakistani number (03XXXXXXXXX)';
+    if (!form.first_name.trim()) {
+      newErrors.first_name = 'First name is required';
     }
-    if (!form.address.trim()) newErrors.address = 'Address is required';
-    if (!form.city.trim()) newErrors.city = 'City is required';
+
+    if (!form.last_name.trim()) {
+      newErrors.last_name = 'Last name is required';
+    }
+
+    if (!form.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (
+      !/^(\+92|0)3[0-9]{9}$/.test(
+        form.phone.replace(/\s/g, '')
+      )
+    ) {
+      newErrors.phone =
+        'Enter a valid Pakistani number (03XXXXXXXXX)';
+    }
+
+    if (!form.address.trim()) {
+      newErrors.address = 'Address is required';
+    }
+
+    if (!form.city.trim()) {
+      newErrors.city = 'City is required';
+    }
+
+    if (!form.postal_code.trim()) {
+      newErrors.postal_code = 'Postal code is required';
+    }
 
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   }
 
   async function handlePlaceOrder() {
+    // Prevent rapid double-click submissions
+    if (placingRef.current) return;
+
+    if (items.length === 0) {
+      setServerError('Your cart is empty.');
+      return;
+    }
+
     if (!validate()) return;
 
+    placingRef.current = true;
     setPlacing(true);
     setServerError('');
 
     try {
       const res = await fetch('/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           first_name: form.first_name.trim(),
           last_name: form.last_name.trim(),
@@ -232,34 +287,107 @@ export default function CheckoutPage() {
           postal_code: form.postal_code.trim(),
           notes: form.notes.trim(),
           payment_method: paymentMethod,
-          items: items.map(i => ({
-            product_id: i.product_id,
-            variant_id: i.variant_id,
-            quantity: i.quantity,
+          items: items.map(item => ({
+            product_id: item.product_id,
+            variant_id: item.variant_id,
+            quantity: item.quantity,
           })),
         }),
       });
 
       const data = await res.json();
 
-      if (!data.success) {
-        setServerError(data.error ?? 'Something went wrong. Please try again.');
+      if (
+        !res.ok ||
+        !data.success ||
+        !data.data?.order_id ||
+        !data.data?.order_number ||
+        !Number.isFinite(Number(data.data?.total_amount))
+      ) {
+        setServerError(
+          data.error ??
+            'Something went wrong. Please try again.'
+        );
+
+        placingRef.current = false;
         setPlacing(false);
         return;
       }
 
+      const createdOrder = data.data;
+
+      // Meta Pixel Purchase
+      // Only fire after successful server-side order creation.
+      try {
+        const fbq = (
+          window as Window & {
+            fbq?: MetaPixel;
+          }
+        ).fbq;
+
+        if (typeof fbq === 'function') {
+          fbq(
+            'track',
+            'Purchase',
+            {
+              content_ids: items.map(
+                item => item.product_id
+              ),
+              content_type: 'product',
+              contents: items.map(item => ({
+                id: item.product_id,
+                quantity: item.quantity,
+                item_price: item.unit_price,
+              })),
+              num_items: items.reduce(
+                (sum, item) => sum + item.quantity,
+                0
+              ),
+              value: Number(createdOrder.total_amount),
+              currency: 'PKR',
+              order_id: createdOrder.order_id,
+            },
+            {
+              eventID: `purchase_${createdOrder.order_id}`,
+            }
+          );
+        }
+      } catch (pixelError) {
+        // Pixel failure must not prevent a successful checkout.
+        console.error(
+          'Meta Purchase tracking failed:',
+          pixelError
+        );
+      }
+
+      const confirmationUrl =
+        `/order-confirmation?order_number=${encodeURIComponent(
+          createdOrder.order_number
+        )}&order_id=${encodeURIComponent(
+          createdOrder.order_id
+        )}`;
+
       clearCart();
-      router.push(`/order-confirmation?order_number=${data.data.order_number}&order_id=${data.data.order_id}`);
-    } catch {
-      setServerError('Network error. Please check your connection and try again.');
+
+      router.push(confirmationUrl);
+    } catch (error) {
+      console.error('Checkout request failed:', error);
+
+      setServerError(
+        'Unable to confirm the order result. Please check your order status before trying again.'
+      );
+
+      placingRef.current = false;
       setPlacing(false);
     }
   }
 
-  const inputStyle = (hasError: boolean) => ({
+  const inputStyle = (hasError: boolean): CSSProperties => ({
     width: '100%',
     padding: '0.75rem',
-    border: `1px solid ${hasError ? '#ef4444' : 'var(--border)'}`,
+    border: `1px solid ${
+      hasError ? '#ef4444' : 'var(--border)'
+    }`,
     background: 'var(--white)',
     fontFamily: 'var(--font-body)',
     fontSize: '0.875rem',
@@ -269,7 +397,7 @@ export default function CheckoutPage() {
     borderRadius: '2px',
   });
 
-  const labelStyle: React.CSSProperties = {
+  const labelStyle: CSSProperties = {
     display: 'block',
     fontSize: '0.72rem',
     fontWeight: 500,
@@ -285,14 +413,27 @@ export default function CheckoutPage() {
     title: string,
     subtitle: string,
     accentColor: string,
-    bgColor: string,
+    bgColor: string
   ) => {
     const selected = paymentMethod === value;
+
     return (
       <div
+        key={value}
+        role="radio"
+        aria-checked={selected}
+        tabIndex={0}
         onClick={() => setPaymentMethod(value)}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setPaymentMethod(value);
+          }
+        }}
         style={{
-          border: `2px solid ${selected ? accentColor : 'var(--border)'}`,
+          border: `2px solid ${
+            selected ? accentColor : 'var(--border)'
+          }`,
           borderRadius: '4px',
           padding: '1rem',
           display: 'flex',
@@ -300,22 +441,23 @@ export default function CheckoutPage() {
           gap: '0.75rem',
           background: selected ? bgColor : 'var(--white)',
           cursor: 'pointer',
-          transition: 'border-color 0.2s, background 0.2s',
+          transition:
+            'border-color 0.2s, background 0.2s',
         }}
       >
-        {/* Radio dot */}
         <div
           style={{
             width: '18px',
             height: '18px',
             borderRadius: '50%',
-            border: `2px solid ${selected ? accentColor : 'var(--border)'}`,
+            border: `2px solid ${
+              selected ? accentColor : 'var(--border)'
+            }`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
             marginTop: '1px',
-            transition: 'border-color 0.2s',
           }}
         >
           {selected && (
@@ -329,19 +471,104 @@ export default function CheckoutPage() {
             />
           )}
         </div>
+
         <div>
-          <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-dark)' }}>
+          <p
+            style={{
+              fontSize: '0.85rem',
+              fontWeight: 500,
+              color: 'var(--text-dark)',
+            }}
+          >
             {emoji} {title}
           </p>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-mid)', marginTop: '0.15rem' }}>{subtitle}</p>
+
+          <p
+            style={{
+              fontSize: '0.75rem',
+              color: 'var(--text-mid)',
+              marginTop: '0.15rem',
+            }}
+          >
+            {subtitle}
+          </p>
         </div>
       </div>
     );
   };
 
+  if (items.length === 0) {
+    return (
+      <div
+        style={{
+          minHeight: '80vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '2rem',
+          }}
+        >
+          <div
+            style={{
+              width: '72px',
+              height: '72px',
+              borderRadius: '50%',
+              background: 'var(--blush-light)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.5rem',
+              fontSize: '1.8rem',
+            }}
+          >
+            🛍
+          </div>
+
+          <h2
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '1.6rem',
+              fontStyle: 'italic',
+              color: 'var(--text-dark)',
+              marginBottom: '0.5rem',
+            }}
+          >
+            Your cart is empty
+          </h2>
+
+          <p
+            style={{
+              fontSize: '0.9rem',
+              color: 'var(--text-light)',
+              marginBottom: '1.5rem',
+            }}
+          >
+            Add some products before checking out.
+          </p>
+
+          <Link href="/products" className="btn-primary">
+            Browse Products
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--off-white)', overflowX: 'hidden' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--off-white)',
+        overflowX: 'hidden',
+      }}
+    >
       {/* Header */}
+
       <div
         style={{
           background: 'var(--white)',
@@ -351,6 +578,7 @@ export default function CheckoutPage() {
       >
         <div className="container">
           {/* Breadcrumb */}
+
           <div
             style={{
               display: 'flex',
@@ -363,7 +591,14 @@ export default function CheckoutPage() {
               { label: 'Cart', href: '/cart' },
               { label: 'Checkout', href: null },
             ].map((crumb, i, arr) => (
-              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span
+                key={i}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
                 {crumb.href ? (
                   <Link
                     href={crumb.href}
@@ -376,9 +611,27 @@ export default function CheckoutPage() {
                     {crumb.label}
                   </Link>
                 ) : (
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-dark)', fontWeight: 500 }}>{crumb.label}</span>
+                  <span
+                    style={{
+                      fontSize: '0.78rem',
+                      color: 'var(--text-dark)',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {crumb.label}
+                  </span>
                 )}
-                {i < arr.length - 1 && <span style={{ fontSize: '0.7rem', color: 'var(--border-dark)' }}>›</span>}
+
+                {i < arr.length - 1 && (
+                  <span
+                    style={{
+                      fontSize: '0.7rem',
+                      color: 'var(--border-dark)',
+                    }}
+                  >
+                    ›
+                  </span>
+                )}
               </span>
             ))}
           </div>
@@ -397,17 +650,22 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="container" style={{ padding: '2rem 0' }}>
+      <div
+        className="container"
+        style={{ padding: '2rem 0' }}
+      >
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) min(360px, 100%)',
+            gridTemplateColumns:
+              'minmax(0, 1fr) min(360px, 100%)',
             gap: '2rem',
             alignItems: 'flex-start',
           }}
           className="checkout-grid"
         >
-          {/* ── Left: Customer form ── */}
+          {/* Left: Customer form */}
+
           <div
             style={{
               background: 'var(--white)',
@@ -428,6 +686,7 @@ export default function CheckoutPage() {
             </h2>
 
             {/* Form grid */}
+
             <div
               style={{
                 display: 'grid',
@@ -444,10 +703,17 @@ export default function CheckoutPage() {
                 value={form.first_name}
                 error={errors.first_name}
                 onChange={val => {
-                  setForm(f => ({ ...f, first_name: val }));
-                  setErrors(e => ({ ...e, first_name: '' }));
+                  setForm(f => ({
+                    ...f,
+                    first_name: val,
+                  }));
+                  setErrors(e => ({
+                    ...e,
+                    first_name: '',
+                  }));
                 }}
               />
+
               <Field
                 label="Last Name"
                 name="last_name"
@@ -457,10 +723,17 @@ export default function CheckoutPage() {
                 value={form.last_name}
                 error={errors.last_name}
                 onChange={val => {
-                  setForm(f => ({ ...f, last_name: val }));
-                  setErrors(e => ({ ...e, last_name: '' }));
+                  setForm(f => ({
+                    ...f,
+                    last_name: val,
+                  }));
+                  setErrors(e => ({
+                    ...e,
+                    last_name: '',
+                  }));
                 }}
               />
+
               <Field
                 label="Phone Number"
                 name="phone"
@@ -470,10 +743,17 @@ export default function CheckoutPage() {
                 value={form.phone}
                 error={errors.phone}
                 onChange={val => {
-                  setForm(f => ({ ...f, phone: val }));
-                  setErrors(e => ({ ...e, phone: '' }));
+                  setForm(f => ({
+                    ...f,
+                    phone: val,
+                  }));
+                  setErrors(e => ({
+                    ...e,
+                    phone: '',
+                  }));
                 }}
               />
+
               <Field
                 label="Full Address"
                 name="address"
@@ -482,10 +762,17 @@ export default function CheckoutPage() {
                 value={form.address}
                 error={errors.address}
                 onChange={val => {
-                  setForm(f => ({ ...f, address: val }));
-                  setErrors(e => ({ ...e, address: '' }));
+                  setForm(f => ({
+                    ...f,
+                    address: val,
+                  }));
+                  setErrors(e => ({
+                    ...e,
+                    address: '',
+                  }));
                 }}
               />
+
               <Field
                 label="City"
                 name="city"
@@ -495,26 +782,53 @@ export default function CheckoutPage() {
                 value={form.city}
                 error={errors.city}
                 onChange={val => {
-                  setForm(f => ({ ...f, city: val }));
-                  setErrors(e => ({ ...e, city: '' }));
+                  setForm(f => ({
+                    ...f,
+                    city: val,
+                  }));
+                  setErrors(e => ({
+                    ...e,
+                    city: '',
+                  }));
                 }}
               />
+
               <Field
                 label="Postal Code"
                 name="postal_code"
                 placeholder="75500"
+                required
                 half
                 value={form.postal_code}
-                onChange={val => setForm(f => ({ ...f, postal_code: val }))}
+                error={errors.postal_code}
+                onChange={val => {
+                  setForm(f => ({
+                    ...f,
+                    postal_code: val,
+                  }));
+                  setErrors(e => ({
+                    ...e,
+                    postal_code: '',
+                  }));
+                }}
               />
             </div>
 
             {/* Notes */}
+
             <div style={{ marginTop: '1rem' }}>
-              <label style={labelStyle}>Order Notes (optional)</label>
+              <label style={labelStyle}>
+                Order Notes (optional)
+              </label>
+
               <textarea
                 value={form.notes}
-                onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                onChange={e =>
+                  setForm(f => ({
+                    ...f,
+                    notes: e.target.value,
+                  }))
+                }
                 placeholder="Any special instructions? e.g. Call before delivery, leave at door..."
                 rows={3}
                 style={{
@@ -522,12 +836,19 @@ export default function CheckoutPage() {
                   resize: 'vertical',
                   lineHeight: 1.6,
                 }}
-                onFocus={e => (e.target.style.borderColor = 'var(--blush-deep)')}
-                onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+                onFocus={e => {
+                  e.target.style.borderColor =
+                    'var(--blush-deep)';
+                }}
+                onBlur={e => {
+                  e.target.style.borderColor =
+                    'var(--border)';
+                }}
               />
             </div>
 
             {/* Payment method */}
+
             <div style={{ marginTop: '1.5rem' }}>
               <h3
                 style={{
@@ -541,26 +862,36 @@ export default function CheckoutPage() {
                 Payment Method
               </h3>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div
+                role="radiogroup"
+                aria-label="Payment Method"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                }}
+              >
                 {radioOption(
                   'cod',
                   '💵',
                   'Cash on Delivery',
                   'Pay when your order arrives at your door',
                   'var(--blush-deep)',
-                  'var(--blush-light)',
+                  'var(--blush-light)'
                 )}
+
                 {radioOption(
                   'advance',
                   '💸',
                   'Pay in Advance — Save 5%',
                   'Transfer before delivery and get 5% off your entire order',
                   '#16a34a',
-                  '#f0fdf4',
+                  '#f0fdf4'
                 )}
               </div>
 
-              {/* Advance payment details panel — shown only when selected */}
+              {/* Advance payment details */}
+
               {paymentMethod === 'advance' && (
                 <div
                   style={{
@@ -584,16 +915,45 @@ export default function CheckoutPage() {
                     🏦 Bank Transfer Details
                   </p>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.45rem',
+                    }}
+                  >
                     {[
                       ['Bank', 'Meezan Bank'],
                       ['Account Title', 'Muhammad Shoaib'],
                       ['Account No', '99270111918894'],
                       ['IBAN', 'PK57 MEZN 0099270111918894'],
                     ].map(([key, val]) => (
-                      <div key={key} style={{ display: 'flex', gap: '0.5rem', fontSize: '0.82rem' }}>
-                        <span style={{ color: '#6b7280', minWidth: '100px', flexShrink: 0 }}>{key}</span>
-                        <span style={{ color: 'var(--text-dark)', fontWeight: 500 }}>{val}</span>
+                      <div
+                        key={key}
+                        style={{
+                          display: 'flex',
+                          gap: '0.5rem',
+                          fontSize: '0.82rem',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: '#6b7280',
+                            minWidth: '100px',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {key}
+                        </span>
+
+                        <span
+                          style={{
+                            color: 'var(--text-dark)',
+                            fontWeight: 500,
+                          }}
+                        >
+                          {val}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -608,15 +968,20 @@ export default function CheckoutPage() {
                       lineHeight: 1.6,
                     }}
                   >
-                    📩 After payment, send your receipt screenshot to{' '}
-                    <strong style={{ color: '#15803d' }}>0309 1225130</strong> on WhatsApp to confirm your order.
+                    📩 After payment, send your receipt
+                    screenshot to{' '}
+                    <strong style={{ color: '#15803d' }}>
+                      0309 1225130
+                    </strong>{' '}
+                    on WhatsApp to confirm your order.
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* ── Right: Order summary ── */}
+          {/* Right: Order summary */}
+
           <div
             style={{
               position: 'sticky',
@@ -647,6 +1012,7 @@ export default function CheckoutPage() {
               </h2>
 
               {/* Items */}
+
               <div
                 style={{
                   display: 'flex',
@@ -655,9 +1021,9 @@ export default function CheckoutPage() {
                   marginBottom: '1rem',
                 }}
               >
-                {items.map(item => (
+                {items.map((item, index) => (
                   <div
-                    key={item.product_id}
+                    key={`${item.product_id}-${item.variant_id ?? 'default'}-${index}`}
                     style={{
                       display: 'flex',
                       gap: '0.75rem',
@@ -665,6 +1031,7 @@ export default function CheckoutPage() {
                     }}
                   >
                     {/* Thumbnail */}
+
                     <div
                       style={{
                         width: '52px',
@@ -679,7 +1046,11 @@ export default function CheckoutPage() {
                         <img
                           src={item.image_url}
                           alt={item.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
                         />
                       ) : (
                         <div
@@ -695,12 +1066,14 @@ export default function CheckoutPage() {
                           📦
                         </div>
                       )}
+
                       {/* Quantity badge */}
+
                       <div
                         style={{
                           position: 'absolute',
-                          top: '-6px',
-                          right: '-6px',
+                          top: '2px',
+                          right: '2px',
                           background: 'var(--text-dark)',
                           color: 'white',
                           width: '18px',
@@ -718,7 +1091,13 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Name + price */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
+
+                    <div
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                      }}
+                    >
                       <p
                         style={{
                           fontSize: '0.82rem',
@@ -731,6 +1110,7 @@ export default function CheckoutPage() {
                       >
                         {item.name}
                       </p>
+
                       {item.discount_percent > 0 && (
                         <p
                           style={{
@@ -744,55 +1124,158 @@ export default function CheckoutPage() {
                       )}
                     </div>
 
-                    <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-dark)', flexShrink: 0 }}>
-                      {formatPKR(item.unit_price * item.quantity)}
+                    <p
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 500,
+                        color: 'var(--text-dark)',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {formatPKR(
+                        item.unit_price * item.quantity
+                      )}
                     </p>
                   </div>
                 ))}
               </div>
 
-              <div style={{ height: '1px', background: 'var(--border)', margin: '1rem 0' }} />
+              <div
+                style={{
+                  height: '1px',
+                  background: 'var(--border)',
+                  margin: '1rem 0',
+                }}
+              />
 
               {/* Totals */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-mid)' }}>Subtotal</span>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-dark)' }}>{formatPKR(totalAmount)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-mid)' }}>Shipping</span>
-                  <span style={{ fontSize: '0.85rem', color: shipping === 0 ? '#16a34a' : 'var(--text-dark)' }}>
-                    {shipping === 0 ? 'Free' : formatPKR(shipping)}
-                  </span>
-                </div>
-                {shipping > 0 && (
-                  <p
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.6rem',
+                  marginBottom: '1rem',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span
                     style={{
-                      fontSize: '0.72rem',
-                      color: 'var(--text-light)',
-                      background: 'var(--blush-light)',
-                      padding: '0.5rem 0.75rem',
+                      fontSize: '0.85rem',
+                      color: 'var(--text-mid)',
                     }}
                   >
-                    Add {formatPKR(freeDeliveryThreshold - totalAmount)} more for free shipping
-                  </p>
-                )}
-                {/* Advance discount row — only shown when applicable */}
+                    Subtotal
+                  </span>
+
+                  <span
+                    style={{
+                      fontSize: '0.85rem',
+                      color: 'var(--text-dark)',
+                    }}
+                  >
+                    {formatPKR(totalAmount)}
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '0.85rem',
+                      color: 'var(--text-mid)',
+                    }}
+                  >
+                    Shipping
+                  </span>
+
+                  <span
+                    style={{
+                      fontSize: '0.85rem',
+                      color:
+                        shipping === 0
+                          ? '#16a34a'
+                          : 'var(--text-dark)',
+                    }}
+                  >
+                    {shipping === 0
+                      ? 'Free'
+                      : formatPKR(shipping)}
+                  </span>
+                </div>
+
+                {shipping > 0 &&
+                  freeDeliveryThreshold > totalAmount && (
+                    <p
+                      style={{
+                        fontSize: '0.72rem',
+                        color: 'var(--text-light)',
+                        background: 'var(--blush-light)',
+                        padding: '0.5rem 0.75rem',
+                      }}
+                    >
+                      Add{' '}
+                      {formatPKR(
+                        freeDeliveryThreshold - totalAmount
+                      )}{' '}
+                      more for free shipping
+                    </p>
+                  )}
+
+                {/* Advance discount */}
+
                 {paymentMethod === 'advance' && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
-                    <span style={{ fontSize: '0.85rem', color: '#16a34a', flexShrink: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        color: '#16a34a',
+                        flexShrink: 1,
+                        minWidth: 0,
+                      }}
+                    >
                       Advance (5% off)
                     </span>
-                    <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 500, flexShrink: 0 }}>
+
+                    <span
+                      style={{
+                        fontSize: '0.85rem',
+                        color: '#16a34a',
+                        fontWeight: 500,
+                        flexShrink: 0,
+                      }}
+                    >
                       -{formatPKR(advanceDiscount)}
                     </span>
                   </div>
                 )}
               </div>
 
-              <div style={{ height: '1px', background: 'var(--border)', marginBottom: '1rem' }} />
+              <div
+                style={{
+                  height: '1px',
+                  background: 'var(--border)',
+                  marginBottom: '1rem',
+                }}
+              />
 
               {/* Grand total */}
+
               <div
                 style={{
                   display: 'flex',
@@ -811,6 +1294,7 @@ export default function CheckoutPage() {
                 >
                   Total
                 </span>
+
                 <span
                   style={{
                     fontFamily: 'var(--font-display)',
@@ -824,8 +1308,10 @@ export default function CheckoutPage() {
               </div>
 
               {/* Server error */}
+
               {serverError && (
                 <div
+                  role="alert"
                   style={{
                     padding: '0.75rem',
                     marginBottom: '1rem',
@@ -840,19 +1326,25 @@ export default function CheckoutPage() {
               )}
 
               {/* Place order button */}
+
               <button
+                type="button"
                 onClick={handlePlaceOrder}
                 disabled={placing}
                 className="btn-primary"
                 style={{
                   width: '100%',
                   opacity: placing ? 0.7 : 1,
-                  cursor: placing ? 'not-allowed' : 'pointer',
+                  cursor: placing
+                    ? 'not-allowed'
+                    : 'pointer',
                   fontSize: '0.85rem',
                   padding: '1rem',
                 }}
               >
-                {placing ? 'Placing Order...' : `Place Order · ${formatPKR(grandTotal)}`}
+                {placing
+                  ? 'Placing Order...'
+                  : `Place Order · ${formatPKR(grandTotal)}`}
               </button>
 
               <p
@@ -872,7 +1364,13 @@ export default function CheckoutPage() {
             </div>
 
             {/* Back to cart */}
-            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+
+            <div
+              style={{
+                textAlign: 'center',
+                marginTop: '1rem',
+              }}
+            >
               <Link
                 href="/cart"
                 style={{
@@ -896,9 +1394,11 @@ export default function CheckoutPage() {
           .checkout-grid {
             grid-template-columns: 1fr !important;
           }
+
           .checkout-grid > div:last-child {
             position: static !important;
           }
+
           .container {
             padding-left: 1rem !important;
             padding-right: 1rem !important;
