@@ -24,6 +24,8 @@ export default function ProductDetailPage() {
   // Variants
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [selectedSize, setSelectedSize] = useState<ProductVariant | null>(null);
+  const [sizeError, setSizeError] = useState(false);
 
   useEffect(() => {
     fetch(`/api/products/${slug}`)
@@ -48,6 +50,8 @@ export default function ProductDetailPage() {
   }, [slug]);
 
   function handleVariantClick(variant: ProductVariant) {
+    setSelectedSize(null);
+    setSizeError(false);
     // Toggle off if clicking the already-selected one
     if (selectedVariant?.id === variant.id) {
       setSelectedVariant(null);
@@ -65,8 +69,20 @@ export default function ProductDetailPage() {
     }
   }
 
+  const topVariants = variants.filter(v => !v.parent_id);
+  const sizes = selectedVariant ? variants.filter(v => v.parent_id === selectedVariant.id) : [];
+  const cartVariantId = selectedSize?.id ?? selectedVariant?.id ?? null;
+  const cartVariantLabel =
+    selectedSize && selectedVariant ? `${selectedVariant.label} / ${selectedSize.label}` : (selectedVariant?.label ?? null);
+
   const handleAddToCart = () => {
     if (!product) return;
+
+    if (sizes.length > 0 && !selectedSize) {
+      setSizeError(true);
+      return;
+    }
+
     const finalPrice = calcFinalPrice(product.price, product.discount_percent);
     addItem({
       product_id: product.id,
@@ -77,8 +93,8 @@ export default function ProductDetailPage() {
       original_price: product.price,
       discount_percent: product.discount_percent,
       quantity,
-      variant_id: selectedVariant?.id ?? null,
-      variant_label: selectedVariant?.label ?? null,
+      variant_id: cartVariantId,
+      variant_label: cartVariantLabel,
       free_delivery: product.free_delivery,
     });
     setAdded(true);
@@ -87,6 +103,12 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = () => {
     if (!product) return;
+
+    if (sizes.length > 0 && !selectedSize) {
+      setSizeError(true);
+      return;
+    }
+
     const finalPrice = calcFinalPrice(product.price, product.discount_percent);
     addItem({
       product_id: product.id,
@@ -97,8 +119,8 @@ export default function ProductDetailPage() {
       original_price: product.price,
       discount_percent: product.discount_percent,
       quantity: 1,
-      variant_id: selectedVariant?.id ?? null,
-      variant_label: selectedVariant?.label ?? null,
+      variant_id: cartVariantId,
+      variant_label: cartVariantLabel,
       free_delivery: product.free_delivery,
     });
     router.push('/cart');
@@ -174,7 +196,7 @@ export default function ProductDetailPage() {
   const outOfStock = product.stock_qty === 0;
 
   // Group variants by type_name (always one type per product, but guard anyway)
-  const variantTypeName = variants[0]?.type_name ?? null;
+  const variantTypeName = topVariants[0]?.type_name ?? null;
 
   // Smart back button
   const subcat = searchParams.get('subcategory');
@@ -341,6 +363,7 @@ export default function ProductDetailPage() {
                     onClick={() => {
                       setSelectedImage(img.image_url);
                       setSelectedVariant(null);
+                      setSelectedSize(null);
                     }}
                     style={{
                       width: '72px',
@@ -469,7 +492,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {variants.map(variant => {
+                  {topVariants.map(variant => {
                     const isSelected = selectedVariant?.id === variant.id;
                     const hasImg = !!variant.image?.image_url;
                     return (
@@ -569,6 +592,69 @@ export default function ProductDetailPage() {
                     );
                   })}
                 </div>
+
+                {sizes.length > 0 && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <p
+                      style={{
+                        fontSize: '0.7rem',
+                        fontWeight: 500,
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: 'var(--text-mid)',
+                        marginBottom: '0.6rem',
+                      }}
+                    >
+                      {sizes[0].type_name}
+                      {selectedSize && (
+                        <span
+                          style={{
+                            marginLeft: '0.5rem',
+                            color: 'var(--blush-deep)',
+                            textTransform: 'none',
+                            letterSpacing: 0,
+                            fontSize: '0.78rem',
+                          }}
+                        >
+                          — {selectedSize.label}
+                        </span>
+                      )}
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      {sizes.map(size => {
+                        const active = selectedSize?.id === size.id;
+                        return (
+                          <button
+                            key={size.id}
+                            onClick={() => {
+                              setSelectedSize(active ? null : size);
+                              setSizeError(false);
+                            }}
+                            style={{
+                              padding: '0.4rem 0.9rem',
+                              border: '2px solid',
+                              borderColor: active ? 'var(--blush-deep)' : 'var(--border)',
+                              borderRadius: '4px',
+                              background: 'var(--white)',
+                              color: active ? 'var(--blush-deep)' : 'var(--text-dark)',
+                              fontSize: '0.75rem',
+                              fontWeight: 500,
+                              fontFamily: 'var(--font-body)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {size.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {sizeError && (
+                      <p style={{ fontSize: '0.75rem', color: '#dc2626', marginTop: '0.5rem' }}>
+                        Please select a {sizes[0].type_name.toLowerCase()}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

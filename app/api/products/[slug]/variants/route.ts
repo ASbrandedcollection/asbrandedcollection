@@ -20,7 +20,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   const { data, error } = await supabaseAdmin
     .from('product_variants')
-    .select('id, type_name, label, image_id, display_order, image:product_images(id, image_url)')
+    .select('id, type_name, label, image_id, parent_id, display_order, image:product_images(id, image_url)')
     .eq('product_id', product.id)
     .order('display_order', { ascending: true });
 

@@ -57,6 +57,7 @@ export interface Product {
 export interface ProductVariant {
   id: string;
   product_id: string;
+  parent_id: string | null;
   type_name: string;
   label: string;
   image_id: string | null;

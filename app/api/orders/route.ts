@@ -77,10 +77,24 @@ export async function POST(request: NextRequest) {
 
   const { data: variants } = await supabaseAdmin
     .from('product_variants')
-    .select('id, label')
+    .select('id, label, parent_id')
     .in('id', variantIds.length > 0 ? variantIds : ['00000000-0000-0000-0000-000000000000']);
 
-  const variantMap = new Map((variants ?? []).map((v: any) => [v.id, v.label]));
+  const parentIds = [...new Set((variants ?? []).map((v: any) => v.parent_id).filter(Boolean))] as string[];
+
+  const { data: parents } =
+    parentIds.length > 0
+      ? await supabaseAdmin.from('product_variants').select('id, label').in('id', parentIds)
+      : { data: [] as any[] };
+
+  const parentLabelMap = new Map((parents ?? []).map((p: any) => [p.id, p.label]));
+
+  const variantMap = new Map(
+    (variants ?? []).map((v: any) => [
+      v.id,
+      v.parent_id && parentLabelMap.get(v.parent_id) ? `${parentLabelMap.get(v.parent_id)} / ${v.label}` : v.label,
+    ]),
+  );
 
   let subtotalAmount = 0;
 

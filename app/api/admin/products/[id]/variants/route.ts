@@ -49,6 +49,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       type_name: body.type_name.trim(),
       label: body.label.trim(),
       image_id: body.image_id ?? null,
+      parent_id: body.parent_id ?? null,
       display_order,
     })
     .select('*, image:product_images(id, image_url, is_primary)')
@@ -69,12 +70,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ success: false, error: 'type_name is required' }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin
+  const { error } = await supabaseAdmin
     .from('product_variants')
     .update({ type_name: body.type_name.trim() })
     .eq('product_id', id)
-    .select('*, image:product_images(id, image_url, is_primary)');
+    .is('parent_id', null);
 
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, data });
+
+  const { data, error: fetchError } = await supabaseAdmin
+    .from('product_variants')
+    .select('*, image:product_images(id, image_url, is_primary)')
+    .eq('product_id', id)
+    .order('display_order', { ascending: true });
+
+  if (fetchError) return NextResponse.json({ success: false, error: fetchError.message }, { status: 500 });
+  return NextResponse.json({ success: true, data: data ?? [] });
 }

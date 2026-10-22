@@ -199,6 +199,8 @@ const VariantsEditor = forwardRef(function VariantsEditor(
   const [err, setErr] = useState('');
   const [savedTypeName, setSavedTypeName] = useState('');
   const [savingType, setSavingType] = useState(false);
+  const [sizeInputs, setSizeInputs] = useState<Record<string, string>>({});
+  const [addingSizeFor, setAddingSizeFor] = useState<string | null>(null);
 
   async function handleTypeNameSave() {
     const trimmed = typeName.trim();
@@ -206,9 +208,11 @@ const VariantsEditor = forwardRef(function VariantsEditor(
       setTypeName(savedTypeName);
       return;
     }
-    if (variants.length === 0 || trimmed === savedTypeName) {
+
+    if (variants.filter(v => !v.parent_id).length === 0 || trimmed === savedTypeName) {
       return;
     }
+
     setSavingType(true);
     setErr('');
     const res = await fetch(`/api/admin/products/${productId}/variants`, {
@@ -238,9 +242,10 @@ const VariantsEditor = forwardRef(function VariantsEditor(
       .then(res => {
         if (res.success) {
           setVariants(res.data);
-          if (res.data.length > 0) {
-            setTypeName(res.data[0].type_name);
-            setSavedTypeName(res.data[0].type_name);
+          const top = res.data.find((v: ProductVariant) => !v.parent_id);
+          if (top) {
+            setTypeName(top.type_name);
+            setSavedTypeName(top.type_name);
           }
         }
       })
@@ -277,8 +282,28 @@ const VariantsEditor = forwardRef(function VariantsEditor(
   async function handleDelete(variantId: string) {
     setDeletingId(variantId);
     await fetch(`/api/admin/products/${productId}/variants/${variantId}`, { method: 'DELETE' });
-    setVariants(prev => prev.filter(v => v.id !== variantId));
+    setVariants(prev => prev.filter(v => v.id !== variantId && v.parent_id !== variantId));
     setDeletingId(null);
+  }
+
+  async function handleAddChild(parentId: string) {
+    const label = (sizeInputs[parentId] ?? '').trim();
+    if (!label) return;
+    setAddingSizeFor(parentId);
+    setErr('');
+    const res = await fetch(`/api/admin/products/${productId}/variants`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type_name: 'Size', label, image_id: null, parent_id: parentId }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setVariants(prev => [...prev, data.data]);
+      setSizeInputs(prev => ({ ...prev, [parentId]: '' }));
+    } else {
+      setErr(data.error);
+    }
+    setAddingSizeFor(null);
   }
 
   async function handleImageChange(variantId: string, imageId: string) {
@@ -336,74 +361,149 @@ const VariantsEditor = forwardRef(function VariantsEditor(
 
       {variants.length > 0 && (
         <div style={{ marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {variants.map(v => {
-            const linkedImg = existingImages.find(img => img.id === v.image_id);
-            return (
-              <div
-                key={v.id}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr auto',
-                  gap: '0.5rem',
-                  alignItems: 'center',
-                  padding: '0.5rem 0.6rem',
-                  background: 'var(--off-white)',
-                  borderRadius: '4px',
-                  border: '1px solid var(--border)',
-                }}
-              >
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-dark)', fontWeight: 500 }}>{v.label}</span>
-                <select
-                  value={v.image_id ?? ''}
-                  onChange={e => handleImageChange(v.id, e.target.value)}
-                  style={{ ...inputStyle, width: 'auto', fontSize: '0.75rem', cursor: 'pointer' }}
-                >
-                  <option value="">No image</option>
-                  {existingImages.map((img, i) => (
-                    <option key={img.id} value={img.id}>
-                      {img.is_primary ? '★ Primary' : `Image ${i + 1}`}
-                    </option>
-                  ))}
-                </select>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  {linkedImg && (
-                    <img
-                      src={linkedImg.image_url}
-                      alt=""
-                      style={{
-                        width: '32px',
-                        height: '40px',
-                        objectFit: 'cover',
-                        borderRadius: '3px',
-                        border: '1px solid var(--border)',
-                      }}
-                    />
-                  )}
-                  <button
-                    onClick={() => handleDelete(v.id)}
-                    disabled={deletingId === v.id}
+          {variants
+            .filter(v => !v.parent_id)
+            .map(v => {
+              const linkedImg = existingImages.find(img => img.id === v.image_id);
+              const children = variants.filter(c => c.parent_id === v.id);
+              return (
+                <div key={v.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <div
                     style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
-                      border: 'none',
-                      background: '#fee2e2',
-                      color: '#dc2626',
-                      cursor: 'pointer',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      display: 'flex',
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr auto',
+                      gap: '0.5rem',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
+                      padding: '0.5rem 0.6rem',
+                      background: 'var(--off-white)',
+                      borderRadius: '4px',
+                      border: '1px solid var(--border)',
                     }}
                   >
-                    {deletingId === v.id ? '…' : '×'}
-                  </button>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-dark)', fontWeight: 500 }}>{v.label}</span>
+                    <select
+                      value={v.image_id ?? ''}
+                      onChange={e => handleImageChange(v.id, e.target.value)}
+                      style={{ ...inputStyle, width: 'auto', fontSize: '0.75rem', cursor: 'pointer' }}
+                    >
+                      <option value="">No image</option>
+                      {existingImages.map((img, i) => (
+                        <option key={img.id} value={img.id}>
+                          {img.is_primary ? '★ Primary' : `Image ${i + 1}`}
+                        </option>
+                      ))}
+                    </select>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      {linkedImg && (
+                        <img
+                          src={linkedImg.image_url}
+                          alt=""
+                          style={{
+                            width: '32px',
+                            height: '40px',
+                            objectFit: 'cover',
+                            borderRadius: '3px',
+                            border: '1px solid var(--border)',
+                          }}
+                        />
+                      )}
+                      <button
+                        onClick={() => handleDelete(v.id)}
+                        disabled={deletingId === v.id}
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          border: 'none',
+                          background: '#fee2e2',
+                          color: '#dc2626',
+                          cursor: 'pointer',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {deletingId === v.id ? '…' : '×'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      marginLeft: '1.25rem',
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '0.4rem',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {children.map(c => (
+                      <span
+                        key={c.id}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          padding: '2px 4px 2px 10px',
+                          border: '1px solid var(--border)',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          background: 'var(--white)',
+                        }}
+                      >
+                        {c.label}
+                        <button
+                          onClick={() => handleDelete(c.id)}
+                          disabled={deletingId === c.id}
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            border: 'none',
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            cursor: 'pointer',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {deletingId === c.id ? '…' : '×'}
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      type="text"
+                      value={sizeInputs[v.id] ?? ''}
+                      onChange={e => setSizeInputs(prev => ({ ...prev, [v.id]: e.target.value }))}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleAddChild(v.id);
+                      }}
+                      placeholder="+ Size (e.g. M)"
+                      style={{ ...inputStyle, width: '120px', padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}
+                    />
+                    <button
+                      onClick={() => handleAddChild(v.id)}
+                      disabled={addingSizeFor === v.id}
+                      style={{
+                        padding: '0.3rem 0.7rem',
+                        background: 'var(--blush-deep)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: addingSizeFor === v.id ? 'not-allowed' : 'pointer',
+                        fontSize: '0.72rem',
+                        opacity: addingSizeFor === v.id ? 0.7 : 1,
+                      }}
+                    >
+                      {addingSizeFor === v.id ? '…' : 'Add'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       )}
 
