@@ -109,7 +109,39 @@ export function CartProvider({ children }: { children: ReactNode }) {
     items: state.items,
     itemCount,
     totalAmount,
-    addItem: item => dispatch({ type: 'ADD_ITEM', payload: item }),
+    
+addItem: item => {
+  dispatch({ type: 'ADD_ITEM', payload: item });
+
+  // Track Meta Pixel AddToCart event
+  const fbq = (
+    window as Window & {
+      fbq?: (
+        action: string,
+        event: string,
+        params?: Record<string, unknown>
+      ) => void;
+    }
+  ).fbq;
+
+  if (typeof fbq === 'function') {
+    fbq('track', 'AddToCart', {
+      content_ids: [item.product_id],
+      content_type: 'product',
+      value: item.unit_price * item.quantity,
+      currency: 'PKR',
+      contents: [
+        {
+          id: item.product_id,
+          quantity: item.quantity,
+          item_price: item.unit_price,
+        },
+      ],
+      num_items: item.quantity,
+    });
+  }
+},
+
 
     removeItem: (id, variantId) =>
       dispatch({ type: 'REMOVE_ITEM', payload: { product_id: id, variant_id: variantId ?? null } }),
