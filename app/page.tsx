@@ -1007,6 +1007,66 @@ function ProductsGrid({
   );
 }
 
+function NewArrivalsSection({ groups }: { groups: { category: Category; products: Product[] }[] }) {
+  return (
+    <section style={{ padding: '3.5rem 0', background: 'var(--white)' }} className="section-products-grid">
+      <div className="container">
+        <SectionHeader label="Just In" title="New Arrivals" />
+        {groups.map(({ category, products }) => (
+          <div key={category.id} style={{ marginBottom: '2.5rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1rem',
+                paddingBottom: '0.5rem',
+                borderBottom: '1px solid var(--border)',
+              }}
+            >
+              <h3
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  color: 'var(--text-dark)',
+                }}
+              >
+                {category.name}
+              </h3>
+              <Link
+                href={`/category/${category.slug}`}
+                style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--blush-deep)', textDecoration: 'none' }}
+              >
+                View All →
+              </Link>
+            </div>
+            <div
+              className="home-products-row"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                gap: '1.25rem',
+              }}
+            >
+              {products.map((product, i) => (
+                <div key={product.id} style={{ animation: `fadeUp 0.4s ease ${i * 0.07}s both` }}>
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .section-products-grid {padding: 1.5rem 0 !important}
+        }
+      `}</style>
+    </section>
+  );
+}
+
 function PromoBanner() {
   return (
     <section
@@ -2090,7 +2150,7 @@ function DealCard({ deal }: { deal: Deal }) {
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  const [newArrivals, setNewArrivals] = useState<{ category: Category; products: Product[] }[]>([]);
   const [onSale, setOnSale] = useState<Product[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [brands, setBrands] = useState<BrandItem[]>([]);
@@ -2099,16 +2159,27 @@ export default function HomePage() {
   useEffect(() => {
     async function load() {
       try {
-        const [catRes, prodRes, saleRes, dealsRes, brandsRes] = await Promise.all([
+        const [catRes, saleRes, dealsRes, brandsRes] = await Promise.all([
           fetch('/api/categories').then(r => r.json()),
-          fetch('/api/products?limit=20&sort=newest').then(r => r.json()),
           fetch('/api/products?limit=4&discount=true').then(r => r.json()),
           fetch('/api/deals').then(r => r.json()),
           fetch('/api/subcategories?category=brands').then(r => r.json()),
         ]);
 
-        if (catRes.success) setCategories(catRes.data);
-        if (prodRes.success) setNewArrivals(prodRes.data.data);
+        if (catRes.success) {
+          setCategories(catRes.data);
+
+          // skip "brands", it's not a real product category and the API would return everything
+          const groups = await Promise.all(
+            catRes.data
+              .filter((c: Category) => c.slug !== 'brands')
+              .map(async (cat: Category) => {
+                const res = await fetch(`/api/products?category=${cat.slug}&limit=8&sort=newest`).then(r => r.json());
+                return { category: cat, products: (res.success ? res.data.data : []) as Product[] };
+              }),
+          );
+          setNewArrivals(groups.filter(g => g.products.length > 0));
+        }
         if (saleRes.success) setOnSale(saleRes.data.data);
         if (dealsRes.success) setDeals(dealsRes.data);
         if (brandsRes.success) setBrands(brandsRes.data);
@@ -2124,12 +2195,7 @@ export default function HomePage() {
       <BannerSlider />
       <CategoryLinks categories={categories} />
 
-      {!loading &&
-        (newArrivals.length > 0 ? (
-          <ProductsGrid label="Just In" title="New Arrivals" products={newArrivals} />
-        ) : (
-          <EmptyState />
-        ))}
+      {!loading && (newArrivals.length > 0 ? <NewArrivalsSection groups={newArrivals} /> : <EmptyState />)}
 
       {onSale.length > 0 && (
         <ProductsGrid
