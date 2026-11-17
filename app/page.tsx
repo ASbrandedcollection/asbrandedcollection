@@ -258,7 +258,7 @@ function BannerSlider() {
           className="banner-height"
           style={{
             width: '100%',
-            background: 'var(--off-white)',
+            background: '#ece6e1',
             animation: 'pulse 1.5s ease infinite',
           }}
         />
@@ -1170,6 +1170,7 @@ function PromoBanner() {
 function StatsSection() {
   const [products, setProducts] = useState<number | null>(null);
   const [customers, setCustomers] = useState<number | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     fetch('/api/stats')
@@ -1180,8 +1181,11 @@ function StatsSection() {
           setCustomers(d.happy_customers);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoaded(true));
   }, []);
+
+  if (!loaded) return null;
 
   const fmt = (n: number | null, fallback: string) =>
     n === null ? fallback : n >= 1000 ? `${(n / 1000).toFixed(1)}k+` : `${n}+`;
@@ -2148,6 +2152,33 @@ function DealCard({ deal }: { deal: Deal }) {
   );
 }
 
+function HomeSkeleton() {
+  const box: React.CSSProperties = {
+    background: '#ece6e1',
+    borderRadius: '6px',
+    animation: 'pulse 1.5s ease infinite',
+  };
+
+  return (
+    <section style={{ padding: '3.5rem 0' }}>
+      <div className="container">
+        <div style={{ ...box, width: '220px', height: '28px', margin: '0 auto 2.5rem' }} />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: '1.25rem',
+          }}
+        >
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} style={{ ...box, height: '320px' }} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [newArrivals, setNewArrivals] = useState<{ category: Category; products: Product[] }[]>([]);
@@ -2208,10 +2239,17 @@ export default function HomePage() {
       )}
       {deals.length > 0 && <DealsSection deals={deals} />}
       {brands.length > 0 && <BrandsSection brands={brands} />}
-      <StatsSection />
-      <FeaturesStrip />
-      <AboutSection />
-      <Footer categories={categories} />
+
+      {loading && <HomeSkeleton />}
+
+      {!loading && (
+        <>
+          <StatsSection />
+          <FeaturesStrip />
+          <AboutSection />
+          <Footer categories={categories} />
+        </>
+      )}
     </div>
   );
 }
